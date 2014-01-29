@@ -1,4 +1,4 @@
-#Blowfish and Bcrypt for Xojo
+##Blowfish and Bcrypt for Xojo
 
 A translation of C Blowfish and Bcrypt libraries (included as Xcode
 projects) to Xojo.
