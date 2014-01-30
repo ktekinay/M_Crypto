@@ -1,52 +1,7 @@
 #tag Module
 Protected Module Blowfish_MTC
-	#tag Method, Flags = &h1
-		Protected Sub blf_dec(context As blf_ctx, data As MemoryBlock, blocks As Integer)
-		  dim d( 1 ) As UInt32
-		  dim byteIndex as Integer
-		  
-		  for i As Integer = 1 to blocks
-		    d( 0 ) = data.Uint32Value( byteIndex )
-		    d( 1 ) = data.UInt32Value( byteIndex + 4 )
-		    
-		    Decipher( context, d )
-		    
-		    data.UInt32Value( byteIndex ) = d( 0 )
-		    data.UInt32Value( byteIndex + 4 ) = d( 1 )
-		    
-		    byteIndex = byteIndex + 8
-		  next i
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Sub blf_enc(context As blf_ctx, data As MemoryBlock, blocks As Integer)
-		  #pragma BackgroundTasks False
-		  
-		  dim byteIndex as Integer
-		  dim p as Ptr = data
-		  
-		  for blockIndex as Integer = 1 to blocks
-		    Encipher( context, p, byteIndex )
-		    byteIndex = byteIndex + 8
-		  next blockIndex
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Sub blf_key(ByRef context As blf_ctx, k As MemoryBlock)
-		  // Initalize S-boxes and subkeys with Pi */
-		  context = new blf_ctx
-		  
-		  // Transform S-boxes and subkeys with key */
-		  Expand0State( context, k )
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Sub Decipher(context As blf_ctx, x() As UInt32)
+	#tag Method, Flags = &h21
+		Private Sub Decipher(context As Blowfish_Context, x() As UInt32)
 		  dim Xl, Xr as UInt32
 		  
 		  Xl = x( 0 )
@@ -77,7 +32,29 @@ Protected Module Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Encipher(context As blf_ctx, mb As Ptr, byteIndex As Integer)
+		Protected Sub Decrypt(context As Blowfish_Context, data As MemoryBlock)
+		  dim d( 1 ) As UInt32
+		  dim byteIndex as Integer
+		  
+		  dim blocks as Integer = data.Size \ 8
+		  for i As Integer = 1 to blocks
+		    d( 0 ) = data.Uint32Value( byteIndex )
+		    d( 1 ) = data.UInt32Value( byteIndex + 4 )
+		    
+		    Decipher( context, d )
+		    
+		    data.UInt32Value( byteIndex ) = d( 0 )
+		    data.UInt32Value( byteIndex + 4 ) = d( 1 )
+		    
+		    byteIndex = byteIndex + 8
+		  next i
+		  
+		  // Still need to give this some love
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Encipher(context As Blowfish_Context, mb As Ptr, byteIndex As Integer)
 		  #pragma BackgroundTasks False
 		  
 		  dim Xl, Xr as UInt32
@@ -85,33 +62,38 @@ Protected Module Blowfish_MTC
 		  Xl = mb.UInt32( byteIndex )
 		  Xr = mb.UInt32( byteIndex + 4 )
 		  
-		  dim p0 as UInt32 = context.P( 0 )
-		  Xl = Xl Xor p0
-		  context.BLFRND( Xr, Xl, 1 )
-		  context.BLFRND( Xl, Xr, 2 )
-		  context.BLFRND( Xr, Xl, 3 )
-		  context.BLFRND( Xl, Xr, 4 )
-		  context.BLFRND( Xr, Xl, 5 )
-		  context.BLFRND( Xl, Xr, 6 )
-		  context.BLFRND( Xr, Xl, 7 )
-		  context.BLFRND( Xl, Xr, 8 )
-		  context.BLFRND( Xr, Xl, 9 )
-		  context.BLFRND( Xl, Xr, 10 )
-		  context.BLFRND( Xr, Xl, 11 )
-		  context.BLFRND( Xl, Xr, 12 )
-		  context.BLFRND( Xr, Xl, 13 )
-		  context.BLFRND( Xl, Xr, 14 )
-		  context.BLFRND( Xr, Xl, 15 )
-		  context.BLFRND( Xl, Xr, 16 )
+		  Encipher( context, Xl, Xr )
 		  
-		  mb.UInt32( byteIndex ) = Xr Xor context.P( 17 )
+		  mb.UInt32( byteIndex ) = Xr
 		  mb.UInt32( byteIndex + 4 ) = Xl
+		  
+		  'dim p0 as UInt32 = context.P( 0 )
+		  'Xl = Xl Xor p0
+		  'context.BLFRND( Xr, Xl, 1 )
+		  'context.BLFRND( Xl, Xr, 2 )
+		  'context.BLFRND( Xr, Xl, 3 )
+		  'context.BLFRND( Xl, Xr, 4 )
+		  'context.BLFRND( Xr, Xl, 5 )
+		  'context.BLFRND( Xl, Xr, 6 )
+		  'context.BLFRND( Xr, Xl, 7 )
+		  'context.BLFRND( Xl, Xr, 8 )
+		  'context.BLFRND( Xr, Xl, 9 )
+		  'context.BLFRND( Xl, Xr, 10 )
+		  'context.BLFRND( Xr, Xl, 11 )
+		  'context.BLFRND( Xl, Xr, 12 )
+		  'context.BLFRND( Xr, Xl, 13 )
+		  'context.BLFRND( Xl, Xr, 14 )
+		  'context.BLFRND( Xr, Xl, 15 )
+		  'context.BLFRND( Xl, Xr, 16 )
+		  '
+		  'mb.UInt32( byteIndex ) = Xr Xor context.P( 17 )
+		  'mb.UInt32( byteIndex + 4 ) = Xl
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub Encipher(context As blf_ctx, x() As UInt32)
+	#tag Method, Flags = &h21
+		Private Sub Encipher(context As Blowfish_Context, x() As UInt32)
 		  #pragma BackgroundTasks False
 		  
 		  dim Xl, Xr as UInt32
@@ -119,8 +101,40 @@ Protected Module Blowfish_MTC
 		  Xl = x( 0 )
 		  Xr = x( 1 )
 		  
-		  dim p0 as UInt32 = context.P( 0 )
-		  Xl = Xl Xor p0
+		  Encipher( context, Xl, Xr )
+		  
+		  x( 0 ) = Xr
+		  x( 1 ) = Xl
+		  
+		  'dim p0 as UInt32 = context.P( 0 )
+		  'Xl = Xl Xor p0
+		  'context.BLFRND( Xr, Xl, 1 )
+		  'context.BLFRND( Xl, Xr, 2 )
+		  'context.BLFRND( Xr, Xl, 3 )
+		  'context.BLFRND( Xl, Xr, 4 )
+		  'context.BLFRND( Xr, Xl, 5 )
+		  'context.BLFRND( Xl, Xr, 6 )
+		  'context.BLFRND( Xr, Xl, 7 )
+		  'context.BLFRND( Xl, Xr, 8 )
+		  'context.BLFRND( Xr, Xl, 9 )
+		  'context.BLFRND( Xl, Xr, 10 )
+		  'context.BLFRND( Xr, Xl, 11 )
+		  'context.BLFRND( Xl, Xr, 12 )
+		  'context.BLFRND( Xr, Xl, 13 )
+		  'context.BLFRND( Xl, Xr, 14 )
+		  'context.BLFRND( Xr, Xl, 15 )
+		  'context.BLFRND( Xl, Xr, 16 )
+		  '
+		  'x( 0 ) = Xr Xor context.P( 17 )
+		  'x( 1 ) = Xl
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Encipher(context As Blowfish_Context, ByRef Xl As UInt32, ByRef Xr As UInt32)
+		  // The main loop for processing Encipher
+		  
+		  Xl = Xl Xor context.P( 0 )
 		  context.BLFRND( Xr, Xl, 1 )
 		  context.BLFRND( Xl, Xr, 2 )
 		  context.BLFRND( Xr, Xl, 3 )
@@ -137,14 +151,26 @@ Protected Module Blowfish_MTC
 		  context.BLFRND( Xl, Xr, 14 )
 		  context.BLFRND( Xr, Xl, 15 )
 		  context.BLFRND( Xl, Xr, 16 )
+		  Xr = Xr Xor context.P( 17 )
 		  
-		  x( 0 ) = Xr Xor context.P( 17 )
-		  x( 1 ) = Xl
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub Expand0State(context As blf_ctx, key As MemoryBlock)
+		Protected Sub Encrypt(context As Blowfish_Context, data As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  
+		  dim p as Ptr = data
+		  dim lastByteIndex as Integer = data.Size - 1
+		  for byteIndex as Integer = 0 to lastByteIndex step 8
+		    Encipher( context, p, byteIndex )
+		  next byteIndex
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub Expand0State(context As Blowfish_Context, key As MemoryBlock)
 		  #pragma BackgroundTasks False
 		  
 		  dim i, j, k as UInt16
@@ -177,7 +203,7 @@ Protected Module Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub ExpandState(context As blf_ctx, data As MemoryBlock, key As MemoryBlock)
+		Protected Sub ExpandState(context As Blowfish_Context, data As MemoryBlock, key As MemoryBlock)
 		  #pragma BackgroundTasks False
 		  
 		  dim i, j, k as UInt16
@@ -215,22 +241,35 @@ Protected Module Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub InitState(ByRef context As blf_ctx)
-		  context = new blf_ctx
+		Protected Function InitState() As Blowfish_Context
+		  return new Blowfish_Context
 		  
-		  // Really just need to create a new blf_ctx directly, but this is here
-		  // to help making conversions of code easier.
-		End Sub
+		  // Really just need to create a new Blowfish_Context directly, but this is here
+		  // to help make conversions of code easier.
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Key(k As MemoryBlock) As Blowfish_Context
+		  // Initalize S-boxes and subkeys with Pi */
+		  dim context as new Blowfish_Context
+		  
+		  // Transform S-boxes and subkeys with key */
+		  Expand0State( context, k )
+		  
+		  return context
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function Stream2Word(data As MemoryBlock, ByRef current As UInt16) As UInt32
 		  #pragma BackgroundTasks False
 		  
-		  dim dataBytes as Integer = data.Size
+		  dim r as Uint32
 		  
+		  dim dataBytes as Integer = data.Size
 		  dim j as Integer
-		  dim temp as Uint32
 		  dim p as Ptr = data
 		  j = current
 		  
@@ -238,13 +277,13 @@ Protected Module Blowfish_MTC
 		    if j >= databytes then
 		      j = 0
 		    end if
-		    temp = Bitwise.ShiftLeft( temp, 8 ) or p.Byte( j  )
+		    r = Bitwise.ShiftLeft( r, 8 ) or p.Byte( j  )
 		    
 		    j = j + 1
 		  next i
 		  
 		  current = j
-		  return temp
+		  return r
 		  
 		End Function
 	#tag EndMethod

@@ -1,5 +1,5 @@
 #tag Class
-Protected Class blf_ctx
+Protected Class Blowfish_Context
 	#tag Method, Flags = &h0
 		Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
 		  #pragma BackgroundTasks False
@@ -9,6 +9,7 @@ Protected Class blf_ctx
 		  static mb as new MemoryBlock( 4 )
 		  static pt as Ptr = mb
 		  static isLittleEndian as boolean = mb.LittleEndian
+		  
 		  pt.UInt32( 0 ) = j
 		  
 		  if isLittleEndian then

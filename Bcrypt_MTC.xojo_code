@@ -6,7 +6,7 @@ Protected Module Bcrypt_MTC
 		  
 		  dim r as string
 		  
-		  dim state as Blowfish_MTC.blf_ctx
+		  dim state as Blowfish_MTC.Blowfish_Context
 		  dim rounds as Integer
 		  dim j as UInt16
 		  dim logr, minor as UInt8
@@ -61,7 +61,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  state = new Blowfish_MTC.blf_ctx
+		  state = new Blowfish_MTC.Blowfish_Context
 		  Blowfish_MTC.ExpandState( state, csalt, key )
 		  dim lastRound as UInt32= rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
@@ -81,7 +81,7 @@ Protected Module Bcrypt_MTC
 		  
 		  // Now to encrypt
 		  for k as Integer = 0 to 63
-		    Blowfish_MTC.blf_enc( state, cdata, BCRYPT_BLOCKS \ 2 )
+		    Blowfish_MTC.Encrypt( state, cdata )
 		  next k
 		  
 		  for i as Integer = 0 to lastBlock
@@ -109,20 +109,6 @@ Protected Module Bcrypt_MTC
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function Bcrypt_GenSalt(rounds As UInt8) As String
-		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
-		  
-		  if rounds < 4 then
-		    rounds = 4
-		  elseif rounds > 31 then
-		    rounds = 31
-		  end if
-		  
-		  return encode_salt( csalt, BCRYPT_MAXSALT, rounds )
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Function Char64(c As Byte) As Integer
 		  if c > 127 then
@@ -134,8 +120,8 @@ Protected Module Bcrypt_MTC
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub decode_base64(buffer As MemoryBlock, data As MemoryBlock)
+	#tag Method, Flags = &h21
+		Private Sub decode_base64(buffer As MemoryBlock, data As MemoryBlock)
 		  Init()
 		  
 		  dim bp, p as integer
@@ -179,8 +165,8 @@ Protected Module Bcrypt_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub encode_base64(buffer As MemoryBlock, data As MemoryBlock)
+	#tag Method, Flags = &h21
+		Private Sub encode_base64(buffer As MemoryBlock, data As MemoryBlock)
 		  Init()
 		  
 		  dim lastByteIndex as integer = data.Size - 1
@@ -241,6 +227,20 @@ Protected Module Bcrypt_MTC
 		  salt = salt + buffer.CString( 0 )
 		  return salt
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GenerateSalt(rounds As UInt8) As String
+		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
+		  
+		  if rounds < 4 then
+		    rounds = 4
+		  elseif rounds > 31 then
+		    rounds = 31
+		  end if
+		  
+		  return encode_salt( csalt, BCRYPT_MAXSALT, rounds )
 		End Function
 	#tag EndMethod
 
@@ -443,7 +443,7 @@ Protected Module Bcrypt_MTC
 		char   *
 		bcrypt(const char *key, const char *salt)
 		{
-		blf_ctx state;
+		Blowfish_Context state;
 		u_int32_t rounds, i, k;
 		u_int16_t j;
 		u_int8_t key_len, salt_len, logr, minor;

@@ -137,11 +137,11 @@ End
 		  'BCrypt_MTC.decode_base64( buffer, data )
 		  'dim s2 as string = buffer
 		  '
-		  'dim x() as UInt32 
+		  'dim x() as UInt32
 		  'x.Append 2300
 		  'x.Append 4200
 		  '
-		  'dim ctx as new Blowfish_MTC.blf_ctx
+		  'dim ctx as new Blowfish_MTC.Blowfish_Context
 		  'Blowfish_MTC.Encipher( ctx, x )
 		  'Blowfish_MTC.Decipher( ctx, x )
 		  '
@@ -156,17 +156,17 @@ End
 		  'data = "12345678"
 		  'dim key as MemoryBlock = "password"
 		  '
-		  'ctx = new Blowfish_MTC.blf_ctx
+		  'ctx = new Blowfish_MTC.Blowfish_Context
 		  'Blowfish_MTC.Expand0State( ctx, key )
 		  'Blowfish_MTC.ExpandState( ctx, data, key )
-		  'Blowfish_MTC.blf_enc( ctx, data, 1 )
+		  'Blowfish_MTC.Encrypt( ctx, data, 1 )
 		  'AddToResult EncodeHex( data, true )
 		  '
-		  'Blowfish_MTC.blf_dec( ctx, data, 1 )
+		  'Blowfish_MTC.Decrypt( ctx, data, 1 )
 		  'AddToResult data
 		  '
 		  dim salt as string
-		  'salt = BCrypt_MTC.Bcrypt_GenSalt( 32 )
+		  'salt = BCrypt_MTC.GenerateSalt( 32 )
 		  'AddToResult salt
 		  
 		  salt = "$2a$10$1234567890123456789012"
