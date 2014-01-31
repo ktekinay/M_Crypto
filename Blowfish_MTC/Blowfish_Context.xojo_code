@@ -1,7 +1,7 @@
 #tag Class
 Protected Class Blowfish_Context
-	#tag Method, Flags = &h0
-		Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
+	#tag Method, Flags = &h21
+		Private Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
 		  #pragma BackgroundTasks False
 		  
 		  dim a, b, c, d As Integer
@@ -60,6 +60,220 @@ Protected Class Blowfish_Context
 		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
 		  &h9216d5d9, &h8979fb1b _
 		  )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Decipher(ByRef Xl As UInt32, ByRef Xr As Uint32)
+		  // The main loop for processing Decipher
+		  
+		  Xl = Xl Xor self.P( 17 )
+		  BLFRND( Xr, Xl, 16 )
+		  BLFRND( Xl, Xr, 15 )
+		  BLFRND( Xr, Xl, 14 )
+		  BLFRND( Xl, Xr, 13 )
+		  BLFRND( Xr, Xl, 12 )
+		  BLFRND( Xl, Xr, 11 )
+		  BLFRND( Xr, Xl, 10 )
+		  BLFRND( Xl, Xr, 9 )
+		  BLFRND( Xr, Xl, 8 )
+		  BLFRND( Xl, Xr, 7 )
+		  BLFRND( Xr, Xl, 6 )
+		  BLFRND( Xl, Xr, 5 )
+		  BLFRND( Xr, Xl, 4 )
+		  BLFRND( Xl, Xr, 3 )
+		  BLFRND( Xr, Xl, 2 )
+		  BLFRND( Xl, Xr, 1 )
+		  Xr = Xr Xor self.P( 0 )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Decipher(mb As Ptr, byteIndex As Integer)
+		  dim Xl, Xr as UInt32
+		  
+		  Xl = mb.UInt32( byteIndex )
+		  Xr = mb.UInt32( byteIndex + 4 )
+		  
+		  Decipher( Xl, Xr )
+		  
+		  mb.UInt32( byteIndex ) = Xr
+		  mb.UInt32( byteIndex + 4 ) = Xl
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Decipher(x() As UInt32)
+		  dim Xl, Xr as UInt32
+		  
+		  Xl = x( 0 )
+		  Xr = x( 1 )
+		  
+		  Decipher( Xl, Xr )
+		  
+		  X( 0 ) = Xr
+		  X( 1 ) = Xl
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Decrypt(data As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  
+		  dim p as Ptr = data
+		  dim lastByteIndex as Integer = data.Size - 1
+		  for byteIndex as Integer = 0  to lastByteIndex step 8
+		    Decipher( p, byteIndex )
+		  next byteIndex
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Encipher(ByRef Xl As UInt32, ByRef Xr As UInt32)
+		  // The main loop for processing Encipher
+		  
+		  Xl = Xl Xor self.P( 0 )
+		  BLFRND( Xr, Xl, 1 )
+		  BLFRND( Xl, Xr, 2 )
+		  BLFRND( Xr, Xl, 3 )
+		  BLFRND( Xl, Xr, 4 )
+		  BLFRND( Xr, Xl, 5 )
+		  BLFRND( Xl, Xr, 6 )
+		  BLFRND( Xr, Xl, 7 )
+		  BLFRND( Xl, Xr, 8 )
+		  BLFRND( Xr, Xl, 9 )
+		  BLFRND( Xl, Xr, 10 )
+		  BLFRND( Xr, Xl, 11 )
+		  BLFRND( Xl, Xr, 12 )
+		  BLFRND( Xr, Xl, 13 )
+		  BLFRND( Xl, Xr, 14 )
+		  BLFRND( Xr, Xl, 15 )
+		  BLFRND( Xl, Xr, 16 )
+		  Xr = Xr Xor self.P( 17 )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Encipher(mb As Ptr, byteIndex As Integer)
+		  #pragma BackgroundTasks False
+		  
+		  dim Xl, Xr as UInt32
+		  
+		  Xl = mb.UInt32( byteIndex )
+		  Xr = mb.UInt32( byteIndex + 4 )
+		  
+		  Encipher( Xl, Xr )
+		  
+		  mb.UInt32( byteIndex ) = Xr
+		  mb.UInt32( byteIndex + 4 ) = Xl
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Encipher(x() As UInt32)
+		  #pragma BackgroundTasks False
+		  
+		  dim Xl, Xr as UInt32
+		  
+		  Xl = x( 0 )
+		  Xr = x( 1 )
+		  
+		  Encipher( Xl, Xr )
+		  
+		  x( 0 ) = Xr
+		  x( 1 ) = Xl
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Encrypt(data As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  
+		  dim p as Ptr = data
+		  dim lastByteIndex as Integer = data.Size - 1
+		  for byteIndex as Integer = 0 to lastByteIndex step 8
+		    Encipher( p, byteIndex )
+		  next byteIndex
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Expand0State(key As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  
+		  dim i, j, k as UInt16
+		  dim temp as UInt32
+		  dim data( 1 ) as UInt32
+		  
+		  dim lastIndex as integer = BLF_N + 1
+		  for i = 0 to lastIndex
+		    temp = Stream2Word( key, j )
+		    self.P( i ) = self.P( i ) Xor temp
+		  next i
+		  
+		  j = 0
+		  for i = 0 to lastIndex step 2
+		    Encipher( data )
+		    self.P( i ) = data( 0 )
+		    self.P( i + 1 ) = data( 1 )
+		  next i
+		  
+		  for i = 0 to 3
+		    for k = 0 to 255 step 2
+		      Encipher( data )
+		      
+		      self.S( i, k ) = data( 0 )
+		      self.S( i, k + 1 ) = data( 1 )
+		    next k
+		  next i
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  
+		  dim i, j, k as UInt16
+		  dim temp as UInt32
+		  dim d( 1 ) as UInt32
+		  
+		  dim lastIndex as Integer = BLF_N + 1
+		  for i = 0 to lastIndex
+		    temp = Stream2Word( key, j )
+		    self.P( i ) = self.P( i ) Xor temp
+		  next i
+		  
+		  j = 0
+		  for i = 0 to lastIndex step 2
+		    d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
+		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
+		    Encipher( d )
+		    
+		    self.P( i ) = d( 0 )
+		    self.P( i + 1 ) = d( 1 )
+		  next i
+		  
+		  for i = 0 to 3
+		    for k = 0 to 255 step 2
+		      d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
+		      d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
+		      Encipher( d )
+		      
+		      self.S( i, k ) = d( 0 )
+		      self.S( i, k + 1 ) = d( 1 )
+		    next k
+		  next i
 		  
 		End Sub
 	#tag EndMethod

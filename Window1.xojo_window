@@ -124,50 +124,7 @@ End
 		Sub Action()
 		  dim sw as new Stopwatch_MTC
 		  
-		  'dim s as string = EncodeBase64( "this" )
-		  '
-		  'dim buffer as new MemoryBlock( 1028 )
-		  'dim data as MemoryBlock = "this"
-		  'BCrypt_MTC.encode_base64( buffer, data )
-		  'dim s1 as string = buffer.CString( 0 )
-		  '
-		  'data = s1
-		  'buffer = new MemoryBlock( 4 )
-		  '
-		  'BCrypt_MTC.decode_base64( buffer, data )
-		  'dim s2 as string = buffer
-		  '
-		  'dim x() as UInt32
-		  'x.Append 2300
-		  'x.Append 4200
-		  '
-		  'dim ctx as new Blowfish_MTC.Blowfish_Context
-		  'Blowfish_MTC.Encipher( ctx, x )
-		  'Blowfish_MTC.Decipher( ctx, x )
-		  '
-		  'data = new MemoryBlock( 8 )
-		  'data.LittleEndian = false
-		  'data.UInt32Value( 0 ) = 1000
-		  'data.UInt32Value( 4 ) = 2000
-		  'dim current as UInt16
-		  'dim r as UInt32 = Blowfish_MTC.Stream2Word( data, current )
-		  'r = Blowfish_MTC.Stream2Word( data, current )
-		  '
-		  'data = "12345678"
-		  'dim key as MemoryBlock = "password"
-		  '
-		  'ctx = new Blowfish_MTC.Blowfish_Context
-		  'Blowfish_MTC.Expand0State( ctx, key )
-		  'Blowfish_MTC.ExpandState( ctx, data, key )
-		  'Blowfish_MTC.Encrypt( ctx, data, 1 )
-		  'AddToResult EncodeHex( data, true )
-		  '
-		  'Blowfish_MTC.Decrypt( ctx, data, 1 )
-		  'AddToResult data
-		  '
 		  dim salt as string
-		  'salt = BCrypt_MTC.GenerateSalt( 32 )
-		  'AddToResult salt
 		  
 		  salt = "$2a$10$1234567890123456789012"
 		  sw.Start
@@ -175,6 +132,22 @@ End
 		  sw.Stop
 		  AddToResult hash
 		  AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
+		  
+		  dim pw as string = "password"
+		  dim text as MemoryBlock = "some text"
+		  
+		  dim state as Blowfish_MTC.Blowfish_Context
+		  state = Blowfish_MTC.StateWithKey( pw )
+		  state.Encrypt( text )
+		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
+		  state.Decrypt( text )
+		  AddToResult( "Decrypted: " + text.StringValue( 0, text.Size ) + " (" + EncodeHex( text, true ) + ")" )
+		  
+		  Blowfish_MTC.Encrypt( text, pw )
+		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
+		  
+		  Blowfish_MTC.Decrypt( text, pw )
+		  AddToResult( "Decrypted: " + text.StringValue( 0, text.Size ) + " (" + EncodeHex( text, true ) + ")" )
 		  
 		  return
 		End Sub
