@@ -135,8 +135,11 @@ Protected Class Blowfish_Context
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encipher(ByRef Xl As UInt32, ByRef Xr As UInt32)
+		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
+		  
+		  dim Xl as UInt32 = x0
+		  dim Xr as Uint32 = x1
 		  
 		  Xl = Xl Xor self.P( 0 )
 		  BLFRND( Xr, Xl, 1 )
@@ -157,6 +160,8 @@ Protected Class Blowfish_Context
 		  BLFRND( Xl, Xr, 16 )
 		  Xr = Xr Xor self.P( 17 )
 		  
+		  x0 = Xr
+		  x1 = Xl
 		End Sub
 	#tag EndMethod
 
@@ -171,8 +176,8 @@ Protected Class Blowfish_Context
 		  
 		  Encipher( Xl, Xr )
 		  
-		  mb.UInt32( byteIndex ) = Xr
-		  mb.UInt32( byteIndex + 4 ) = Xl
+		  mb.UInt32( byteIndex ) = Xl
+		  mb.UInt32( byteIndex + 4 ) = Xr
 		  
 		End Sub
 	#tag EndMethod
@@ -188,8 +193,8 @@ Protected Class Blowfish_Context
 		  
 		  Encipher( Xl, Xr )
 		  
-		  x( 0 ) = Xr
-		  x( 1 ) = Xl
+		  x( 0 ) = Xl
+		  x( 1 ) = Xr
 		  
 		End Sub
 	#tag EndMethod
@@ -213,9 +218,9 @@ Protected Class Blowfish_Context
 		  
 		  dim i, j, k as UInt16
 		  dim temp as UInt32
-		  dim data( 1 ) as UInt32
+		  dim d0, d1 as UInt32
 		  
-		  dim lastIndex as integer = BLF_N + 1
+		  static lastIndex as integer = P.Ubound
 		  for i = 0 to lastIndex
 		    temp = Stream2Word( key, j )
 		    self.P( i ) = self.P( i ) Xor temp
@@ -223,17 +228,17 @@ Protected Class Blowfish_Context
 		  
 		  j = 0
 		  for i = 0 to lastIndex step 2
-		    Encipher( data )
-		    self.P( i ) = data( 0 )
-		    self.P( i + 1 ) = data( 1 )
+		    Encipher( d0, d1 )
+		    self.P( i ) = d0
+		    self.P( i + 1 ) = d1
 		  next i
 		  
 		  for i = 0 to 3
 		    for k = 0 to 255 step 2
-		      Encipher( data )
+		      Encipher( d0, d1 )
 		      
-		      self.S( i, k ) = data( 0 )
-		      self.S( i, k + 1 ) = data( 1 )
+		      self.S( i, k ) = d0
+		      self.S( i, k + 1 ) = d1
 		    next k
 		  next i
 		  

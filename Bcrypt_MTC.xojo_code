@@ -66,7 +66,7 @@ Protected Module Bcrypt_MTC
 		  state.ExpandState( csalt, key )
 		  dim lastRound as UInt32= rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
-		  'lastRound = 10
+		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
 		    state.Expand0State( key )
 		    state.Expand0State( csalt )
@@ -86,6 +86,7 @@ Protected Module Bcrypt_MTC
 		    state.Encrypt( cdata )
 		  next k
 		  
+		  cipherText.LittleEndian = false // Make sure the bytes are copied in the right order
 		  cdata.LittleEndian = not ciphertext.LittleEndian // Will copy the bytes in reverse order
 		  for i as Integer = 0 to lastBlock
 		    dim dataIndex as Integer = i * 4
@@ -258,7 +259,6 @@ Protected Module Bcrypt_MTC
 		C code for bcrypt here:
 		
 		http://ftp3.usa.openbsd.org/pub/OpenBSD/src/lib/libc/crypt/bcrypt.c
-		
 	#tag EndNote
 
 

@@ -41,22 +41,34 @@ Protected Module Blowfish_MTC
 	#tag Method, Flags = &h1
 		Protected Function Stream2Word(data As MemoryBlock, ByRef current As UInt16) As UInt32
 		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
 		  
 		  dim r as Uint32
 		  
 		  dim dataBytes as Integer = data.Size
-		  dim j as Integer
-		  dim p as Ptr = data
-		  j = current
+		  dim j as Integer = current
 		  
-		  for i as Integer = 0 to 3
-		    if j >= databytes then
-		      j = 0
-		    end if
-		    r = Bitwise.ShiftLeft( r, 8 ) or p.Byte( j  )
+		  if j <= ( dataBytes - 4 ) then
 		    
-		    j = j + 1
-		  next i
+		    dim savedLE as boolean = data.LittleEndian
+		    data.LittleEndian = false
+		    r = data.UInt32Value( j )
+		    data.LittleEndian = savedLE
+		    j = j + 4
+		    
+		  else
+		    
+		    dim p as Ptr = data
+		    
+		    for i as Integer = 0 to 3
+		      if j >= databytes then
+		        j = 0
+		      end if
+		      r = Bitwise.ShiftLeft( r, 8, 32 ) or p.Byte( j )
+		      j = j + 1
+		    next i
+		    
+		  end if
 		  
 		  current = j
 		  return r
@@ -77,7 +89,6 @@ Protected Module Blowfish_MTC
 		For header:
 		
 		http://stuff.mit.edu/afs/sipb/project/postgres-8.2/src/postgresql-8.2.5/contrib/pgcrypto/blf.h
-		
 	#tag EndNote
 
 
