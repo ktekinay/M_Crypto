@@ -6,9 +6,8 @@ Protected Module Bcrypt_MTC
 		  
 		  dim r as string
 		  
-		  dim state as Blowfish_MTC.Blowfish_Context
+		  dim state as Blowfish_MTC
 		  dim rounds as Integer
-		  dim j as UInt16
 		  dim logr, minor as UInt8
 		  dim ciphertext as MemoryBlock = "OrpheanBeholderScryDoubt"
 		  dim precomputedCiphertext as string = "hprOBnaeloheSredDyrctbuo" // Same every time
@@ -62,7 +61,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  state = new Blowfish_MTC.Blowfish_Context
+		  state = new Blowfish_MTC
 		  state.ExpandState( csalt, key )
 		  dim lastRound as UInt32= rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
@@ -72,11 +71,11 @@ Protected Module Bcrypt_MTC
 		    state.Expand0State( csalt )
 		  next k
 		  
-		  'j = 0
+		  'dim j as UInt16 = 0
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
 		  'dim byteIndex as integer
 		  'for i as Integer= 0 to lastBlock
-		  'cdata.UInt32Value( byteIndex ) = Blowfish_MTC.Stream2Word( ciphertext, j )
+		  'cdata.UInt32Value( byteIndex ) = M_Blowfish.Stream2Word( ciphertext, j )
 		  'byteIndex = byteIndex + 4
 		  'next i
 		  cdata = precomputedCiphertext // Same every time, no need to recompute

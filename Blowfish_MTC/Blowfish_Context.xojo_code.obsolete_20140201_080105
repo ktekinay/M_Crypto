@@ -24,17 +24,23 @@ Protected Class Blowfish_Context
 		    d = pt.Byte( 3 )
 		  end if
 		  
-		  j = S( 0, a ) + S( 1, b )
-		  j = j Xor S( 2, c )
-		  j = j + S( 3, d )
+		  j = SPtr.UInt32( a * 4 ) + SPtr.UInt32( ( 256 + b ) * 4 )
+		  j = j Xor SPtr.UInt32( ( 512 + c ) * 4 )
+		  j = j + SPtr.UInt32( ( 768 + d ) * 4 )
 		  
-		  i = i Xor ( j Xor P( n ) )
+		  i = i Xor ( j Xor PPtr.UInt32( n * 4 ) )
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
+		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
+		  PPtr = P
+		  S = new MemoryBlock( 4 * 256 * 4 )
+		  SPtr = S
+		  
+		  dim x as integer
 		  for i as integer = 0 to 3
 		    dim arr() as UInt32
 		    select case i
@@ -49,11 +55,12 @@ Protected Class Blowfish_Context
 		    end
 		    
 		    for i1 as Integer = 0 to arr.Ubound
-		      S( i, i1 ) = arr( i1 )
+		      SPtr.UInt32( x ) = arr( i1 )
+		      x = x + 4
 		    next i1
 		  next i
 		  
-		  P = Array( _
+		  dim vals() as UInt32 = Array( _
 		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
 		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
 		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
@@ -61,6 +68,9 @@ Protected Class Blowfish_Context
 		  &h9216d5d9, &h8979fb1b _
 		  )
 		  
+		  for i as integer = 0 to vals.Ubound
+		    PPtr.UInt32( i * 4 ) = vals( i )
+		  next i
 		End Sub
 	#tag EndMethod
 
@@ -68,7 +78,16 @@ Protected Class Blowfish_Context
 		Private Sub Decipher(ByRef Xl As UInt32, ByRef Xr As Uint32)
 		  // The main loop for processing Decipher
 		  
-		  Xl = Xl Xor self.P( 17 )
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  
+		  Xl = Xl Xor self.PPtr.UInt32( 17 * 4 )
+		  
+		  'for i as integer = 16 downto 2 step 2
+		  'BLFRND( Xr, Xl, i )
+		  'BLFRND( Xl, Xr, i - 1 )
+		  'next i
+		  
 		  BLFRND( Xr, Xl, 16 )
 		  BLFRND( Xl, Xr, 15 )
 		  BLFRND( Xr, Xl, 14 )
@@ -85,7 +104,8 @@ Protected Class Blowfish_Context
 		  BLFRND( Xl, Xr, 3 )
 		  BLFRND( Xr, Xl, 2 )
 		  BLFRND( Xl, Xr, 1 )
-		  Xr = Xr Xor self.P( 0 )
+		  
+		  Xr = Xr Xor self.PPtr.UInt32( 0 )
 		  
 		End Sub
 	#tag EndMethod
@@ -138,27 +158,39 @@ Protected Class Blowfish_Context
 		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
 		  
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  
 		  dim Xl as UInt32 = x0
 		  dim Xr as Uint32 = x1
 		  
-		  Xl = Xl Xor self.P( 0 )
-		  BLFRND( Xr, Xl, 1 )
-		  BLFRND( Xl, Xr, 2 )
-		  BLFRND( Xr, Xl, 3 )
-		  BLFRND( Xl, Xr, 4 )
-		  BLFRND( Xr, Xl, 5 )
-		  BLFRND( Xl, Xr, 6 )
-		  BLFRND( Xr, Xl, 7 )
-		  BLFRND( Xl, Xr, 8 )
-		  BLFRND( Xr, Xl, 9 )
-		  BLFRND( Xl, Xr, 10 )
-		  BLFRND( Xr, Xl, 11 )
-		  BLFRND( Xl, Xr, 12 )
-		  BLFRND( Xr, Xl, 13 )
-		  BLFRND( Xl, Xr, 14 )
-		  BLFRND( Xr, Xl, 15 )
-		  BLFRND( Xl, Xr, 16 )
-		  Xr = Xr Xor self.P( 17 )
+		  Xl = Xl Xor self.PPtr.UInt32( 0 )
+		  
+		  for i as integer = 1 to 16 step 2
+		    BLFRND( Xr, Xl, i )
+		    BLFRND( Xl, Xr, i + 1 )
+		  next i
+		  
+		  // The loop tests faster than spelling it item out as below. Go figure.
+		  
+		  'BLFRND( Xr, Xl, 1 )
+		  'BLFRND( Xl, Xr, 2 )
+		  'BLFRND( Xr, Xl, 3 )
+		  'BLFRND( Xl, Xr, 4 )
+		  'BLFRND( Xr, Xl, 5 )
+		  'BLFRND( Xl, Xr, 6 )
+		  'BLFRND( Xr, Xl, 7 )
+		  'BLFRND( Xl, Xr, 8 )
+		  'BLFRND( Xr, Xl, 9 )
+		  'BLFRND( Xl, Xr, 10 )
+		  'BLFRND( Xr, Xl, 11 )
+		  'BLFRND( Xl, Xr, 12 )
+		  'BLFRND( Xr, Xl, 13 )
+		  'BLFRND( Xl, Xr, 14 )
+		  'BLFRND( Xr, Xl, 15 )
+		  'BLFRND( Xl, Xr, 16 )
+		  
+		  Xr = Xr Xor self.PPtr.Uint32( 17 * 4 )
 		  
 		  x0 = Xr
 		  x1 = Xl
@@ -202,6 +234,7 @@ Protected Class Blowfish_Context
 	#tag Method, Flags = &h0
 		Sub Encrypt(data As MemoryBlock)
 		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
 		  
 		  dim p as Ptr = data
 		  dim lastByteIndex as Integer = data.Size - 1
@@ -215,30 +248,32 @@ Protected Class Blowfish_Context
 	#tag Method, Flags = &h0
 		Sub Expand0State(key As MemoryBlock)
 		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
 		  
 		  dim i, j, k as UInt16
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
 		  
-		  static lastIndex as integer = P.Ubound
+		  static lastIndex as integer = BLF_N + 1
 		  for i = 0 to lastIndex
 		    temp = Stream2Word( key, j )
-		    self.P( i ) = self.P( i ) Xor temp
+		    dim x as integer = i * 4
+		    self.PPtr.UInt32( x ) = self.PPtr.UInt32( x ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to lastIndex step 2
 		    Encipher( d0, d1 )
-		    self.P( i ) = d0
-		    self.P( i + 1 ) = d1
+		    self.PPtr.Uint32( i * 4 ) = d0
+		    self.PPtr.Uint32( ( i + 1 ) * 4 ) = d1
 		  next i
 		  
 		  for i = 0 to 3
 		    for k = 0 to 255 step 2
 		      Encipher( d0, d1 )
 		      
-		      self.S( i, k ) = d0
-		      self.S( i, k + 1 ) = d1
+		      self.SPtr.Uint32( ( ( i * 256 ) + k ) * 4 ) = d0
+		      self.SPtr.UInt32( ( ( i * 256 ) + k + 1 ) * 4 ) = d1
 		    next k
 		  next i
 		  
@@ -248,6 +283,7 @@ Protected Class Blowfish_Context
 	#tag Method, Flags = &h0
 		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
 		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
 		  
 		  dim i, j, k as UInt16
 		  dim temp as UInt32
@@ -256,7 +292,8 @@ Protected Class Blowfish_Context
 		  dim lastIndex as Integer = BLF_N + 1
 		  for i = 0 to lastIndex
 		    temp = Stream2Word( key, j )
-		    self.P( i ) = self.P( i ) Xor temp
+		    dim x as integer = i * 4
+		    self.PPtr.UInt32( x ) = self.PPtr.UInt32( x ) Xor temp
 		  next i
 		  
 		  j = 0
@@ -265,8 +302,8 @@ Protected Class Blowfish_Context
 		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
 		    Encipher( d )
 		    
-		    self.P( i ) = d( 0 )
-		    self.P( i + 1 ) = d( 1 )
+		    self.PPtr.UInt32( i * 4 ) = d( 0 )
+		    self.PPtr.UInt32( ( i + 1 ) * 4 ) = d( 1 )
 		  next i
 		  
 		  for i = 0 to 3
@@ -275,8 +312,8 @@ Protected Class Blowfish_Context
 		      d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
 		      Encipher( d )
 		      
-		      self.S( i, k ) = d( 0 )
-		      self.S( i, k + 1 ) = d( 1 )
+		      self.SPtr.UInt32( ( ( i * 256 ) + k ) * 4 ) = d( 0 )
+		      self.SPtr.Uint32( ( ( i * 256 ) + k + 1 ) * 4 ) = d( 1 )
 		    next k
 		  next i
 		  
@@ -568,12 +605,20 @@ Protected Class Blowfish_Context
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
-		P() As UInt32
+	#tag Property, Flags = &h21
+		Private P As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		S(3,255) As UInt32
+	#tag Property, Flags = &h21
+		Private PPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private S As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private SPtr As Ptr
 	#tag EndProperty
 
 
