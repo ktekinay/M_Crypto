@@ -17,11 +17,11 @@ int main(int argc, const char * argv[])
     blf_ctx c ;
     
     u_int8_t key[] = "password" ;
-    u_int8_t astring[] = "12345678" ;
+    u_int8_t astring[] = "sometext123" ;
 
     Blowfish_initstate( &c ) ;
     Blowfish_expand0state( &c, &key, 8 ) ;
-    Blowfish_expandstate( &c, &astring, 8, &key, 8 ) ;
+//Blowfish_expandstate( &c, &astring, 8, &key, 8 ) ;
     blf_enc( &c, &astring, 1 ) ;
     blf_dec( &c, &astring, 1 ) ;
     

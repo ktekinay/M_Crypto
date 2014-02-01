@@ -1,5 +1,5 @@
 #tag Class
-Protected Class Blowfish_MTC
+Protected Class Blowfish_Context
 	#tag Method, Flags = &h21
 		Private Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
 		  #pragma BackgroundTasks False
@@ -72,7 +72,6 @@ Protected Class Blowfish_MTC
 		    PPtr.UInt32( i * 4 ) = vals( i )
 		  next i
 		  
-		  // See if a key was provided
 		  if key <> "" then
 		    Expand0State( key )
 		  end if
@@ -149,27 +148,15 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub Decrypt(data As MemoryBlock)
 		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
 		  
-		  dim dataPtr as Ptr = data
+		  dim p as Ptr = data
 		  dim lastByteIndex as Integer = data.Size - 1
 		  for byteIndex as Integer = 0  to lastByteIndex step 8
-		    Decipher( dataPtr, byteIndex )
+		    Decipher( p, byteIndex )
 		  next byteIndex
 		  
+		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Decrypt(data As String) As String
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  
-		  dim d as MemoryBlock = data
-		  Decrypt( d )
-		  return d
-		  
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -254,24 +241,13 @@ Protected Class Blowfish_MTC
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  dim dataPtr as Ptr = data
+		  dim p as Ptr = data
 		  dim lastByteIndex as Integer = data.Size - 1
 		  for byteIndex as Integer = 0 to lastByteIndex step 8
-		    Encipher( dataPtr, byteIndex )
+		    Encipher( p, byteIndex )
 		  next byteIndex
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Encrypt(data As String) As String
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  
-		  dim d as MemoryBlock = data
-		  Encrypt( d )
-		  return d
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -279,34 +255,30 @@ Protected Class Blowfish_MTC
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  dim j as UInt16
-		  dim i, k, arrIndex, arrIndexMajor as integer
+		  dim i, j, k as UInt16
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
 		  
 		  static lastIndex as integer = BLF_N + 1
 		  for i = 0 to lastIndex
 		    temp = Stream2Word( key, j )
-		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
+		    dim x as integer = i * 4
+		    self.PPtr.UInt32( x ) = self.PPtr.UInt32( x ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to lastIndex step 2
 		    Encipher( d0, d1 )
-		    arrIndex = i * 4
-		    self.PPtr.Uint32( arrIndex ) = d0
-		    self.PPtr.Uint32( arrIndex + 4 ) = d1
+		    self.PPtr.Uint32( i * 4 ) = d0
+		    self.PPtr.Uint32( ( i + 1 ) * 4 ) = d1
 		  next i
 		  
 		  for i = 0 to 3
-		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
 		      Encipher( d0, d1 )
 		      
-		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.Uint32( arrIndex ) = d0
-		      self.SPtr.UInt32( arrIndex + 4 ) = d1
+		      self.SPtr.Uint32( ( ( i * 256 ) + k ) * 4 ) = d0
+		      self.SPtr.UInt32( ( ( i * 256 ) + k + 1 ) * 4 ) = d1
 		    next k
 		  next i
 		  
@@ -318,41 +290,35 @@ Protected Class Blowfish_MTC
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  dim j as UInt16
-		  dim i, k, arrIndexMajor, arrIndex as Integer
+		  dim i, j, k as UInt16
 		  dim temp as UInt32
 		  dim d( 1 ) as UInt32
 		  
 		  dim lastIndex as Integer = BLF_N + 1
 		  for i = 0 to lastIndex
 		    temp = Stream2Word( key, j )
-		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
+		    dim x as integer = i * 4
+		    self.PPtr.UInt32( x ) = self.PPtr.UInt32( x ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to lastIndex step 2
 		    d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
 		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
-		    
 		    Encipher( d )
 		    
-		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = d( 0 )
-		    self.PPtr.UInt32( arrIndex + 4 ) = d( 1 )
+		    self.PPtr.UInt32( i * 4 ) = d( 0 )
+		    self.PPtr.UInt32( ( i + 1 ) * 4 ) = d( 1 )
 		  next i
 		  
 		  for i = 0 to 3
-		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
 		      d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
 		      d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
-		      
 		      Encipher( d )
 		      
-		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.UInt32( arrIndex ) = d( 0 )
-		      self.SPtr.Uint32( arrIndex + 4 ) = d( 1 )
+		      self.SPtr.UInt32( ( ( i * 256 ) + k ) * 4 ) = d( 0 )
+		      self.SPtr.Uint32( ( ( i * 256 ) + k + 1 ) * 4 ) = d( 1 )
 		    next k
 		  next i
 		  
@@ -663,13 +629,13 @@ Protected Class Blowfish_MTC
 		    
 		  else
 		    
-		    dim dataPtr as Ptr = data
+		    dim p as Ptr = data
 		    
 		    for i as Integer = 0 to 3
 		      if j >= databytes then
 		        j = 0
 		      end if
-		      r = Bitwise.ShiftLeft( r, 8, 32 ) or dataPtr.Byte( j )
+		      r = Bitwise.ShiftLeft( r, 8, 32 ) or p.Byte( j )
 		      j = j + 1
 		    next i
 		    

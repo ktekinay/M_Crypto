@@ -126,31 +126,32 @@ End
 		  
 		  dim salt as string
 		  
-		  'salt = "$2a$10$1234567890123456789012"
-		  'sw.Start
-		  'dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
-		  'sw.Stop
-		  'AddToResult hash
-		  'AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
+		  salt = "$2a$10$1234567890123456789012"
+		  sw.Start
+		  dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
+		  sw.Stop
+		  AddToResult hash
+		  AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
+		  
+		  const kText = "sometext123"
 		  
 		  dim pw as string = "password"
-		  dim text as MemoryBlock = "sometext"
+		  dim text, text2 as string
 		  
-		  dim state as Blowfish_MTC.Blowfish_Context
-		  state = Blowfish_MTC.StateWithKey( pw )
-		  state.Encrypt( text )
+		  dim bfmtc as new Blowfish_MTC( pw )
+		  text = bfmtc.Encrypt( kText + ChrB( 0 ) )
 		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
 		  
 		  dim bf as new BlowfishECB( pw )
-		  dim text2 as string = bf.Encrypt( text )
+		  text2 = bf.Encrypt( kText )
 		  AddToResult( "Ein: " + EncodeHex( text2, true ) )
 		  
 		  if StrComp( text, text2, 0 ) = 0 then
 		    AddToResult "They match"
 		  end if
 		  
-		  state.Decrypt( text )
-		  AddToResult( "Decrypted: " + text.StringValue( 0, text.Size ) + " (" + EncodeHex( text, true ) + ")" )
+		  text = bfmtc.Decrypt( text )
+		  AddToResult( "Decrypted: " + text + " (" + EncodeHex( text, true ) + ")" )
 		  
 		  return
 		End Sub
