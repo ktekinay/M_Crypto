@@ -152,10 +152,14 @@ Protected Class Blowfish_MTC
 		  #pragma BoundsChecking False
 		  
 		  dim dataPtr as Ptr = data
-		  dim lastByteIndex as Integer = data.Size - 1
-		  for byteIndex as Integer = 0  to lastByteIndex step 8
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex as integer
+		  for thisBlock as Integer = 1 to blocks
 		    Decipher( dataPtr, byteIndex )
-		  next byteIndex
+		    byteIndex = byteIndex + 8
+		  next thisBlock
+		  
+		  DepadIfNeeded( data )
 		  
 		End Sub
 	#tag EndMethod
@@ -170,6 +174,28 @@ Protected Class Blowfish_MTC
 		  return d
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub DepadIfNeeded(data As MemoryBlock)
+		  // Counterpart to padding. Will remove nulls followed by the number of nulls
+		  // from the end of the MemoryBlock. See PadIfNeeded for a description of how
+		  // the padding works.
+		  
+		  if data is nil or data.Size = 0 then return
+		  
+		  dim paddedSize as integer = data.Size
+		  if ( paddedSize mod 8 ) <> 0 then return // If it's not a multiple of 8, it's not properly padded anyway
+		  dim lastByte as integer = data.Byte( paddedSize - 1 )
+		  if lastByte >= paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
+		  
+		  dim compareMB as new MemoryBlock( lastByte )
+		  compareMB.Byte( lastByte - 1 ) = lastByte
+		  if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
+		    data.Size = paddedSize - lastByte
+		  end if
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -251,14 +277,20 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Encrypt(data As MemoryBlock)
+		  if data.Size = 0 then return
+		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
+		  PadIfNeeded( data )
+		  
 		  dim dataPtr as Ptr = data
-		  dim lastByteIndex as Integer = data.Size - 1
-		  for byteIndex as Integer = 0 to lastByteIndex step 8
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex as integer
+		  for thisBlock as integer = 1 to blocks
 		    Encipher( dataPtr, byteIndex )
-		  next byteIndex
+		    byteIndex = byteIndex + 8
+		  next thisBlock
 		  
 		End Sub
 	#tag EndMethod
@@ -355,6 +387,44 @@ Protected Class Blowfish_MTC
 		      self.SPtr.Uint32( arrIndex + 4 ) = d( 1 )
 		    next k
 		  next i
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub PadIfNeeded(data As MemoryBlock)
+		  // Pads the data to an exact multiple of 8 bytes.
+		  // It does this by adding nulls followed by the number of padding bytes.
+		  // Example: If data is &h31 32 33, it will turn it into
+		  // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will 
+		  // add 9 to avoid confusion.
+		  //
+		  // If data is already a multiple of 8, it will only add a padding if the trailing bytes
+		  // match the pattern of X nulls followed by &hX.
+		  
+		  if data is nil or data.Size = 0 then return
+		  
+		  dim originalSize as integer = data.Size
+		  dim padToAdd as integer = 8 - ( originalSize mod 8 )
+		  if padToAdd = 1 then padToAdd = 9
+		  
+		  if padToAdd = 8 then // Already a multiple, so see if we need to do anything
+		    padToAdd = 0 // Assume we have nothing to add
+		    dim lastByte as integer = data.Byte( originalSize - 1 )
+		    if lastByte < originalSize and lastByte >= 2 and lastByte <= 9 then // It's in the valid trigger range
+		      dim compareMB as new MemoryBlock( lastByte )
+		      compareMB.Byte( lastByte - 1 ) = lastByte
+		      if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
+		        padToAdd = 8 // Add another pad 
+		      end if
+		    end if
+		  end if
+		  
+		  if padToAdd <> 0 then
+		    dim newSize as integer = originalSize + padToAdd
+		    data.Size = newSize
+		    data.Byte( newSize - 1 ) = padToAdd
+		  end if
 		  
 		End Sub
 	#tag EndMethod
