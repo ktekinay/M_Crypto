@@ -126,20 +126,19 @@ End
 		  
 		  dim salt as string
 		  
-		  salt = "$2a$10$1234567890123456789012"
-		  sw.Start
-		  dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
-		  sw.Stop
-		  AddToResult hash
-		  AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
+		  'salt = "$2a$10$1234567890123456789012"
+		  'sw.Start
+		  'dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
+		  'sw.Stop
+		  'AddToResult hash
+		  'AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
 		  
 		  const kText = "sometext123"
-		  
 		  dim pw as string = "password"
 		  dim text, text2 as string
 		  
 		  dim bfmtc as new Blowfish_MTC( pw )
-		  text = bfmtc.Encrypt( kText + ChrB( 0 ) )
+		  text = bfmtc.Encrypt( kText )
 		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
 		  
 		  dim bf as new BlowfishECB( pw )
