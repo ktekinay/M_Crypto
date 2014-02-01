@@ -126,32 +126,21 @@ End
 		  
 		  dim salt as string
 		  
-		  'salt = "$2a$10$1234567890123456789012"
-		  'sw.Start
-		  'dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
-		  'sw.Stop
-		  'AddToResult hash
-		  'AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
+		  salt = "$2a$10$1234567890123456789012"
+		  sw.Start
+		  dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
+		  sw.Stop
+		  AddToResult hash
+		  AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
 		  
 		  const kText = "sometext123"
 		  dim pw as string = "password"
-<<<<<<< HEAD
-		  dim text as MemoryBlock = "sometext123"
-=======
 		  dim text, text2 as string
->>>>>>> Sbox-Access
 		  
 		  dim bfmtc as new Blowfish_MTC( pw )
 		  text = bfmtc.Encrypt( kText )
 		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
 		  
-<<<<<<< HEAD
-		  'Blowfish_MTC.Encrypt( text, pw )
-		  'AddToResult( "Encrypted: " + EncodeHex( text, true ) )
-		  
-		  'Blowfish_MTC.Decrypt( text, pw )
-		  'AddToResult( "Decrypted: " + text.StringValue( 0, text.Size ) + " (" + EncodeHex( text, true ) + ")" )
-=======
 		  dim bf as new BlowfishECB( pw )
 		  text2 = bf.Encrypt( kText )
 		  AddToResult( "Ein: " + EncodeHex( text2, true ) )
@@ -162,7 +151,6 @@ End
 		  
 		  text = bfmtc.Decrypt( text )
 		  AddToResult( "Decrypted: " + text + " (" + EncodeHex( text, true ) + ")" )
->>>>>>> Sbox-Access
 		  
 		  return
 		End Sub
