@@ -3,6 +3,9 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h21
 		Private Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
 		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim a, b, c, d As Integer
 		  
@@ -86,6 +89,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim Xl as UInt32 = X0
 		  dim Xr as UInt32 = X1
@@ -156,6 +161,8 @@ Protected Class Blowfish_MTC
 		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -194,6 +201,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  dim vectorPtr as Ptr = vectorMB
@@ -264,6 +273,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -331,6 +342,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim Xl as UInt32 = x0
 		  dim Xr as Uint32 = x1
@@ -370,8 +383,6 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Encipher(mb As Ptr, byteIndex As Integer)
-		  #pragma BackgroundTasks False
-		  
 		  dim Xl, Xr as UInt32
 		  
 		  Xl = mb.UInt32( byteIndex )
@@ -387,8 +398,6 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Encipher(x() As UInt32)
-		  #pragma BackgroundTasks False
-		  
 		  dim Xl, Xr as UInt32
 		  
 		  Xl = x( 0 )
@@ -408,6 +417,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
@@ -441,6 +452,11 @@ Protected Class Blowfish_MTC
 		    err.Message = "Vector must be eight bytes."
 		    raise err
 		  end if
+		  
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  if vector <> "" then
@@ -502,6 +518,8 @@ Protected Class Blowfish_MTC
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
@@ -545,6 +563,8 @@ Protected Class Blowfish_MTC
 		Sub Expand0State(key As MemoryBlock)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim j as UInt16
 		  dim i, k, arrIndex, arrIndexMajor as integer
@@ -584,6 +604,8 @@ Protected Class Blowfish_MTC
 		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
 		  
 		  dim j as UInt16
 		  dim i, k, arrIndexMajor, arrIndex as Integer

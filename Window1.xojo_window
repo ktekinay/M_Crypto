@@ -372,6 +372,48 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function pPHPCommand() As String
+		  #if not TargetWin32
+		    dim sh as new Shell
+		    sh.Execute "which php"
+		    return sh.Result.Trim
+		  #endif
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub pTestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
+		  AddToResult "Salt: " + salt
+		  sw.Start
+		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  sw.Stop
+		  AddToResult "Hash: " + hash
+		  
+		  // See if we can compare PHP
+		  dim php as string = pPHPCommand
+		  if php <> "" then
+		    key = key.ReplaceAll( "'", "'\\\''" )
+		    
+		    dim cmd as string = "$key = '%key%' ; $salt = '%salt%' ; print crypt( $key, $salt ) ;"
+		    cmd = cmd.ReplaceAll( "'", "'\''" )
+		    cmd = cmd.ReplaceAll( "%key%", key )
+		    cmd = cmd.ReplaceAll( "%salt%", salt )
+		    
+		    dim sh as new Shell
+		    sh.Execute(  php, "-r '" + cmd + "'" )
+		    dim phpHash as string = sh.Result.Trim
+		    AddToResult "PHP: " + phpHash
+		    
+		    if StrComp( hash, phpHash, 0 ) = 0 then
+		      AddToResult "(they match)"
+		    else
+		      AddToResult "(NO MATCH!!)"
+		    end if
+		  end if
+		End Sub
+	#tag EndMethod
+
 
 #tag EndWindowCode
 
@@ -447,11 +489,7 @@ End
 		    AddToResult "Decrypted: " + data
 		    
 		  case 5 // Bcrypt
-		    AddToResult "Salt: " + salt
-		    sw.Start
-		    data = Bcrypt_MTC.Bcrypt( key, salt )
-		    sw.Stop
-		    AddToResult "Hash: " + data
+		    pTestBcrypt( key, salt, sw )
 		    
 		  case 6 // Generate Salt
 		    sw.Start

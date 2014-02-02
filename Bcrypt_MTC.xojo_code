@@ -4,6 +4,11 @@ Protected Module Bcrypt_MTC
 		Protected Function Bcrypt(key As String, salt As String) As String
 		  if salt = "" or key = "" then return ""
 		  
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
+		  
 		  dim r as string
 		  
 		  dim state as Blowfish_MTC
@@ -33,7 +38,7 @@ Protected Module Bcrypt_MTC
 		  saltVersionString = NthFieldB( saltVersionString, str( saltVersion ), 2 )
 		  if saltVersionString <> "" then
 		    select case saltVersionString
-		    case "a", "x", "y" 
+		    case "a", "x", "y"
 		      minor = AscB( "a" )
 		    else
 		      return ""
@@ -150,40 +155,47 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub pDecodeBase64(buffer As MemoryBlock, data As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
+		  
 		  dim bp, p as integer
 		  dim c1, c2, c3, c4 as byte
 		  dim lastByteIndex as integer = buffer.Size - 1
+		  dim bufferPtr as Ptr = buffer
+		  dim dataPtr as Ptr = data
 		  
 		  while bp <= lastByteIndex
-		    c1 = pChar64( data.Byte( p ) )
-		    c2 = pChar64( data.Byte( p + 1 ) )
+		    c1 = pChar64( dataPtr.Byte( p ) )
+		    c2 = pChar64( dataPtr.Byte( p + 1 ) )
 		    
 		    if c1 = 255 or c2 = 255 then
 		      exit while
 		    end if
 		    
-		    buffer.Byte( bp ) = Bitwise.ShiftLeft( c1, 2 ) or Bitwise.ShiftRight( c2 and &h30, 4 )
+		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c1, 2, 8 ) or Bitwise.ShiftRight( c2 and &h30, 4, 8 )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
 		    end if
 		    
-		    c3 = pChar64( data.Byte( p + 2 ) )
+		    c3 = pChar64( dataPtr.Byte( p + 2 ) )
 		    if c3 = 255 then
 		      exit while
 		    end if
 		    
-		    buffer.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4 ) or Bitwise.ShiftRight( c3 and &h3C, 2 )
+		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4, 8 ) or Bitwise.ShiftRight( c3 and &h3C, 2, 8 )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
 		    end if
 		    
-		    c4 = pChar64( data.Byte( p + 3 ) )
+		    c4 = pChar64( dataPtr.Byte( p + 3 ) )
 		    if c4 = 255 then
 		      exit while
 		    end if
-		    buffer.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6 ) or c4
+		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6, 8 ) or c4
 		    bp = bp + 1
 		    
 		    p = p + 4
@@ -193,49 +205,58 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub pEncodeBase64(buffer As MemoryBlock, data As MemoryBlock)
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  #pragma NilObjectChecking False
+		  #pragma StackOverflowChecking False
+		  
 		  dim lastByteIndex as integer = data.Size - 1
 		  dim bp, p as integer
+		  dim bufferPtr as Ptr = buffer
+		  dim dataPtr as Ptr = data
+		  dim base64AlphabetPtr as Ptr = zBase64AlphabetMB
 		  
 		  dim c1, c2 as byte
+		  
 		  while ( p <= lastByteIndex )
-		    c1 = data.Byte( p )
+		    c1 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    buffer.Byte( bp ) = zBase64AlphabetMB.Byte( Bitwise.ShiftRight( c1, 2 ) )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( Bitwise.ShiftRight( c1, 2, 8 ) )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c1 and &h03, 4 )
+		    c1 = Bitwise.ShiftLeft( c1 and &h03, 4, 8 )
 		    if p > lastByteIndex then
-		      buffer.Byte( bp ) = zBase64AlphabetMB.Byte( c1 )
+		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
 		      exit while
 		    end if
 		    
-		    c2 = data.Byte( p )
+		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 4 ) and &h0F )
-		    buffer.Byte( bp ) = zBase64AlphabetMB.Byte( c1 )
+		    c1 = c1 or ( Bitwise.ShiftRight( c2, 4, 8 ) and &h0F )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c2 and &h0F, 2 )
+		    c1 = Bitwise.ShiftLeft( c2 and &h0F, 2, 8 )
 		    if p > lastByteIndex then
-		      buffer.Byte( bp ) = zBase64AlphabetMB.Byte( c1 )
+		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
 		      exit while
 		    end if
 		    
-		    c2 = data.Byte( p )
+		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 6 ) and &h03 )
-		    buffer.Byte( bp ) = zBase64AlphabetMB.Byte( c1 )
+		    c1 = c1 or ( Bitwise.ShiftRight( c2, 6 , 8) and &h03 )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
-		    buffer.Byte( bp ) = zBase64AlphabetMB.Byte( c2 and &h3F )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c2 and &h3F )
 		    bp = bp + 1
 		  wend
 		  
-		  buffer.Byte( bp ) = 0
+		  bufferPtr.Byte( bp ) = 0
 		  
 		End Sub
 	#tag EndMethod
