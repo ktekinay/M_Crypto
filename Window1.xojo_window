@@ -18,20 +18,20 @@ Begin Window Window1
    MaxWidth        =   32000
    MenuBar         =   410277764
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   400
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   600
    Placement       =   0
    Resizeable      =   True
    Title           =   "Untitled"
    Visible         =   True
    Width           =   600
-   Begin PushButton btnCode
+   Begin PushButton btnTest
       AutoDeactivate  =   True
       Bold            =   False
       ButtonStyle     =   "0"
       Cancel          =   False
-      Caption         =   "Code"
+      Caption         =   "Do It"
       Default         =   False
       Enabled         =   True
       Height          =   20
@@ -39,7 +39,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   False
-      Left            =   20
+      Left            =   500
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
@@ -52,7 +52,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   14
+      Top             =   15
       Underline       =   False
       Visible         =   True
       Width           =   80
@@ -69,7 +69,7 @@ Begin Window Window1
       DataSource      =   ""
       Enabled         =   True
       Format          =   ""
-      Height          =   156
+      Height          =   211
       HelpTag         =   ""
       HideSelection   =   True
       Index           =   -2147483648
@@ -98,11 +98,267 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   224
+      Top             =   169
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
       Width           =   560
+   End
+   Begin TextField fldPassword
+      AcceptTabs      =   False
+      Alignment       =   0
+      AutoDeactivate  =   True
+      AutomaticallyCheckSpelling=   False
+      BackColor       =   &cFFFFFF00
+      Bold            =   False
+      Border          =   True
+      CueText         =   ""
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Format          =   ""
+      Height          =   22
+      HelpTag         =   ""
+      Index           =   -2147483648
+      Italic          =   False
+      Left            =   98
+      LimitText       =   0
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Mask            =   ""
+      Password        =   False
+      ReadOnly        =   False
+      Scope           =   0
+      TabIndex        =   4
+      TabPanelIndex   =   0
+      TabStop         =   True
+      Text            =   "password"
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   13
+      Underline       =   False
+      UseFocusRing    =   True
+      Visible         =   True
+      Width           =   137
+   End
+   Begin Label lblLabel
+      AutoDeactivate  =   True
+      Bold            =   False
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   0
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   20
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Multiline       =   False
+      Scope           =   0
+      Selectable      =   False
+      TabIndex        =   5
+      TabPanelIndex   =   0
+      Text            =   "Password:"
+      TextAlign       =   0
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   15
+      Transparent     =   False
+      Underline       =   False
+      Visible         =   True
+      Width           =   100
+   End
+   Begin PopupMenu mnuTests
+      AutoDeactivate  =   True
+      Bold            =   False
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      InitialValue    =   ""
+      Italic          =   False
+      Left            =   299
+      ListIndex       =   0
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   6
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   15
+      Underline       =   False
+      Visible         =   True
+      Width           =   163
+   End
+   Begin Label lblLabel
+      AutoDeactivate  =   True
+      Bold            =   False
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   1
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   247
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Multiline       =   False
+      Scope           =   0
+      Selectable      =   False
+      TabIndex        =   7
+      TabPanelIndex   =   0
+      Text            =   "Test:"
+      TextAlign       =   0
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   16
+      Transparent     =   False
+      Underline       =   False
+      Visible         =   True
+      Width           =   40
+   End
+   Begin Label lblLabel
+      AutoDeactivate  =   True
+      Bold            =   False
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   21
+      HelpTag         =   ""
+      Index           =   2
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   46
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Multiline       =   False
+      Scope           =   0
+      Selectable      =   False
+      TabIndex        =   9
+      TabPanelIndex   =   0
+      Text            =   "Data:"
+      TextAlign       =   0
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   47
+      Transparent     =   False
+      Underline       =   False
+      Visible         =   True
+      Width           =   40
+   End
+   Begin TextArea fldData
+      AcceptTabs      =   False
+      Alignment       =   0
+      AutoDeactivate  =   True
+      AutomaticallyCheckSpelling=   True
+      BackColor       =   &cFFFFFF00
+      Bold            =   False
+      Border          =   True
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Format          =   ""
+      Height          =   85
+      HelpTag         =   ""
+      HideSelection   =   True
+      Index           =   -2147483648
+      Italic          =   False
+      Left            =   98
+      LimitText       =   0
+      LineHeight      =   0.0
+      LineSpacing     =   1.0
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Mask            =   ""
+      Multiline       =   True
+      ReadOnly        =   False
+      Scope           =   0
+      ScrollbarHorizontal=   False
+      ScrollbarVertical=   True
+      Styled          =   True
+      TabIndex        =   10
+      TabPanelIndex   =   0
+      TabStop         =   True
+      Text            =   "This is some data to encrypt. The data should really be in blocks of eight bytes, as this is, but the engine will pad in case it is not."
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   46
+      Underline       =   False
+      UseFocusRing    =   True
+      Visible         =   True
+      Width           =   482
+   End
+   Begin Label lblLabel
+      AutoDeactivate  =   True
+      Bold            =   False
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   21
+      HelpTag         =   ""
+      Index           =   3
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   20
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Multiline       =   False
+      Scope           =   0
+      Selectable      =   False
+      TabIndex        =   11
+      TabPanelIndex   =   0
+      Text            =   "Result:"
+      TextAlign       =   0
+      TextColor       =   &c00000000
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   143
+      Transparent     =   False
+      Underline       =   False
+      Visible         =   True
+      Width           =   89
    End
 End
 #tag EndWindow
@@ -119,29 +375,30 @@ End
 
 #tag EndWindowCode
 
-#tag Events btnCode
+#tag Events btnTest
 	#tag Event
 		Sub Action()
 		  dim sw as new Stopwatch_MTC
 		  
-		  dim salt as string
+		  'dim salt as string
+		  '
+		  'salt = "$2a$10$1234567890123456789012"
+		  'sw.Start
+		  'dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
+		  'sw.Stop
+		  'AddToResult hash
+		  'AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
 		  
-		  salt = "$2a$10$1234567890123456789012"
-		  sw.Start
-		  dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
-		  sw.Stop
-		  AddToResult hash
-		  AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
-		  
-		  const kText = "sometext123"
+		  const kText = "sometext1234567"
 		  dim pw as string = "password"
 		  dim text, text2 as string
 		  
 		  dim bfmtc as new Blowfish_MTC( pw )
-		  text = bfmtc.Encrypt( kText )
+		  text = bfmtc.EncryptCBC( "sometext", false )
+		  text = text + bfmtc.EncryptCBC( "12345678", true, bfmtc.LastVector )
 		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
 		  
-		  dim bf as new BlowfishECB( pw )
+		  dim bf as new BlowfishCBC( pw )
 		  text2 = bf.Encrypt( kText )
 		  AddToResult( "Ein: " + EncodeHex( text2, true ) )
 		  
@@ -149,10 +406,29 @@ End
 		    AddToResult "They match"
 		  end if
 		  
-		  text = bfmtc.Decrypt( text )
+		  dim textL as string = text.LeftB( 8 )
+		  dim textR as string = text.RightB( 8 )
+		  text = bfmtc.DecryptCBC( textL, false )
+		  text = text + bfmtc.DecryptCBC( textR, true, bfmtc.LastVector )
 		  AddToResult( "Decrypted: " + text + " (" + EncodeHex( text, true ) + ")" )
 		  
 		  return
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events mnuTests
+	#tag Event
+		Sub Open()
+		  // Constuct tests here
+		  
+		  dim tests() as string = Array( _
+		  "Encrypt", _
+		  "EncryptEBC", _
+		  "EncryptCBC", _
+		  "-" _
+		  )
+		  
+		  me.AddRows tests
 		End Sub
 	#tag EndEvent
 #tag EndEvents

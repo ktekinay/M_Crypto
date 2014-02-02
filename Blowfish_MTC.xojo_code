@@ -81,37 +81,43 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decipher(ByRef Xl As UInt32, ByRef Xr As Uint32)
+		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
+		  dim Xl as UInt32 = X0
+		  dim Xr as UInt32 = X1
+		  
 		  Xl = Xl Xor self.PPtr.UInt32( 17 * 4 )
 		  
-		  'for i as integer = 16 downto 2 step 2
-		  'BLFRND( Xr, Xl, i )
-		  'BLFRND( Xl, Xr, i - 1 )
-		  'next i
+		  for i as integer = 16 downto 2 step 2
+		    BLFRND( Xr, Xl, i )
+		    BLFRND( Xl, Xr, i - 1 )
+		  next i
 		  
-		  BLFRND( Xr, Xl, 16 )
-		  BLFRND( Xl, Xr, 15 )
-		  BLFRND( Xr, Xl, 14 )
-		  BLFRND( Xl, Xr, 13 )
-		  BLFRND( Xr, Xl, 12 )
-		  BLFRND( Xl, Xr, 11 )
-		  BLFRND( Xr, Xl, 10 )
-		  BLFRND( Xl, Xr, 9 )
-		  BLFRND( Xr, Xl, 8 )
-		  BLFRND( Xl, Xr, 7 )
-		  BLFRND( Xr, Xl, 6 )
-		  BLFRND( Xl, Xr, 5 )
-		  BLFRND( Xr, Xl, 4 )
-		  BLFRND( Xl, Xr, 3 )
-		  BLFRND( Xr, Xl, 2 )
-		  BLFRND( Xl, Xr, 1 )
+		  'BLFRND( Xr, Xl, 16 )
+		  'BLFRND( Xl, Xr, 15 )
+		  'BLFRND( Xr, Xl, 14 )
+		  'BLFRND( Xl, Xr, 13 )
+		  'BLFRND( Xr, Xl, 12 )
+		  'BLFRND( Xl, Xr, 11 )
+		  'BLFRND( Xr, Xl, 10 )
+		  'BLFRND( Xl, Xr, 9 )
+		  'BLFRND( Xr, Xl, 8 )
+		  'BLFRND( Xl, Xr, 7 )
+		  'BLFRND( Xr, Xl, 6 )
+		  'BLFRND( Xl, Xr, 5 )
+		  'BLFRND( Xr, Xl, 4 )
+		  'BLFRND( Xl, Xr, 3 )
+		  'BLFRND( Xr, Xl, 2 )
+		  'BLFRND( Xl, Xr, 1 )
 		  
 		  Xr = Xr Xor self.PPtr.UInt32( 0 )
+		  
+		  X0 = Xr
+		  X1 = Xl
 		  
 		End Sub
 	#tag EndMethod
@@ -125,8 +131,8 @@ Protected Class Blowfish_MTC
 		  
 		  Decipher( Xl, Xr )
 		  
-		  mb.UInt32( byteIndex ) = Xr
-		  mb.UInt32( byteIndex + 4 ) = Xl
+		  mb.UInt32( byteIndex ) = Xl
+		  mb.UInt32( byteIndex + 4 ) = Xr
 		  
 		End Sub
 	#tag EndMethod
@@ -140,14 +146,14 @@ Protected Class Blowfish_MTC
 		  
 		  Decipher( Xl, Xr )
 		  
-		  X( 0 ) = Xr
-		  X( 1 ) = Xl
+		  X( 0 ) = Xl
+		  X( 1 ) = Xr
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Decrypt(data As MemoryBlock)
+		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
@@ -159,18 +165,135 @@ Protected Class Blowfish_MTC
 		    byteIndex = byteIndex + 8
 		  next thisBlock
 		  
-		  DepadIfNeeded( data )
-		  
+		  if isFinalBlock then
+		    DepadIfNeeded( data )
+		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Decrypt(data As String) As String
+		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
 		  dim d as MemoryBlock = data
-		  Decrypt( d )
+		  Decrypt( d, isFinalBlock )
+		  return d
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+		  if data.Size = 0 then return
+		  if vector <> "" and vector.LenB <> 8 then
+		    dim err as new CryptoException
+		    err.Message = "Vector must be eight bytes."
+		    raise err
+		  end if
+		  
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  
+		  dim vectorMB as new MemoryBlock( 8 )
+		  dim vectorPtr as Ptr = vectorMB
+		  dim dataPtr as Ptr = data
+		  dim l, r as UInt32
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
+		  dim dataIndex as integer
+		  
+		  zLastVector = data.StringValue( byteIndex, 8 ) // For chain decrypting
+		  
+		  for i as integer = blocks downto 1
+		    if i = 1 then
+		      if vector = "" then
+		        vectorMB = new MemoryBlock( 8 )
+		        vectorPtr = vectorMB
+		      else
+		        vectorMB.StringValue( 0, 8 ) = vector
+		      end if
+		    else // i <> 1
+		      vectorMB.StringValue( 0, 8 ) = data.StringValue( byteIndex - 8, 8 )
+		    end if
+		    
+		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
+		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    Decipher( l, r )
+		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    
+		    for j as integer = 0 to 7
+		      dataIndex = byteIndex + j
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) Xor vectorPtr.Byte( j )
+		    next j
+		    
+		    byteIndex = byteIndex - 8
+		  next i
+		  
+		  if isFinalBlock then
+		    DepadIfNeeded( data )
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function DecryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
+		  dim d as MemoryBlock = data
+		  DecryptCBC( d, isFinalBlock, vector )
+		  return d
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  if data.Size = 0 then return
+		  
+		  #pragma BackgroundTasks False
+		  #pragma BoundsChecking False
+		  
+		  dim dataPtr as Ptr = data
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex as integer
+		  dim l, r as UInt32
+		  
+		  for i as integer = 1 to blocks
+		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
+		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    Decipher( l, r )
+		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    
+		    byteIndex = byteIndex + 8
+		  next i
+		  
+		  if isFinalBlock then
+		    DepadIfNeeded( data )
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  dim d As MemoryBlock = data
+		  DecryptECB( d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -276,17 +399,20 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Encrypt(data As MemoryBlock)
+		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  if data.Size = 0 then return
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  PadIfNeeded( data )
+		  if isFinalBlock then
+		    PadIfNeeded( data )
+		  end if
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
+		  
 		  for thisBlock as integer = 1 to blocks
 		    Encipher( dataPtr, byteIndex )
 		    byteIndex = byteIndex + 8
@@ -296,13 +422,115 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Encrypt(data As String) As String
+		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
+		  dim d as MemoryBlock = data
+		  Encrypt( d, isfinalBlock )
+		  return d
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+		  if data.Size = 0 then return
+		  if vector <> "" and vector.LenB <> 8 then
+		    dim err as new CryptoException
+		    err.Message = "Vector must be eight bytes."
+		    raise err
+		  end if
+		  
+		  dim vectorMB as new MemoryBlock( 8 )
+		  if vector <> "" then
+		    vectorMB.StringValue( 0, 8 ) = vector
+		  end if
+		  dim vectorPtr as Ptr = vectorMB
+		  
+		  if isFinalBlock then
+		    PadIfNeeded( data )
+		  end if
+		  
+		  dim r, l as UInt32
+		  dim dataPtr as Ptr = data
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex, dataIndex as integer
+		  
+		  for i as integer = 1 to blocks
+		    for j as integer = 0 to 7
+		      dataIndex = byteIndex + j
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) Xor vectorPtr.Byte( j )
+		    next j
+		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
+		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    Encipher( l, r )
+		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    
+		    vectorMB.StringValue( 0, 8 ) = data.StringValue( byteIndex, 8 )
+		    byteIndex = byteIndex + 8
+		  next i
+		  
+		  zLastVector = vectorMB // So the user can block chain if desired
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function EncryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
+		  dim d as MemoryBlock = data
+		  EncryptCBC( d, isfinalBlock, vector )
+		  return d
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  if data.Size = 0 then return
+		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  dim d as MemoryBlock = data
-		  Encrypt( d )
+		  if isFinalBlock then
+		    PadIfNeeded( data )
+		  end if
+		  
+		  dim dataPtr as Ptr = data
+		  dim blocks as integer = data.Size \ 8
+		  dim byteIndex as integer
+		  dim l, r as UInt32
+		  
+		  for i as integer = 1 to blocks
+		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
+		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
+		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    Encipher( l, r )
+		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    
+		    byteIndex = byteIndex + 8
+		  next i
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  dim d As MemoryBlock = data
+		  EncryptECB( d, isFinalBlock )
 		  return d
+		  
 		End Function
 	#tag EndMethod
 
@@ -391,12 +619,18 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function LastVector() As String
+		  return zLastVector
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub PadIfNeeded(data As MemoryBlock)
 		  // Pads the data to an exact multiple of 8 bytes.
 		  // It does this by adding nulls followed by the number of padding bytes.
 		  // Example: If data is &h31 32 33, it will turn it into
-		  // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will 
+		  // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
 		  // add 9 to avoid confusion.
 		  //
 		  // If data is already a multiple of 8, it will only add a padding if the trailing bytes
@@ -415,7 +649,7 @@ Protected Class Blowfish_MTC
 		      dim compareMB as new MemoryBlock( lastByte )
 		      compareMB.Byte( lastByte - 1 ) = lastByte
 		      if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		        padToAdd = 8 // Add another pad 
+		        padToAdd = 8 // Add another pad
 		      end if
 		    end if
 		  end if
@@ -792,6 +1026,10 @@ Protected Class Blowfish_MTC
 
 	#tag Property, Flags = &h21
 		Private SPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private zLastVector As String
 	#tag EndProperty
 
 
