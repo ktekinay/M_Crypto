@@ -32,11 +32,12 @@ Protected Module Bcrypt_MTC
 		  
 		  saltVersionString = NthFieldB( saltVersionString, str( saltVersion ), 2 )
 		  if saltVersionString <> "" then
-		    if saltVersionString = "a" then
+		    select case saltVersionString
+		    case "a", "x", "y" 
 		      minor = AscB( "a" )
 		    else
 		      return ""
-		    end if
+		    end select
 		  end if
 		  
 		  n = Val( saltRounds )
@@ -107,7 +108,7 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GenerateSalt(rounds As UInt8) As String
+		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
 		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
 		  
 		  if rounds < 4 then
@@ -116,7 +117,7 @@ Protected Module Bcrypt_MTC
 		    rounds = 31
 		  end if
 		  
-		  return pEncodeSalt( csalt, BCRYPT_MAXSALT, rounds )
+		  return pEncodeSalt( csalt, rounds, preferredPrefix )
 		End Function
 	#tag EndMethod
 
@@ -240,11 +241,13 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function pEncodeSalt(csalt As MemoryBlock, clen As Integer, logr As UInt8) As String
-		  dim salt as string = "$" + BCRYPT_VERSION + "a$"
-		  salt = salt + format( logr, "00" ) + "$"
+		Private Function pEncodeSalt(csalt As MemoryBlock, rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
+		  dim prefixLetter as string = Chr( Integer( preferredPrefix ) )
 		  
-		  dim buffer as new MemoryBlock( clen * 2 )
+		  dim salt as string = "$" + BCRYPT_VERSION + prefixLetter + "$"
+		  salt = salt + format( rounds, "00" ) + "$"
+		  
+		  dim buffer as new MemoryBlock( csalt.Size * 2 )
 		  pEncodeBase64( buffer, csalt )
 		  
 		  salt = salt + buffer.CString( 0 )
@@ -283,6 +286,13 @@ Protected Module Bcrypt_MTC
 
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
+
+
+	#tag Enum, Name = Prefix, Type = Integer, Flags = &h1
+		A = 97
+		  X = 120
+		Y = 121
+	#tag EndEnum
 
 
 	#tag ViewBehavior

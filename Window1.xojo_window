@@ -23,7 +23,7 @@ Begin Window Window1
    MinWidth        =   600
    Placement       =   0
    Resizeable      =   True
-   Title           =   "Untitled"
+   Title           =   "Blowfish MTC"
    Visible         =   True
    Width           =   600
    Begin PushButton btnTest
@@ -104,7 +104,7 @@ Begin Window Window1
       Visible         =   True
       Width           =   560
    End
-   Begin TextField fldPassword
+   Begin TextField fldKey
       AcceptTabs      =   False
       Alignment       =   0
       AutoDeactivate  =   True
@@ -378,41 +378,95 @@ End
 #tag Events btnTest
 	#tag Event
 		Sub Action()
+		  dim data as string = fldData.Text
+		  dim key as string = fldKey.Text
+		  dim salt as string = "$2a$10$1234567890123456789012" // For bcrypt
+		  
+		  dim blf as new Blowfish_MTC
 		  dim sw as new Stopwatch_MTC
 		  
-		  'dim salt as string
-		  '
-		  'salt = "$2a$10$1234567890123456789012"
-		  'sw.Start
-		  'dim hash as string = BCrypt_MTC.BCrypt( "that", salt )
-		  'sw.Stop
-		  'AddToResult hash
-		  'AddToResult format( sw.ElapsedMilliseconds, "#,0" ) + " ms"
-		  
-		  const kText = "sometext1234567"
-		  dim pw as string = "password"
-		  dim text, text2 as string
-		  
-		  dim bfmtc as new Blowfish_MTC( pw )
-		  text = bfmtc.EncryptCBC( "sometext", false )
-		  text = text + bfmtc.EncryptCBC( "12345678", true, bfmtc.LastVector )
-		  AddToResult( "Encrypted: " + EncodeHex( text, true ) )
-		  
-		  dim bf as new BlowfishCBC( pw )
-		  text2 = bf.Encrypt( kText )
-		  AddToResult( "Ein: " + EncodeHex( text2, true ) )
-		  
-		  if StrComp( text, text2, 0 ) = 0 then
-		    AddToResult "They match"
+		  if fldResult.Text.LenB <> 0 then
+		    AddToResult "---"
 		  end if
+		  AddToResult "Testing: " + mnuTests.List( mnuTests.ListIndex )
 		  
-		  dim textL as string = text.LeftB( 8 )
-		  dim textR as string = text.RightB( 8 )
-		  text = bfmtc.DecryptCBC( textL, false )
-		  text = text + bfmtc.DecryptCBC( textR, true, bfmtc.LastVector )
-		  AddToResult( "Decrypted: " + text + " (" + EncodeHex( text, true ) + ")" )
+		  select case mnuTests.ListIndex
+		  case 0 // Encrypt
+		    sw.Start
+		    data = blf.Encrypt( data )
+		    sw.Stop
+		    AddToResult "Encrypted: " + EncodeHex( data, true )
+		    sw.Start
+		    data = blf.Decrypt( data )
+		    sw.Stop
+		    AddToResult "Decrypted: " + data
+		    
+		  case 1 // EBC
+		    sw.Start
+		    data = blf.EncryptEBC( data )
+		    sw.Stop
+		    AddToResult "Encrypted: " + EncodeHex( data, true )
+		    sw.Start
+		    data = blf.DecryptEBC( data )
+		    sw.Stop
+		    AddToResult "Decrypted: " + data
+		    
+		  case 2 // CBC
+		    sw.Start
+		    data = blf.EncryptCBC( data )
+		    sw.Stop
+		    AddToResult "Encrypted: " + EncodeHex( data, true )
+		    sw.Start
+		    data = blf.DecryptCBC( data )
+		    sw.Stop
+		    AddToResult "Decrypted: " + data
+		    
+		  case 3 // Chained
+		    // Will break up the text into blocks of eight and pad the last block.
+		    // Simulates reading from a file or stream.
+		    dim byteIndex as integer = 1
+		    dim encrypted as string
+		    while byteIndex <= data.LenB
+		      dim block as string = data.MidB( byteIndex, 8 )
+		      byteIndex = byteIndex + 8
+		      sw.Start
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB, blf.LastVector )
+		      sw.Stop
+		    wend
+		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
+		    
+		    byteIndex = 1
+		    data = ""
+		    while byteIndex <= encrypted.LenB
+		      dim block as string = encrypted.MidB( byteIndex, 8 )
+		      byteIndex = byteIndex + 8
+		      sw.Start
+		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB, blf.LastVector )
+		      sw.Stop
+		    wend
+		    AddToResult "Decrypted: " + data
+		    
+		  case 5 // Bcrypt
+		    AddToResult "Salt: " + salt
+		    sw.Start
+		    data = Bcrypt_MTC.Bcrypt( key, salt )
+		    sw.Stop
+		    AddToResult "Hash: " + data
+		    
+		  case 6 // Generate Salt
+		    sw.Start
+		    AddToResult Bcrypt_MTC.GenerateSalt( 6 )
+		    AddToResult Bcrypt_MTC.GenerateSalt( 10, Bcrypt_MTC.Prefix.Y )
+		    sw.Stop
+		    
+		  else
+		    AddToResult "Unrecognized Index: " + str( mnuTests.ListIndex )
+		    
+		  end select
 		  
-		  return
+		  AddToResult " "
+		  AddToResult "Elapsed Milliseconds: " + format( sw.ElapsedMilliseconds, "#,0.###" )
+		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -422,13 +476,17 @@ End
 		  // Constuct tests here
 		  
 		  dim tests() as string = Array( _
-		  "Encrypt", _
-		  "EncryptEBC", _
-		  "EncryptCBC", _
-		  "-" _
+		  "Encrypt / Decrypt", _
+		  "EncryptEBC / DecryptEBC", _
+		  "EncryptCBC / DecryptCBC", _
+		  "EcryptCBC / DecryptCBC (chained)", _
+		  "-", _
+		  "Bcrypt", _
+		  "Generate Salt" _
 		  )
 		  
 		  me.AddRows tests
+		  me.ListIndex = 0
 		End Sub
 	#tag EndEvent
 #tag EndEvents

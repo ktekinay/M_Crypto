@@ -203,7 +203,11 @@ Protected Class Blowfish_MTC
 		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
 		  dim dataIndex as integer
 		  
-		  zLastVector = data.StringValue( byteIndex, 8 ) // For chain decrypting
+		  if isFinalBlock then
+		    zLastVector = ""
+		  else
+		    zLastVector = data.StringValue( byteIndex, 8 ) // For chain decrypting
+		  end if
 		  
 		  for i as integer = blocks downto 1
 		    if i = 1 then
@@ -255,7 +259,7 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Sub DecryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  if data.Size = 0 then return
 		  
 		  #pragma BackgroundTasks False
@@ -291,9 +295,9 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
+		Function DecryptEBC(data As String, isFinalBlock As Boolean = True) As String
 		  dim d As MemoryBlock = data
-		  DecryptECB( d, isFinalBlock )
+		  DecryptEBC( d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -476,8 +480,11 @@ Protected Class Blowfish_MTC
 		    byteIndex = byteIndex + 8
 		  next i
 		  
-		  zLastVector = vectorMB // So the user can block chain if desired
-		  
+		  if isFinalBlock then
+		    zLastVector = ""
+		  else
+		    zLastVector = vectorMB // So the user can block chain if desired
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -490,7 +497,7 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Sub EncryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  if data.Size = 0 then return
 		  
 		  #pragma BackgroundTasks False
@@ -526,9 +533,9 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
+		Function EncryptEBC(data As String, isFinalBlock As Boolean = True) As String
 		  dim d As MemoryBlock = data
-		  EncryptECB( d, isFinalBlock )
+		  EncryptEBC( d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -660,6 +667,12 @@ Protected Class Blowfish_MTC
 		    data.Byte( newSize - 1 ) = padToAdd
 		  end if
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub ResetVector()
+		  zLastVector = ""
 		End Sub
 	#tag EndMethod
 
