@@ -165,6 +165,9 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  if data.Size = 0 then return
+		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
+		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  #pragma NilObjectChecking False
@@ -199,11 +202,8 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
 		  if data.Size = 0 then return
-		  if vector <> "" and vector.LenB <> 8 then
-		    dim err as new CryptoException
-		    err.Message = "Vector must be eight bytes."
-		    raise err
-		  end if
+		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
+		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -280,6 +280,7 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub DecryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  if data.Size = 0 then return
+		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -432,6 +433,8 @@ Protected Class Blowfish_MTC
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
+		  else
+		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		  end if
 		  
 		  dim dataPtr as Ptr = data
@@ -457,11 +460,7 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
 		  if data.Size = 0 then return
-		  if vector <> "" and vector.LenB <> 8 then
-		    dim err as new CryptoException
-		    err.Message = "Vector must be eight bytes."
-		    raise err
-		  end if
+		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -477,6 +476,8 @@ Protected Class Blowfish_MTC
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
+		  else
+		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		  end if
 		  
 		  dim r, l as UInt32
@@ -534,6 +535,8 @@ Protected Class Blowfish_MTC
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
+		  else
+		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		  end if
 		  
 		  dim dataPtr as Ptr = data
@@ -694,6 +697,16 @@ Protected Class Blowfish_MTC
 		    data.Byte( newSize - 1 ) = padToAdd
 		  end if
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RaiseErrorIf(test As Boolean, msg As String)
+		  if test then
+		    dim err as new CryptoException
+		    err.Message = msg
+		    raise err
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -1087,6 +1100,15 @@ Protected Class Blowfish_MTC
 
 
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption.", Scope = Public
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Public
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty for default\x2C or exactly 8 bytes.", Scope = Public
 	#tag EndConstant
 
 
