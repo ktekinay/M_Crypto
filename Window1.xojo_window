@@ -69,7 +69,7 @@ Begin Window Window1
       DataSource      =   ""
       Enabled         =   True
       Format          =   ""
-      Height          =   211
+      Height          =   204
       HelpTag         =   ""
       HideSelection   =   True
       Index           =   -2147483648
@@ -98,7 +98,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   169
+      Top             =   176
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -360,6 +360,37 @@ Begin Window Window1
       Visible         =   True
       Width           =   89
    End
+   Begin PushButton btnClear
+      AutoDeactivate  =   True
+      Bold            =   False
+      ButtonStyle     =   "0"
+      Cancel          =   False
+      Caption         =   "Clear"
+      Default         =   False
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   500
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   False
+      LockRight       =   True
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   12
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   143
+      Underline       =   False
+      Visible         =   True
+      Width           =   80
+   End
 End
 #tag EndWindow
 
@@ -555,6 +586,13 @@ End
 		  
 		  me.AddRows tests
 		  me.ListIndex = 0
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events btnClear
+	#tag Event
+		Sub Action()
+		  fldResult.Text = ""
 		End Sub
 	#tag EndEvent
 #tag EndEvents

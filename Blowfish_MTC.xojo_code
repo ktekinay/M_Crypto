@@ -1,6 +1,22 @@
 #tag Class
 Protected Class Blowfish_MTC
 	#tag Method, Flags = &h21
+		Private Sub AddBackNullIfNeeded(data As MemoryBlock)
+		  // See if the previous block had a null that could have been part of the padding and
+		  // add it back to this decrypted block
+		  if zLastBlockHadNull then
+		    dim oldSize as integer = data.Size
+		    dim newSize as integer = oldSize + 1
+		    data.Size = newSize
+		    data.StringValue( 1, oldSize ) = data.StringValue( 0, oldSize ) // Shift the data over by one byte
+		    data.Byte( 0 ) = 0
+		    zLastBlockHadNull = false
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -181,8 +197,14 @@ Protected Class Blowfish_MTC
 		    byteIndex = byteIndex + 8
 		  next thisBlock
 		  
+		  // See if we have to add back the last null
+		  AddBackNullIfNeeded( data )
+		  
 		  if isFinalBlock then
 		    DepadIfNeeded( data )
+		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
+		    data.Size = data.Size - 1
+		    zLastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
@@ -262,8 +284,14 @@ Protected Class Blowfish_MTC
 		    byteIndex = byteIndex - 8
 		  next i
 		  
+		  // See if we have to add back the last null
+		  AddBackNullIfNeeded( data )
+		  
 		  if isFinalBlock then
 		    DepadIfNeeded( data )
+		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
+		    data.Size = data.Size - 1
+		    zLastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
@@ -310,9 +338,16 @@ Protected Class Blowfish_MTC
 		    byteIndex = byteIndex + 8
 		  next i
 		  
+		  // See if we have to add back the last null
+		  AddBackNullIfNeeded( data )
+		  
 		  if isFinalBlock then
 		    DepadIfNeeded( data )
+		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
+		    data.Size = data.Size - 1
+		    zLastBlockHadNull = true
 		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -334,9 +369,9 @@ Protected Class Blowfish_MTC
 		  if data is nil or data.Size = 0 then return
 		  
 		  dim paddedSize as integer = data.Size
-		  if ( paddedSize mod 8 ) <> 0 then return // If it's not a multiple of 8, it's not properly padded anyway
+		  if ( paddedSize mod 8 ) <> 0 and paddedSize <> 9 then return // If it's not a multiple of 8, it's not properly padded anyway (9 bytes is a special case and has to be checked)
 		  dim lastByte as integer = data.Byte( paddedSize - 1 )
-		  if lastByte >= paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
+		  if lastByte > paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
 		  
 		  dim compareMB as new MemoryBlock( lastByte )
 		  compareMB.Byte( lastByte - 1 ) = lastByte
@@ -1096,6 +1131,10 @@ Protected Class Blowfish_MTC
 
 	#tag Property, Flags = &h21
 		Private zCurrentVector As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private zLastBlockHadNull As Boolean
 	#tag EndProperty
 
 
