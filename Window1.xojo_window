@@ -472,7 +472,7 @@ End
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) 
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB )
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )

@@ -1,3 +1,6 @@
 
 *.xojo_uistate
 *Builds*
+*.xojo_uistate
+
+.Blowfish Harness.xojo_uistate
