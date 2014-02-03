@@ -706,22 +706,36 @@ Protected Class Blowfish_MTC
 		  // add 9 to avoid confusion.
 		  //
 		  // If data is already a multiple of 8, it will only add a padding if the trailing bytes
-		  // match the pattern of X nulls followed by &hX.
+		  // match the pattern of X nulls followed by &hX. The exception is if the
+		  // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
+		  // To be on the safe side, it will add padding then too.
 		  
 		  if data is nil or data.Size = 0 then return
 		  
 		  dim originalSize as integer = data.Size
 		  dim padToAdd as integer = 8 - ( originalSize mod 8 )
-		  if padToAdd = 1 then padToAdd = 9
+		  dim lastByte as integer = data.Byte( originalSize - 1 )
+		  
+		  if padToAdd = 1 then 
+		     padToAdd = 9 // Will never add a single byte pad, so have to add 9
+		  end if
 		  
 		  if padToAdd = 8 then // Already a multiple, so see if we need to do anything
 		    padToAdd = 0 // Assume we have nothing to add
-		    dim lastByte as integer = data.Byte( originalSize - 1 )
-		    if lastByte < originalSize and lastByte >= 2 and lastByte <= 9 then // It's in the valid trigger range
+		    
+		    if lastByte = 9 then // Special case
+		      // See if the rest of the bytes are all zeros
+		      dim compareMB as new MemoryBlock( 8 )
+		      compareMB.Byte( 7 ) = 9
+		      if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
+		        padToAdd = 8 // This means that the last 8 bytes are all nulls followed by a 9, so add an 8-byte padding
+		      end if
+		      
+		    elseif lastByte >= 2 and lastByte < 9 then // It's in the valid trigger range
 		      dim compareMB as new MemoryBlock( lastByte )
 		      compareMB.Byte( lastByte - 1 ) = lastByte
 		      if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		        padToAdd = 8 // Add another pad
+		        padToAdd = 8 // Add a real pad
 		      end if
 		    end if
 		  end if
