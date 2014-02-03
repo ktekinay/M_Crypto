@@ -525,7 +525,8 @@ End
 		    dim encrypted as string
 		    dim block as string
 		    
-		    dim vector as string = "12345678" // Don't need to do this, but if you do, be sure to store the vector for decryption
+		    dim vector as string = "0123456789ABCDEF" // Don't need to do this, but if you do, be sure to store the vector for decryption
+		    // You can supply either an 8-byte string or hex representing 8 bytes
 		    blf.SetVector( vector )
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )

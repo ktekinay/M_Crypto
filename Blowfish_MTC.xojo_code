@@ -227,7 +227,10 @@ Protected Class Blowfish_MTC
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
+		  if vector <> "" then
+		    vector = InterpretVector( vector )
+		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		  end if
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -500,7 +503,10 @@ Protected Class Blowfish_MTC
 		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
-		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
+		  if vector <> "" then
+		    vector = InterpretVector( vector )
+		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		  end if
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -707,6 +713,20 @@ Protected Class Blowfish_MTC
 		  next i
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function InterpretVector(vector As String) As String
+		  if vector = "" then return vector
+		  if vector.LenB = 8 then return vector
+		  dim newVector as string = DecodeHex( vector )
+		  if newVector.LenB = 8 then
+		    return newVector
+		  else
+		    return vector
+		  end if
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -1063,10 +1083,9 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub SetVector(vector As String)
-		  if vector <> "" and vector.LenB <> 8 then
-		    dim err as new CryptoException
-		    err.Message = "Vector must be eight bytes."
-		    raise err
+		  if vector <> "" then
+		    vector = InterpretVector( vector )
+		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
 		  end if
 		  
 		  zCurrentVector = vector
@@ -1183,7 +1202,7 @@ Protected Class Blowfish_MTC
 	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty for default\x2C or exactly 8 bytes.", Scope = Public
+	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to 8 nulls)\x2C or exactly 8 bytes or hexadecimal characters representing 8 bytes.", Scope = Public
 	#tag EndConstant
 
 
