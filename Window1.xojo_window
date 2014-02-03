@@ -468,22 +468,26 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
+		    dim vector as string = "12345678" // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB, blf.LastVector )
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB, vector ) // If you don't specify your own intital vector, you can just use blf.LastVector here
+		      vector = blf.LastVector
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
 		    
 		    byteIndex = 1
 		    data = ""
+		    vector = "12345678"
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB, blf.LastVector )
+		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB, vector )
+		      vector = blf.LastVector
 		      sw.Stop
 		    wend
 		    AddToResult "Decrypted: " + data
