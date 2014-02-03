@@ -83,6 +83,12 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function CurrentVector() As String
+		  return zCurrentVector
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
@@ -212,10 +218,14 @@ Protected Class Blowfish_MTC
 		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
 		  dim dataIndex as integer
 		  
+		  if vector = "" then
+		    vector = zCurrentVector
+		  end if
+		  
 		  if isFinalBlock then
-		    zLastVector = ""
+		    zCurrentVector = ""
 		  else
-		    zLastVector = data.StringValue( byteIndex, 8 ) // For chain decrypting
+		    zCurrentVector = data.StringValue( byteIndex, 8 ) // For chain decrypting
 		  end if
 		  
 		  for i as integer = blocks downto 1
@@ -459,6 +469,7 @@ Protected Class Blowfish_MTC
 		  #pragma StackOverflowChecking False
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
+		  if vector = "" then vector = zCurrentVector
 		  if vector <> "" then
 		    vectorMB.StringValue( 0, 8 ) = vector
 		  end if
@@ -497,9 +508,9 @@ Protected Class Blowfish_MTC
 		  next i
 		  
 		  if isFinalBlock then
-		    zLastVector = ""
+		    zCurrentVector = ""
 		  else
-		    zLastVector = vectorMB // So the user can block chain if desired
+		    zCurrentVector = vectorMB // So the user can block chain if desired
 		  end if
 		End Sub
 	#tag EndMethod
@@ -648,12 +659,6 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function LastVector() As String
-		  return zLastVector
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub PadIfNeeded(data As MemoryBlock)
 		  // Pads the data to an exact multiple of 8 bytes.
@@ -694,7 +699,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub ResetVector()
-		  zLastVector = ""
+		  zCurrentVector = ""
 		End Sub
 	#tag EndMethod
 
@@ -983,6 +988,19 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SetVector(vector As String)
+		  if vector <> "" and vector.LenB <> 8 then
+		    dim err as new CryptoException
+		    err.Message = "Vector must be eight bytes."
+		    raise err
+		  end if
+		  
+		  zCurrentVector = vector
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As UInt16) As UInt32
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -1064,7 +1082,7 @@ Protected Class Blowfish_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private zLastVector As String
+		Private zCurrentVector As String
 	#tag EndProperty
 
 

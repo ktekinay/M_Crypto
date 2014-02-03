@@ -468,34 +468,59 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
-		    dim vector as string = "12345678" // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB, vector ) // If you don't specify your own intital vector, you can just use blf.LastVector here
-		      vector = blf.LastVector
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) 
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
 		    
 		    byteIndex = 1
 		    data = ""
-		    vector = "12345678"
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB, vector )
-		      vector = blf.LastVector
+		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB )
 		      sw.Stop
 		    wend
 		    AddToResult "Decrypted: " + data
 		    
-		  case 5 // Bcrypt
+		  case 4 // Chained, modified vector
+		    // Same as chained, but starting with a different vector.
+		    dim byteIndex as integer = 1
+		    dim encrypted as string
+		    dim block as string
+		    
+		    dim vector as string = "12345678" // Don't need to do this, but if you do, be sure to store the vector for decryption
+		    blf.SetVector( vector )
+		    while byteIndex <= data.LenB
+		      block = data.MidB( byteIndex, 8 )
+		      byteIndex = byteIndex + 8
+		      sw.Start
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetVector or SetVector is called
+		      sw.Stop
+		    wend
+		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
+		    
+		    byteIndex = 1
+		    data = ""
+		    blf.SetVector( vector )
+		    while byteIndex <= encrypted.LenB
+		      block = encrypted.MidB( byteIndex, 8 )
+		      byteIndex = byteIndex + 8
+		      sw.Start
+		      data = data + blf.DecryptCBC( block, byteIndex > encrypted.LenB )
+		      sw.Stop
+		    wend
+		    AddToResult "Decrypted: " + data
+		    
+		  case 6 // Bcrypt
 		    pTestBcrypt( key, salt, sw )
 		    
-		  case 6 // Generate Salt
+		  case 7 // Generate Salt
 		    sw.Start
 		    AddToResult Bcrypt_MTC.GenerateSalt( 6 )
 		    AddToResult Bcrypt_MTC.GenerateSalt( 10, Bcrypt_MTC.Prefix.Y )
@@ -522,6 +547,7 @@ End
 		  "EncryptEBC / DecryptEBC", _
 		  "EncryptCBC / DecryptCBC", _
 		  "EcryptCBC / DecryptCBC (chained)", _
+		  "EncryptCBC / DecryptCBC (chained, modified vector)", _
 		  "-", _
 		  "Bcrypt", _
 		  "Generate Salt" _
