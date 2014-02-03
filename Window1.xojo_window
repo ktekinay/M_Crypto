@@ -42,8 +42,8 @@ Begin Window Window1
       Left            =   500
       LockBottom      =   False
       LockedInPosition=   False
-      LockLeft        =   True
-      LockRight       =   False
+      LockLeft        =   False
+      LockRight       =   True
       LockTop         =   True
       Scope           =   0
       TabIndex        =   0
@@ -82,7 +82,7 @@ Begin Window Window1
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   True
-      LockTop         =   False
+      LockTop         =   True
       Mask            =   ""
       Multiline       =   True
       ReadOnly        =   False
@@ -197,7 +197,7 @@ Begin Window Window1
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
-      LockRight       =   False
+      LockRight       =   True
       LockTop         =   True
       Scope           =   0
       TabIndex        =   6
@@ -303,7 +303,7 @@ Begin Window Window1
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
-      LockRight       =   False
+      LockRight       =   True
       LockTop         =   True
       Mask            =   ""
       Multiline       =   True
