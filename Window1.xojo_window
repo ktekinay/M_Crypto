@@ -424,7 +424,7 @@ End
 		  dim key as string = fldKey.Text
 		  dim salt as string = "$2a$10$1234567890123456789012" // For bcrypt
 		  
-		  dim blf as new Blowfish_MTC
+		  dim blf as new Blowfish_MTC( key )
 		  dim sw as new Stopwatch_MTC
 		  
 		  if fldResult.Text.LenB <> 0 then
