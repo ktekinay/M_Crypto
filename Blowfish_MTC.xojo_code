@@ -181,6 +181,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
@@ -223,6 +224,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
@@ -307,6 +309,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub DecryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
@@ -459,6 +462,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  
 		  #pragma BackgroundTasks False
@@ -494,6 +498,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( vector <> "" and vector.LenB <> 8, kErrorVectorSize )
 		  
@@ -561,6 +566,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub EncryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  
 		  #pragma BackgroundTasks False
@@ -610,6 +616,9 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Expand0State(key As MemoryBlock)
+		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
+		  zKeyWasSet = true
+		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  #pragma NilObjectChecking False
@@ -651,6 +660,9 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
+		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
+		  zKeyWasSet = true
+		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  #pragma NilObjectChecking False
@@ -716,8 +728,8 @@ Protected Class Blowfish_MTC
 		  dim padToAdd as integer = 8 - ( originalSize mod 8 )
 		  dim lastByte as integer = data.Byte( originalSize - 1 )
 		  
-		  if padToAdd = 1 then 
-		     padToAdd = 9 // Will never add a single byte pad, so have to add 9
+		  if padToAdd = 1 then
+		    padToAdd = 9 // Will never add a single byte pad, so have to add 9
 		  end if
 		  
 		  if padToAdd = 8 then // Already a multiple, so see if we need to do anything
@@ -1148,6 +1160,10 @@ Protected Class Blowfish_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private zKeyWasSet As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private zLastBlockHadNull As Boolean
 	#tag EndProperty
 
@@ -1159,6 +1175,12 @@ Protected Class Blowfish_MTC
 	#tag EndConstant
 
 	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Public
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty.", Scope = Public
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty for default\x2C or exactly 8 bytes.", Scope = Public
