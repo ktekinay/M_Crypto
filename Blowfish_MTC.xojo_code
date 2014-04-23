@@ -16,44 +16,13 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub BLFRND(ByRef i As UInt32, j As UInt32, n As Integer)
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
-		  
-		  dim a, b, c, d As Integer
-		  
-		  static mb as new MemoryBlock( 4 )
-		  static pt as Ptr = mb
-		  static isLittleEndian as boolean = mb.LittleEndian
-		  
-		  pt.UInt32( 0 ) = j
-		  
-		  if isLittleEndian then
-		    a = pt.Byte( 3 )
-		    b = pt.Byte( 2 )
-		    c = pt.Byte( 1 )
-		    d = pt.Byte( 0 )
-		  else
-		    a = pt.Byte( 0 )
-		    b = pt.Byte( 1 )
-		    c = pt.Byte( 2 )
-		    d = pt.Byte( 3 )
-		  end if
-		  
-		  j = SPtr.UInt32( a * 4 ) + SPtr.UInt32( ( 256 + b ) * 4 )
-		  j = j Xor SPtr.UInt32( ( 512 + c ) * 4 )
-		  j = j + SPtr.UInt32( ( 768 + d ) * 4 )
-		  
-		  i = i Xor ( j Xor PPtr.UInt32( n * 4 ) )
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub Constructor(key As String = "")
+		  if zCSEncipher is nil then
+		    zCSEncipher = new CriticalSection
+		    zCSDecipher = new CriticalSection
+		  end if
+		  
 		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
 		  PPtr = P
 		  S = new MemoryBlock( 4 * 256 * 4 )
@@ -109,43 +78,79 @@ Protected Class Blowfish_MTC
 		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  zCSDecipher.Enter
+		  
+		  dim mySPtr as Ptr = SPtr
+		  dim myPPtr as Ptr = PPtr
+		  
+		  static mb as new MemoryBlock( 4 )
+		  static pt as Ptr = mb
+		  static isLittleEndian as boolean = mb.LittleEndian
 		  
 		  dim Xl as UInt32 = X0
 		  dim Xr as UInt32 = X1
 		  
-		  Xl = Xl Xor self.PPtr.UInt32( 17 * 4 )
+		  Xl = Xl Xor myPPtr.UInt32( 17 * 4 )
 		  
+		  dim a, b, c, d as integer
+		  dim j as UInt32
 		  for i as integer = 16 downto 2 step 2
-		    BLFRND( Xr, Xl, i )
-		    BLFRND( Xl, Xr, i - 1 )
+		    j = Xl
+		    pt.UInt32( 0 ) = j
+		    
+		    if isLittleEndian then
+		      a = pt.Byte( 3 )
+		      b = pt.Byte( 2 )
+		      c = pt.Byte( 1 )
+		      d = pt.Byte( 0 )
+		    else
+		      a = pt.Byte( 0 )
+		      b = pt.Byte( 1 )
+		      c = pt.Byte( 2 )
+		      d = pt.Byte( 3 )
+		    end if
+		    
+		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
+		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
+		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    
+		    Xr = Xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
+		    
+		    j = Xr
+		    pt.UInt32( 0 ) = j
+		    
+		    if isLittleEndian then
+		      a = pt.Byte( 3 )
+		      b = pt.Byte( 2 )
+		      c = pt.Byte( 1 )
+		      d = pt.Byte( 0 )
+		    else
+		      a = pt.Byte( 0 )
+		      b = pt.Byte( 1 )
+		      c = pt.Byte( 2 )
+		      d = pt.Byte( 3 )
+		    end if
+		    
+		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
+		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
+		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    
+		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i - 1 ) * 4 ) )
 		  next i
 		  
-		  'BLFRND( Xr, Xl, 16 )
-		  'BLFRND( Xl, Xr, 15 )
-		  'BLFRND( Xr, Xl, 14 )
-		  'BLFRND( Xl, Xr, 13 )
-		  'BLFRND( Xr, Xl, 12 )
-		  'BLFRND( Xl, Xr, 11 )
-		  'BLFRND( Xr, Xl, 10 )
-		  'BLFRND( Xl, Xr, 9 )
-		  'BLFRND( Xr, Xl, 8 )
-		  'BLFRND( Xl, Xr, 7 )
-		  'BLFRND( Xr, Xl, 6 )
-		  'BLFRND( Xl, Xr, 5 )
-		  'BLFRND( Xr, Xl, 4 )
-		  'BLFRND( Xl, Xr, 3 )
-		  'BLFRND( Xr, Xl, 2 )
-		  'BLFRND( Xl, Xr, 1 )
-		  
-		  Xr = Xr Xor self.PPtr.UInt32( 0 )
+		  Xr = Xr Xor myPPtr.UInt32( 0 )
 		  
 		  X0 = Xr
 		  X1 = Xl
 		  
+		  zCSDecipher.Leave
 		End Sub
 	#tag EndMethod
 
@@ -392,44 +397,80 @@ Protected Class Blowfish_MTC
 		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  zCSEncipher.Enter
+		  
+		  dim mySPtr as Ptr = SPtr
+		  dim myPPtr as Ptr = PPtr
+		  
+		  static mb as new MemoryBlock( 4 )
+		  static pt as Ptr = mb
+		  static isLittleEndian as boolean = mb.LittleEndian
 		  
 		  dim Xl as UInt32 = x0
 		  dim Xr as Uint32 = x1
 		  
-		  Xl = Xl Xor self.PPtr.UInt32( 0 )
+		  Xl = Xl Xor myPPtr.UInt32( 0 )
 		  
+		  dim a, b, c, d as integer
+		  dim j as UInt32
 		  for i as integer = 1 to 16 step 2
-		    BLFRND( Xr, Xl, i )
-		    BLFRND( Xl, Xr, i + 1 )
+		    j = Xl
+		    pt.UInt32( 0 ) = j
+		    
+		    if isLittleEndian then
+		      a = pt.Byte( 3 )
+		      b = pt.Byte( 2 )
+		      c = pt.Byte( 1 )
+		      d = pt.Byte( 0 )
+		    else
+		      a = pt.Byte( 0 )
+		      b = pt.Byte( 1 )
+		      c = pt.Byte( 2 )
+		      d = pt.Byte( 3 )
+		    end if
+		    
+		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
+		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
+		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    
+		    Xr = Xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
+		    
+		    j = Xr
+		    pt.UInt32( 0 ) = j
+		    
+		    if isLittleEndian then
+		      a = pt.Byte( 3 )
+		      b = pt.Byte( 2 )
+		      c = pt.Byte( 1 )
+		      d = pt.Byte( 0 )
+		    else
+		      a = pt.Byte( 0 )
+		      b = pt.Byte( 1 )
+		      c = pt.Byte( 2 )
+		      d = pt.Byte( 3 )
+		    end if
+		    
+		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
+		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
+		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    
+		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
 		  next i
 		  
-		  // The loop tests faster than spelling it item out as below. Go figure.
-		  
-		  'BLFRND( Xr, Xl, 1 )
-		  'BLFRND( Xl, Xr, 2 )
-		  'BLFRND( Xr, Xl, 3 )
-		  'BLFRND( Xl, Xr, 4 )
-		  'BLFRND( Xr, Xl, 5 )
-		  'BLFRND( Xl, Xr, 6 )
-		  'BLFRND( Xr, Xl, 7 )
-		  'BLFRND( Xl, Xr, 8 )
-		  'BLFRND( Xr, Xl, 9 )
-		  'BLFRND( Xl, Xr, 10 )
-		  'BLFRND( Xr, Xl, 11 )
-		  'BLFRND( Xl, Xr, 12 )
-		  'BLFRND( Xr, Xl, 13 )
-		  'BLFRND( Xl, Xr, 14 )
-		  'BLFRND( Xr, Xl, 15 )
-		  'BLFRND( Xl, Xr, 16 )
-		  
-		  Xr = Xr Xor self.PPtr.Uint32( 17 * 4 )
+		  Xr = Xr Xor myPPtr.Uint32( 17 * 4 )
 		  
 		  x0 = Xr
 		  x1 = Xl
+		  
+		  zCSEncipher.Leave
+		  
 		End Sub
 	#tag EndMethod
 
@@ -508,10 +549,12 @@ Protected Class Blowfish_MTC
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
 		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  if vector = "" then vector = zCurrentVector
@@ -575,10 +618,12 @@ Protected Class Blowfish_MTC
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
@@ -625,10 +670,12 @@ Protected Class Blowfish_MTC
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
 		  zKeyWasSet = true
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim j as UInt16
 		  dim i, k, arrIndex, arrIndexMajor as integer
@@ -644,7 +691,7 @@ Protected Class Blowfish_MTC
 		  
 		  j = 0
 		  for i = 0 to lastIndex step 2
-		    Encipher( d0, d1 )
+		    self.Encipher( d0, d1 )
 		    arrIndex = i * 4
 		    self.PPtr.Uint32( arrIndex ) = d0
 		    self.PPtr.Uint32( arrIndex + 4 ) = d1
@@ -653,7 +700,7 @@ Protected Class Blowfish_MTC
 		  for i = 0 to 3
 		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
-		      Encipher( d0, d1 )
+		      self.Encipher( d0, d1 )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
 		      self.SPtr.Uint32( arrIndex ) = d0
@@ -669,10 +716,12 @@ Protected Class Blowfish_MTC
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
 		  zKeyWasSet = true
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim j as UInt16
 		  dim i, k, arrIndexMajor, arrIndex as Integer
@@ -1162,16 +1211,24 @@ Protected Class Blowfish_MTC
 		Private P As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private PPtr As Ptr
+	#tag Property, Flags = &h0
+		PPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private S As MemoryBlock
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		SPtr As Ptr
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
-		Private SPtr As Ptr
+		Private Shared zCSDecipher As CriticalSection
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared zCSEncipher As CriticalSection
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
