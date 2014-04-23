@@ -21,6 +21,7 @@ Protected Class Blowfish_MTC
 		  if zCSEncipher is nil then
 		    zCSEncipher = new CriticalSection
 		    zCSDecipher = new CriticalSection
+		    zCSStream2Word = new CriticalSection
 		  end if
 		  
 		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
@@ -1156,26 +1157,37 @@ Protected Class Blowfish_MTC
 		  dim dataBytes as Integer = data.Size
 		  dim j as Integer = current
 		  
-		  if j <= ( dataBytes - 4 ) then
+		  if j = dataBytes then j = 0 // Special case optimization
+		  
+		  if dataBytes >= 4 and j <= ( dataBytes - 4 ) then
 		    
 		    dim savedLE as boolean = data.LittleEndian
 		    data.LittleEndian = false
+		    'r = dataPtr.UInt32( j ) // Can't use this because of endian issues
 		    r = data.UInt32Value( j )
 		    data.LittleEndian = savedLE
 		    j = j + 4
 		    
 		  else
 		    
+		    zCSStream2Word.Enter
+		    
 		    dim dataPtr as Ptr = data
 		    
+		    static newMB as new MemoryBlock( 4 )
+		    static newMBPtr as Ptr = newMB
+		    newMB.LittleEndian = false
 		    for i as Integer = 0 to 3
 		      if j >= databytes then
 		        j = 0
 		      end if
-		      r = Bitwise.ShiftLeft( r, 8, 32 ) or dataPtr.Byte( j )
+		      'r = Bitwise.ShiftLeft( r, 8, 32 ) or dataPtr.Byte( j )
+		      newMBPtr.Byte( i ) = dataPtr.Byte( j )
 		      j = j + 1
 		    next i
+		    r = newMB.UInt32Value( 0 )
 		    
+		    zCSStream2Word.Leave
 		  end if
 		  
 		  current = j
@@ -1233,6 +1245,10 @@ Protected Class Blowfish_MTC
 
 	#tag Property, Flags = &h21
 		Private Shared zCSEncipher As CriticalSection
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared zCSStream2Word As CriticalSection
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
