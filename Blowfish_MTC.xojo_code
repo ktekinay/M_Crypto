@@ -677,7 +677,7 @@ Protected Class Blowfish_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim j as UInt16
+		  dim j as Integer
 		  dim i, k, arrIndex, arrIndexMajor as integer
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
@@ -723,7 +723,7 @@ Protected Class Blowfish_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim j as UInt16
+		  dim j as Integer
 		  dim i, k, arrIndexMajor, arrIndex as Integer
 		  dim temp as UInt32
 		  dim d( 1 ) as UInt32
@@ -1143,11 +1143,11 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As UInt16) As UInt32
+		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  
-		  dim r as Uint32
+		  dim r as UInt32
 		  
 		  dim dataBytes as Integer = data.Size
 		  dim j as Integer = current
