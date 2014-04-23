@@ -1144,8 +1144,12 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim r as UInt32
 		  
