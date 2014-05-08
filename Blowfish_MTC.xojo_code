@@ -317,7 +317,7 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub DecryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
@@ -364,9 +364,9 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function DecryptEBC(data As String, isFinalBlock As Boolean = True) As String
+		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim d As MemoryBlock = data
-		  DecryptEBC( d, isFinalBlock )
+		  DecryptECB( d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -615,7 +615,7 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub EncryptEBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  
@@ -658,9 +658,9 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function EncryptEBC(data As String, isFinalBlock As Boolean = True) As String
+		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim d As MemoryBlock = data
-		  EncryptEBC( d, isFinalBlock )
+		  EncryptECB( d, isFinalBlock )
 		  return d
 		  
 		End Function

@@ -168,6 +168,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   5
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Password:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -233,6 +234,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Test:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -267,6 +269,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   9
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Data:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -348,6 +351,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   11
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Result:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -474,13 +478,13 @@ End
 		    sw.Stop
 		    AddToResult "Decrypted: " + data
 		    
-		  case 1 // EBC
+		  case 1 // ECB
 		    sw.Start
-		    data = blf.EncryptEBC( data )
+		    data = blf.EncryptECB( data )
 		    sw.Stop
 		    AddToResult "Encrypted: " + EncodeHex( data, true )
 		    sw.Start
-		    data = blf.DecryptEBC( data )
+		    data = blf.DecryptECB( data )
 		    sw.Stop
 		    AddToResult "Decrypted: " + data
 		    
@@ -576,7 +580,7 @@ End
 		  
 		  dim tests() as string = Array( _
 		  "Encrypt / Decrypt", _
-		  "EncryptEBC / DecryptEBC", _
+		  "EncryptECB / DecryptECB", _
 		  "EncryptCBC / DecryptCBC", _
 		  "EcryptCBC / DecryptCBC (chained)", _
 		  "EncryptCBC / DecryptCBC (chained, modified vector)", _
