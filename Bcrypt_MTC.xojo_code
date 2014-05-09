@@ -284,6 +284,23 @@ Protected Module Bcrypt_MTC
 		http://ftp3.usa.openbsd.org/pub/OpenBSD/src/lib/libc/crypt/bcrypt.c
 	#tag EndNote
 
+	#tag Note, Name = License
+		
+		This is an open-source project.
+		
+		This project is distributed AS-IS and no warranty of fitness for any particular purpose 
+		is expressed or implied. You may freely use or modify this project or any part of 
+		within as long as this notice or any other legal notice is left undisturbed.
+		
+		You may distribute a modified version of this project as long as all modifications 
+		are clearly documented and accredited.
+		
+		This project was created by Kem Tekinay (ktekinay@mactechnologies.com) and
+		is housed at:
+		
+		https://github.com/ktekinay/Blowfish
+	#tag EndNote
+
 
 	#tag ComputedProperty, Flags = &h21
 		#tag Getter
