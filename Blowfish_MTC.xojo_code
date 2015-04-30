@@ -49,7 +49,7 @@ Protected Class Blowfish_MTC
 		    next i1
 		  next i
 		  
-		  dim vals() as UInt32 = Array( _
+		  dim vals() as UInt32 = UInt32Array( _
 		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
 		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
 		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
@@ -849,7 +849,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Function S0() As UInt32()
-		  return Array( _
+		  return UInt32Array( _
 		  &hd1310ba6, &h98dfb5ac, &h2ffd72db, &hd01adfb7, _
 		  &hb8e1afed, &h6a267e96, &hba7c9045, &hf12c7f99, _
 		  &h24a19947, &hb3916cf7, &h0801f2e2, &h858efc16, _
@@ -920,7 +920,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Function S1() As UInt32()
-		  return Array( _
+		  return UInt32Array( _
 		  &h4b7a70e9, &hb5b32944, &hdb75092e, &hc4192623, _
 		  &had6ea6b0, &h49a7df7d, &h9cee60b8, &h8fedb266, _
 		  &hecaa8c71, &h699a17ff, &h5664526c, &hc2b19ee1, _
@@ -991,7 +991,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Function S2() As UInt32()
-		  return Array( _
+		  return UInt32Array( _
 		  &he93d5a68, &h948140f7, &hf64c261c, &h94692934, _
 		  &h411520f7, &h7602d4f7, &hbcf46b2e, &hd4a20068, _
 		  &hd4082471, &h3320f46a, &h43b7d4b7, &h500061af, _
@@ -1062,7 +1062,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Function S3() As UInt32()
-		  return Array( _
+		  return UInt32Array( _
 		  &h3a39ce37, &hd3faf5cf, &habc27737, &h5ac52d1b, _
 		  &h5cb0679e, &h4fa33742, &hd3822740, &h99bc9bbe, _
 		  &hd5118e9d, &hbf0f7315, &hd62d1c7e, &hc700c47b, _
@@ -1193,6 +1193,12 @@ Protected Class Blowfish_MTC
 		  current = j
 		  return r
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		 Shared Function UInt32Array(ParamArray values() As UInt32) As UInt32()
+		  return values
 		End Function
 	#tag EndMethod
 
