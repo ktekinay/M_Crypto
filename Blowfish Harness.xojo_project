@@ -40,3 +40,6 @@ DebuggerCommandLine=
 UseGDIPlus=False
 UseBuildsFolder=True
 IsWebProject=False
+LinuxBuildArchitecture=0
+MacBuildArchitecture=1
+WindowsBuildArchitecture=0
