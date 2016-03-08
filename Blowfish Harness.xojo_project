@@ -1,5 +1,5 @@
 Type=Desktop
-RBProjectVersion=2014.011
+RBProjectVersion=2015.03
 MinIDEVersion=20070100
 Class=App;App.xojo_code;&h14C611D3;&h0;false
 Window=Window1;Window1.xojo_window;&h57BC7FF2;&h0;false
@@ -40,3 +40,6 @@ DebuggerCommandLine=
 UseGDIPlus=False
 UseBuildsFolder=True
 IsWebProject=False
+LinuxBuildArchitecture=0
+MacBuildArchitecture=1
+WindowsBuildArchitecture=0

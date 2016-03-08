@@ -168,6 +168,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   5
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Password:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -233,6 +234,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Test:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -267,6 +269,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   9
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Data:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -348,6 +351,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   11
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Result:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -692,6 +696,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="LiveResize"
@@ -772,6 +777,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="Placement"
@@ -801,6 +807,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="Title"
