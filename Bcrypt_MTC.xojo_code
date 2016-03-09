@@ -2,7 +2,9 @@
 Protected Module Bcrypt_MTC
 	#tag Method, Flags = &h1
 		Protected Function Bcrypt(key As String, salt As String) As String
-		  if salt = "" or key = "" then return ""
+		  if salt = "" or key = "" then 
+		    return ""
+		  end if
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -56,7 +58,7 @@ Protected Module Bcrypt_MTC
 		    return ""
 		  end if
 		  
-		  if ( ( saltText.LenB *3 ) / 4 ) < BCRYPT_MAXSALT then
+		  if ( ( saltText.LenB * 3 ) / 4 ) < BCRYPT_MAXSALT then
 		    return ""
 		  end if
 		  
@@ -69,7 +71,7 @@ Protected Module Bcrypt_MTC
 		  // Set up S-Boxes and Subkeys
 		  state = new Blowfish_MTC
 		  state.ExpandState( csalt, key )
-		  dim lastRound as UInt32= rounds - 1
+		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
@@ -77,13 +79,7 @@ Protected Module Bcrypt_MTC
 		    state.Expand0State( csalt )
 		  next k
 		  
-		  'dim j as UInt16 = 0
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
-		  'dim byteIndex as integer
-		  'for i as Integer= 0 to lastBlock
-		  'cdata.UInt32Value( byteIndex ) = M_Blowfish.Stream2Word( ciphertext, j )
-		  'byteIndex = byteIndex + 4
-		  'next i
 		  cdata = precomputedCiphertext // Same every time, no need to recompute
 		  
 		  // Now to encrypt
@@ -113,13 +109,24 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		  dim salt as string = GenerateSalt( rounds, Prefix.A )
+		  return Bcrypt( key, salt )
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
 		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
 		  
-		  if rounds < 4 then
-		    rounds = 4
-		  elseif rounds > 31 then
-		    rounds = 31
+		  const kMinRounds as UInt8 = 4
+		  const kMaxRounds as UInt8 = 31
+		  
+		  if rounds < kMinRounds then
+		    rounds = kMinRounds
+		  elseif rounds > kMaxRounds then
+		    rounds = kMaxRounds
 		  end if
 		  
 		  return pEncodeSalt( csalt, rounds, preferredPrefix )
@@ -274,6 +281,16 @@ Protected Module Bcrypt_MTC
 		  salt = salt + buffer.CString( 0 )
 		  return salt
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Verify(key As String, againstHash As String) As Boolean
+		  dim data as string = againstHash.NthField( "$", 4 )
+		  dim salt as string = againstHash.Left( 7 ) + data.Left(22 )
+		  
+		  dim hash as string = Bcrypt( key, salt )
+		  return hash = againstHash
 		End Function
 	#tag EndMethod
 
