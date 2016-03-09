@@ -41,7 +41,7 @@ Protected Module Bcrypt_MTC
 		  if saltVersionString <> "" then
 		    select case saltVersionString
 		    case "a", "x", "y"
-		      minor = AscB( "a" )
+		      minor = AscB( saltVersionString.Lowercase )
 		    else
 		      return ""
 		    end select
@@ -110,14 +110,14 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h1
 		Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
-		  dim salt as string = GenerateSalt( rounds, Prefix.A )
+		  dim salt as string = GenerateSalt( rounds )
 		  return Bcrypt( key, salt )
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
+		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
 		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
 		  
 		  const kMinRounds as UInt8 = 4
