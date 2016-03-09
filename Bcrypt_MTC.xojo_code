@@ -2,7 +2,9 @@
 Protected Module Bcrypt_MTC
 	#tag Method, Flags = &h1
 		Protected Function Bcrypt(key As String, salt As String) As String
-		  if salt = "" or key = "" then return ""
+		  if salt = "" or key = "" then 
+		    return ""
+		  end if
 		  
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
@@ -56,7 +58,7 @@ Protected Module Bcrypt_MTC
 		    return ""
 		  end if
 		  
-		  if ( ( saltText.LenB *3 ) / 4 ) < BCRYPT_MAXSALT then
+		  if ( ( saltText.LenB * 3 ) / 4 ) < BCRYPT_MAXSALT then
 		    return ""
 		  end if
 		  
@@ -69,7 +71,7 @@ Protected Module Bcrypt_MTC
 		  // Set up S-Boxes and Subkeys
 		  state = new Blowfish_MTC
 		  state.ExpandState( csalt, key )
-		  dim lastRound as UInt32= rounds - 1
+		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
@@ -77,13 +79,7 @@ Protected Module Bcrypt_MTC
 		    state.Expand0State( csalt )
 		  next k
 		  
-		  'dim j as UInt16 = 0
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
-		  'dim byteIndex as integer
-		  'for i as Integer= 0 to lastBlock
-		  'cdata.UInt32Value( byteIndex ) = M_Blowfish.Stream2Word( ciphertext, j )
-		  'byteIndex = byteIndex + 4
-		  'next i
 		  cdata = precomputedCiphertext // Same every time, no need to recompute
 		  
 		  // Now to encrypt
