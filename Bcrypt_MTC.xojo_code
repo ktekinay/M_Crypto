@@ -109,6 +109,14 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		  dim salt as string = GenerateSalt( rounds, Prefix.A )
+		  return Bcrypt( key, salt )
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
 		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
 		  
