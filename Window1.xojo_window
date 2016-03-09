@@ -566,7 +566,7 @@ End
 		Sub Action()
 		  dim data as string = fldData.Text
 		  dim key as string = fldKey.Text
-		  dim salt as string = "$2a$10$1234567890123456789012" // For bcrypt
+		  dim salt as string = "$2y$10$1234567890123456789012" // For bcrypt
 		  
 		  dim blf as new Blowfish_MTC( key )
 		  dim sw as new Stopwatch_MTC
