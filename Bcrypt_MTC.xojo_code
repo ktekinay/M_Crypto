@@ -120,10 +120,13 @@ Protected Module Bcrypt_MTC
 		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
 		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
 		  
-		  if rounds < 4 then
-		    rounds = 4
-		  elseif rounds > 31 then
-		    rounds = 31
+		  const kMinRounds as UInt8 = 4
+		  const kMaxRounds as UInt8 = 31
+		  
+		  if rounds < kMinRounds then
+		    rounds = kMinRounds
+		  elseif rounds > kMaxRounds then
+		    rounds = kMaxRounds
 		  end if
 		  
 		  return pEncodeSalt( csalt, rounds, preferredPrefix )
