@@ -273,6 +273,16 @@ Protected Module Bcrypt_MTC
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function Verify(key As String, againstHash As String) As Boolean
+		  dim data as string = againstHash.NthField( "$", 4 )
+		  dim salt as string = againstHash.Left( 7 ) + data.Left(22 )
+		  
+		  dim hash as string = Bcrypt( key, salt )
+		  return hash = againstHash
+		End Function
+	#tag EndMethod
+
 
 	#tag Note, Name = BCrypt Notes
 		C code for bcrypt here:
