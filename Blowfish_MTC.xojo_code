@@ -1305,7 +1305,7 @@ Protected Class Blowfish_MTC
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to 8 nulls)\x2C or exactly 8 bytes or hexadecimal characters representing 8 bytes.", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kLibraryVersion, Type = String, Dynamic = False, Default = \"1.11", Scope = Public
+	#tag Constant, Name = kLibraryVersion, Type = String, Dynamic = False, Default = \"1.1.1", Scope = Public
 	#tag EndConstant
 
 
