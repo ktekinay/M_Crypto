@@ -404,25 +404,82 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function pPHPCommand() As String
-		  #if not TargetWin32
-		    dim sh as new Shell
-		    sh.Execute "which php"
-		    return sh.Result.Trim
-		  #endif
-		End Function
+		Private Sub BcryptStressTest()
+		  //
+		  // Stress test Bcrypt to make sure the result
+		  // matches the output from PHP
+		  //
+		  
+		  dim alphabet() as string = split( _
+		  "abcdefghijklmnopqrstuvwxyz " + _
+		  "!@#$%^&*()_+" + _
+		  "=-/.,?><[]{}" + _
+		  "¡™£¢∞§¶•ªº–≠⁄€‹›ﬁﬂ‡°·‚—±" + _
+		  """'" + _
+		  "œ∑áé®†¥üîøπ¬", _
+		  "" )
+		  
+		  dim passwords() as string
+		  
+		  const kMinLetters = 5
+		  const kMaxLetters = 15
+		  const kRounds = 50
+		  
+		  dim r as new Random
+		  
+		  for letterCount as integer = kMinLetters to kMaxLetters
+		    for round as integer = 1 to kRounds
+		      dim wordArr() as string
+		      
+		      for letterIndex as integer = 1 to letterCount
+		        dim randomCharIndex as integer = r.InRange( 0, alphabet.Ubound )
+		        dim char as string = alphabet( randomCharIndex )
+		        wordArr.Append char
+		      next letterIndex
+		      
+		      
+		      dim word as string = join( wordArr, "" )
+		      passwords.Append word
+		    next round
+		  next letterCount
+		  
+		  const kMinCost = 7
+		  const kMaxCost = 12
+		  
+		  for cost as integer = kMinCost to kMaxCost
+		    AddToResult "Cost: " + str( cost )
+		    
+		    dim salt as string = Bcrypt_MTC.GenerateSalt( cost )
+		    
+		    for each pw as string in passwords
+		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
+		      if not PHPVerify( pw, myHash ) then
+		        AddToResult "PHP no match: " + pw
+		      elseif not Bcrypt_MTC.Verify( pw, myHash ) then
+		        AddToResult "Internal no match: " + pw
+		      end if
+		      if UserCancelled then
+		        AddToResult "Cancelled"
+		        exit for cost
+		      end if
+		    next
+		    fldResult.Refresh
+		  next
+		  
+		  AddToResult "Bcrypt Stress Test Finished"
+		  
+		  return
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub pTestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
-		  AddToResult "Salt: " + salt
+		Private Function PHPBcrypt(key As String, salt As String) As String
+		  dim sw as new Stopwatch_MTC
 		  sw.Start
-		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
-		  sw.Stop
-		  AddToResult "Hash: " + hash
 		  
-		  // See if we can compare PHP
-		  dim php as string = pPHPCommand
+		  dim phpHash as string
+		  
+		  dim php as string = PHPCommand
 		  if php <> "" then
 		    key = key.ReplaceAll( "'", "'\\\''" )
 		    
@@ -433,15 +490,71 @@ End
 		    
 		    dim sh as new Shell
 		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    dim phpHash as string = sh.Result.Trim
-		    AddToResult "PHP: " + phpHash
+		    phpHash = sh.Result.Trim
 		    
-		    if StrComp( hash, phpHash, 0 ) = 0 then
-		      AddToResult "(they match)"
-		    else
-		      AddToResult "(NO MATCH!!)"
-		    end if
 		  end if
+		  
+		  sw.Stop
+		  return phpHash
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function PHPCommand() As String
+		  #if not TargetWin32
+		    dim sh as new Shell
+		    sh.Execute "which php"
+		    return sh.Result.Trim
+		  #endif
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function PHPVerify(key As String, againstHash As String) As Boolean
+		  dim r as boolean
+		  
+		  dim sw as new Stopwatch_MTC
+		  sw.Start
+		  
+		  dim php as string = PHPCommand
+		  if php <> "" then
+		    key = key.ReplaceAll( "'", "'\\\''" )
+		    againstHash = againstHash.ReplaceAll( "'", "'\\\''" )
+		    
+		    dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
+		    cmd = cmd.ReplaceAll( "'", "'\''" )
+		    cmd = cmd.ReplaceAll( "%key%", key )
+		    cmd = cmd.ReplaceAll( "%hash%", againstHash )
+		    
+		    dim sh as new Shell
+		    sh.Execute(  php, "-r '" + cmd + "'" )
+		    r = sh.Result.Trim = "true"
+		    
+		  end if
+		  
+		  sw.Stop
+		  return r
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub TestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
+		  AddToResult "Salt: " + salt
+		  sw.Start
+		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  sw.Stop
+		  AddToResult "Hash: " + hash
+		  
+		  // See if we can compare PHP
+		  dim phpHash as string = PHPBcrypt( key, salt )
+		  AddToResult "PHP: " + phpHash
+		  
+		  if StrComp( hash, phpHash, 0 ) = 0 then
+		    AddToResult "(they match)"
+		  else
+		    AddToResult "(NO MATCH!!)"
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -550,13 +663,29 @@ End
 		    AddToResult "Decrypted: " + data
 		    
 		  case 6 // Bcrypt
-		    pTestBcrypt( key, salt, sw )
+		    TestBcrypt( key, salt, sw )
 		    
 		  case 7 // Generate Salt
 		    sw.Start
 		    AddToResult Bcrypt_MTC.GenerateSalt( 6 )
 		    AddToResult Bcrypt_MTC.GenerateSalt( 10, Bcrypt_MTC.Prefix.Y )
 		    sw.Stop
+		    
+		  case 8 // Verify
+		    dim hash as string = "$2a$10$123456789012345678901uRYpa/ge9OYdnnseqfe9ZYWxLa1GUiyi"
+		    dim pw as string = "password"
+		    sw.Start
+		    dim verified as boolean = Bcrypt_MTC.Verify( pw, hash )
+		    sw.Stop
+		    
+		    if verified then
+		      AddToResult "Verified"
+		    else
+		      AddToResult "VERIFICATION FAILED!"
+		    end if
+		    
+		  case 10 // Bcrypt stress test
+		    BcryptStressTest
 		    
 		  else
 		    AddToResult "Unrecognized Index: " + str( mnuTests.ListIndex )
@@ -572,7 +701,7 @@ End
 #tag Events mnuTests
 	#tag Event
 		Sub Open()
-		  // Constuct tests here
+		  // Construct tests here
 		  
 		  dim tests() as string = Array( _
 		  "Encrypt / Decrypt", _
@@ -582,7 +711,10 @@ End
 		  "EncryptCBC / DecryptCBC (chained, modified vector)", _
 		  "-", _
 		  "Bcrypt", _
-		  "Generate Salt" _
+		  "Generate Salt", _
+		  "Verify", _
+		  "-", _
+		  "Bcrypt Stress Test" _
 		  )
 		  
 		  me.AddRows tests
@@ -692,6 +824,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="LiveResize"
@@ -772,6 +905,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="Placement"
@@ -801,6 +935,7 @@ End
 		Visible=true
 		Group="ID"
 		Type="String"
+		EditorType="String"
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="Title"
