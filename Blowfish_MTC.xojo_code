@@ -1143,8 +1143,8 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
+	#tag Method, Flags = &h21
+		Private Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -1196,8 +1196,8 @@ Protected Class Blowfish_MTC
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		 Shared Function UInt32Array(ParamArray values() As UInt32) As UInt32()
+	#tag Method, Flags = &h21
+		Private Shared Function UInt32Array(ParamArray values() As UInt32) As UInt32()
 		  return values
 		End Function
 	#tag EndMethod
@@ -1250,16 +1250,16 @@ Protected Class Blowfish_MTC
 		Private P As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		PPtr As Ptr
+	#tag Property, Flags = &h21
+		Private PPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private S As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		SPtr As Ptr
+	#tag Property, Flags = &h21
+		Private SPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
