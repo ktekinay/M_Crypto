@@ -384,6 +384,19 @@ Protected Class Blowfish_MTC
 		  // See PadIfNeeded for a description of how padding works.
 		  select case PaddingMethod
 		  case Padding.PKCS5
+		    static paddingStrings() as string
+		    if paddingStrings.Ubound = -1 then
+		      redim paddingStrings( 8 )
+		      for index as integer = 1 to 8
+		        dim pad as string = ChrB( index )
+		        while pad.LenB < index
+		          pad = pad + pad
+		        wend
+		        pad = pad.LeftB( index )
+		        paddingStrings( index ) = pad
+		      next
+		    end if
+		    
 		    if data is nil then
 		      return
 		    end if
@@ -394,7 +407,12 @@ Protected Class Blowfish_MTC
 		    end if
 		    
 		    dim stripCount as byte = data.Byte( originalSize - 1 )
-		    data.Size = originalSize - stripCount
+		    if stripCount > 0 and stripCount <= 8 and stripCount < originalSize then
+		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
+		      if testPad = paddingStrings( stripCount ) then
+		        data.Size = originalSize - stripCount
+		      end if
+		    end if
 		    
 		  case Padding.NullPadding
 		    // Counterpart to padding. Will remove nulls followed by the number of nulls
