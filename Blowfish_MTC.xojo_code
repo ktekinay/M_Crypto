@@ -17,11 +17,13 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(key As String = "")
-		  if zCSEncipher is nil then
-		    zCSEncipher = new CriticalSection
-		    zCSDecipher = new CriticalSection
-		    zCSStream2Word = new CriticalSection
+		Sub Constructor(key As String = "", paddingMethod as Padding = Padding.NullPadding)
+		  self.PaddingMethod = paddingMethod
+		  
+		  if zFlagEncipher is nil then
+		    zFlagEncipher = new Semaphore
+		    zFlagDecipher = new Semaphore
+		    zFlagStream2Word = new Semaphore
 		  end if
 		  
 		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
@@ -79,14 +81,16 @@ Protected Class Blowfish_MTC
 		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
 		  
+		  while not zFlagDecipher.TrySignal
+		    App.YieldToNextThread
+		  wend
+		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  zCSDecipher.Enter
 		  
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
@@ -151,7 +155,7 @@ Protected Class Blowfish_MTC
 		  X0 = Xr
 		  X1 = Xl
 		  
-		  zCSDecipher.Leave
+		  zFlagDecipher.Release
 		End Sub
 	#tag EndMethod
 
@@ -191,10 +195,12 @@ Protected Class Blowfish_MTC
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -218,9 +224,6 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  
 		  dim d as MemoryBlock = data
 		  Decrypt( d, isFinalBlock )
 		  return d
@@ -238,10 +241,12 @@ Protected Class Blowfish_MTC
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
 		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  dim vectorPtr as Ptr = vectorMB
@@ -322,10 +327,12 @@ Protected Class Blowfish_MTC
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -374,23 +381,56 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub DepadIfNeeded(data As MemoryBlock)
-		  // Counterpart to padding. Will remove nulls followed by the number of nulls
-		  // from the end of the MemoryBlock. See PadIfNeeded for a description of how
-		  // the padding works.
-		  
-		  if data is nil or data.Size = 0 then return
-		  
-		  dim paddedSize as integer = data.Size
-		  if ( paddedSize mod 8 ) <> 0 and paddedSize <> 9 then return // If it's not a multiple of 8, it's not properly padded anyway (9 bytes is a special case and has to be checked)
-		  dim lastByte as integer = data.Byte( paddedSize - 1 )
-		  if lastByte > paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
-		  
-		  dim compareMB as new MemoryBlock( lastByte )
-		  compareMB.Byte( lastByte - 1 ) = lastByte
-		  if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
-		    data.Size = paddedSize - lastByte
-		  end if
-		  
+		  // See PadIfNeeded for a description of how padding works.
+		  select case PaddingMethod
+		  case Padding.PKCS5
+		    static paddingStrings() as string
+		    if paddingStrings.Ubound = -1 then
+		      redim paddingStrings( 8 )
+		      for index as integer = 1 to 8
+		        dim pad as string = ChrB( index )
+		        while pad.LenB < index
+		          pad = pad + pad
+		        wend
+		        pad = pad.LeftB( index )
+		        paddingStrings( index ) = pad
+		      next
+		    end if
+		    
+		    if data is nil then
+		      return
+		    end if
+		    
+		    dim originalSize as integer = data.Size
+		    if originalSize = 0 then
+		      return
+		    end if
+		    
+		    dim stripCount as byte = data.Byte( originalSize - 1 )
+		    if stripCount > 0 and stripCount <= 8 and stripCount < originalSize then
+		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
+		      if testPad = paddingStrings( stripCount ) then
+		        data.Size = originalSize - stripCount
+		      end if
+		    end if
+		    
+		  case Padding.NullPadding
+		    // Counterpart to padding. Will remove nulls followed by the number of nulls
+		    // from the end of the MemoryBlock.
+		    
+		    if data is nil or data.Size = 0 then return
+		    
+		    dim paddedSize as integer = data.Size
+		    if ( paddedSize mod 8 ) <> 0 and paddedSize <> 9 then return // If it's not a multiple of 8, it's not properly padded anyway (9 bytes is a special case and has to be checked)
+		    dim lastByte as integer = data.Byte( paddedSize - 1 )
+		    if lastByte > paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
+		    
+		    dim compareMB as new MemoryBlock( lastByte )
+		    compareMB.Byte( lastByte - 1 ) = lastByte
+		    if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
+		      data.Size = paddedSize - lastByte
+		    end if
+		  end select
 		End Sub
 	#tag EndMethod
 
@@ -398,14 +438,16 @@ Protected Class Blowfish_MTC
 		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
 		  
+		  while not zFlagEncipher.TrySignal
+		    App.YieldToNextThread
+		  wend
+		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  zCSEncipher.Enter
 		  
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
@@ -470,7 +512,7 @@ Protected Class Blowfish_MTC
 		  x0 = Xr
 		  x1 = Xl
 		  
-		  zCSEncipher.Leave
+		  zFlagEncipher.Release
 		  
 		End Sub
 	#tag EndMethod
@@ -508,12 +550,16 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+		  if data.Size = 0 then 
+		    return
+		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
@@ -544,7 +590,9 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+		  if data.Size = 0 then 
+		    return
+		  end if
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
@@ -617,7 +665,9 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+		  if data.Size = 0 then 
+		    return
+		  end if
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -683,18 +733,18 @@ Protected Class Blowfish_MTC
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
 		  
-		  static lastIndex as integer = BLF_N + 1
-		  for i = 0 to lastIndex
+		  const kLastIndex as integer = BLF_N + 1
+		  for i = 0 to kLastIndex
 		    temp = Stream2Word( key, j )
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
-		  for i = 0 to lastIndex step 2
+		  for i = 0 to kLastIndex step 2
 		    self.Encipher( d0, d1 )
 		    arrIndex = i * 4
-		    self.PPtr.Uint32( arrIndex ) = d0
+		    self.PPtr.UInt32( arrIndex ) = d0
 		    self.PPtr.Uint32( arrIndex + 4 ) = d1
 		  next i
 		  
@@ -704,7 +754,7 @@ Protected Class Blowfish_MTC
 		      self.Encipher( d0, d1 )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.Uint32( arrIndex ) = d0
+		      self.SPtr.UInt32( arrIndex ) = d0
 		      self.SPtr.UInt32( arrIndex + 4 ) = d1
 		    next k
 		  next i
@@ -729,15 +779,15 @@ Protected Class Blowfish_MTC
 		  dim temp as UInt32
 		  dim d( 1 ) as UInt32
 		  
-		  dim lastIndex as Integer = BLF_N + 1
-		  for i = 0 to lastIndex
+		  const kLastIndex as Integer = BLF_N + 1
+		  for i = 0 to kLastIndex
 		    temp = Stream2Word( key, j )
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
-		  for i = 0 to lastIndex step 2
+		  for i = 0 to kLastIndex step 2
 		    d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
 		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
 		    
@@ -767,8 +817,14 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Function InterpretVector(vector As String) As String
-		  if vector = "" then return vector
-		  if vector.LenB = 8 then return vector
+		  if vector = "" then 
+		    return vector
+		  end if
+		  
+		  if vector.LenB = 8 then
+		    return vector
+		  end if
+		  
 		  dim newVector as string = DecodeHex( vector )
 		  if newVector.LenB = 8 then
 		    return newVector
@@ -781,53 +837,81 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub PadIfNeeded(data As MemoryBlock)
-		  // Pads the data to an exact multiple of 8 bytes.
-		  // It does this by adding nulls followed by the number of padding bytes.
-		  // Example: If data is &h31 32 33, it will turn it into
-		  // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
-		  // add 9 to avoid confusion.
-		  //
-		  // If data is already a multiple of 8, it will only add a padding if the trailing bytes
-		  // match the pattern of X nulls followed by &hX. The exception is if the
-		  // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
-		  // To be on the safe side, it will add padding then too.
-		  
-		  if data is nil or data.Size = 0 then return
-		  
-		  dim originalSize as integer = data.Size
-		  dim padToAdd as integer = 8 - ( originalSize mod 8 )
-		  dim lastByte as integer = data.Byte( originalSize - 1 )
-		  
-		  if padToAdd = 1 then
-		    padToAdd = 9 // Will never add a single byte pad, so have to add 9
-		  end if
-		  
-		  if padToAdd = 8 then // Already a multiple, so see if we need to do anything
-		    padToAdd = 0 // Assume we have nothing to add
+		  select case PaddingMethod
+		  case Padding.PKCS5
+		    // https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7
 		    
-		    if lastByte = 9 then // Special case
-		      // See if the rest of the bytes are all zeros
-		      dim compareMB as new MemoryBlock( 8 )
-		      compareMB.Byte( 7 ) = 9
-		      if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
-		        padToAdd = 8 // This means that the last 8 bytes are all nulls followed by a 9, so add an 8-byte padding
-		      end if
-		      
-		    elseif lastByte >= 2 and lastByte < 9 then // It's in the valid trigger range
-		      dim compareMB as new MemoryBlock( lastByte )
-		      compareMB.Byte( lastByte - 1 ) = lastByte
-		      if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		        padToAdd = 8 // Add a real pad
-		      end if
+		    if data is nil then
+		      return
 		    end if
-		  end if
-		  
-		  if padToAdd <> 0 then
+		    
+		    dim originalSize as integer = data.Size
+		    if originalSize = 0 then
+		      return
+		    end if
+		    
+		    dim padToAdd as byte = 8 - ( originalSize mod 8 )
+		    if padToAdd = 0 then
+		      padToAdd = 8
+		    end if
+		    
 		    dim newSize as integer = originalSize + padToAdd
 		    data.Size = newSize
-		    data.Byte( newSize - 1 ) = padToAdd
-		  end if
-		  
+		    dim firstIndex as integer = originalSize
+		    dim lastIndex as integer = newSize - 1
+		    dim p as Ptr = data
+		    for i as integer = firstIndex to lastIndex
+		      p.Byte( i ) = padToAdd
+		    next
+		    
+		  case Padding.NullPadding
+		    // Pads the data to an exact multiple of 8 bytes.
+		    // It does this by adding nulls followed by the number of padding bytes.
+		    // Example: If data is &h31 32 33, it will turn it into
+		    // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
+		    // add 9 to avoid confusion.
+		    //
+		    // If data is already a multiple of 8, it will only add a padding if the trailing bytes
+		    // match the pattern of X nulls followed by &hX. The exception is if the
+		    // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
+		    // To be on the safe side, it will add padding then too.
+		    
+		    if data is nil or data.Size = 0 then return
+		    
+		    dim originalSize as integer = data.Size
+		    dim padToAdd as integer = 8 - ( originalSize mod 8 )
+		    dim lastByte as integer = data.Byte( originalSize - 1 )
+		    
+		    if padToAdd = 1 then
+		      padToAdd = 9 // Will never add a single byte pad, so have to add 9
+		    end if
+		    
+		    if padToAdd = 8 then // Already a multiple, so see if we need to do anything
+		      padToAdd = 0 // Assume we have nothing to add
+		      
+		      if lastByte = 9 then // Special case
+		        // See if the rest of the bytes are all zeros
+		        dim compareMB as new MemoryBlock( 8 )
+		        compareMB.Byte( 7 ) = 9
+		        if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
+		          padToAdd = 8 // This means that the last 8 bytes are all nulls followed by a 9, so add an 8-byte padding
+		        end if
+		        
+		      elseif lastByte >= 2 and lastByte < 9 then // It's in the valid trigger range
+		        dim compareMB as new MemoryBlock( lastByte )
+		        compareMB.Byte( lastByte - 1 ) = lastByte
+		        if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
+		          padToAdd = 8 // Add a real pad
+		        end if
+		      end if
+		    end if
+		    
+		    if padToAdd <> 0 then
+		      dim newSize as integer = originalSize + padToAdd
+		      data.Size = newSize
+		      data.Byte( newSize - 1 ) = padToAdd
+		    end if
+		  end select
 		End Sub
 	#tag EndMethod
 
@@ -1157,7 +1241,9 @@ Protected Class Blowfish_MTC
 		  dim dataBytes as Integer = data.Size
 		  dim j as Integer = current
 		  
-		  if j = dataBytes then j = 0 // Special case optimization
+		  if j = dataBytes then 
+		    j = 0 // Special case optimization
+		  end if
 		  
 		  if dataBytes >= 4 and j <= ( dataBytes - 4 ) then
 		    
@@ -1170,7 +1256,17 @@ Protected Class Blowfish_MTC
 		    
 		  else
 		    
-		    zCSStream2Word.Enter
+		    #if not DebugBuild
+		      #pragma BackgroundTasks true
+		    #endif
+		    
+		    while not zFlagStream2Word.TrySignal
+		      App.YieldToNextThread
+		    wend
+		    
+		    #if not DebugBuild
+		      #pragma BackgroundTasks false
+		    #endif
 		    
 		    dim dataPtr as Ptr = data
 		    
@@ -1187,7 +1283,7 @@ Protected Class Blowfish_MTC
 		    next i
 		    r = newMB.UInt32Value( 0 )
 		    
-		    zCSStream2Word.Leave
+		    zFlagStream2Word.Release
 		  end if
 		  
 		  current = j
@@ -1250,6 +1346,10 @@ Protected Class Blowfish_MTC
 		Private P As MemoryBlock
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		PaddingMethod As Padding
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private PPtr As Ptr
 	#tag EndProperty
@@ -1263,19 +1363,19 @@ Protected Class Blowfish_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared zCSDecipher As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zCSEncipher As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zCSStream2Word As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private zCurrentVector As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared zFlagDecipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared zFlagEncipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared zFlagStream2Word As Semaphore
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1309,6 +1409,12 @@ Protected Class Blowfish_MTC
 	#tag EndConstant
 
 
+	#tag Enum, Name = Padding, Type = Integer, Flags = &h0
+		NullPadding
+		PKCS5
+	#tag EndEnum
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
@@ -1329,6 +1435,16 @@ Protected Class Blowfish_MTC
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="PaddingMethod"
+			Group="Behavior"
+			Type="Padding"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - NullPadding"
+				"1 - PKCS5"
+			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

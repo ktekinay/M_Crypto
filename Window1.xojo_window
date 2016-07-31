@@ -168,7 +168,6 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   5
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Password:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -234,7 +233,6 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Test:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -269,7 +267,6 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   9
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Data:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -351,7 +348,6 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   11
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Result:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -399,6 +395,26 @@ End
 #tag EndWindow
 
 #tag WindowCode
+	#tag Event
+		Sub Close()
+		  if zTempFolder isa FolderItem then
+		    dim files() as FolderItem
+		    dim cnt as integer = zTempFolder.Count
+		    for i as integer = 1 to cnt
+		      files.Append zTempFolder.Item( i )
+		    next
+		    
+		    for i as integer = files.Ubound downto 0
+		      files( i ).Delete
+		    next
+		    
+		    zTempFolder.Delete
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub AddToResult(msg As String)
 		  fldResult.AppendText msg
@@ -477,6 +493,119 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub BlowfishStressTest()
+		  //
+		  // Stress test Blowfish to make sure the result
+		  // matches the output from JavaScript
+		  //
+		  
+		  dim dataAlphabet() as string = split( _
+		  "abcdefghijklmnopqrstuvwxyz " + _
+		  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + _
+		  "!@#$%^&*()_+" + _
+		  "=-/.,?><[]{}" + _
+		  "¡™£¢∞§¶•ªº", _
+		  "" )
+		  dim keyAlphabet() as string = split( _
+		  "abcdefghijklmnopqrstuvwxyz " + _
+		  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + _
+		  "!@#$%^&*()_+" + _
+		  "=-/.,?><[]{}", _
+		  "" )
+		  
+		  const kMinDataLetters = 1
+		  const kMaxDataLetters = 100
+		  const kMinKeyLetters = 1
+		  const kMaxKeyLetters = 10
+		  
+		  dim r as new Random
+		  dim sh as new Shell
+		  sh.Execute "bash -lc 'which node'"
+		  dim node as string = sh.Result.Trim
+		  node = node.NthField( EndOfLine.UNIX, node.CountFields( EndOfLine.UNIX ) )
+		  
+		  sh = new Shell
+		  
+		  for keyCount as integer = kMinKeyLetters to kMaxKeyLetters
+		    //
+		    // Create a random key
+		    //
+		    dim keyArr() as string
+		    dim keyLen as integer
+		    while keyLen < keyCount
+		      dim letter as string = keyAlphabet( r.InRange( 0, keyAlphabet.Ubound ) )
+		      keyArr.Append letter
+		      keyLen = keyLen + 1
+		    wend
+		    dim key as string = join( keyArr, "" )
+		    dim jsKey as string = key.ReplaceAll( "'", "\'" )
+		    
+		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS5 )
+		    
+		    for dataCount as integer = kMinDataLetters to kMaxDataLetters
+		      
+		      dim dataArr() as string
+		      dim dataLen as integer
+		      while dataLen < dataCount
+		        dim letter as string = dataAlphabet( r.InRange( 0, dataAlphabet.Ubound ) )
+		        dataArr.Append letter
+		        dataLen = dataLen + 1
+		      wend
+		      dim data as string = join( dataArr, "" )
+		      dim jsData as string = data.ReplaceAll( "'", "\'" )
+		      
+		      //
+		      // Create the Encrypt file
+		      //
+		      dim tos as TextOutputStream
+		      dim jsEncrypt as FolderItem = TempFolder.Child( "encrypt.js" )
+		      jsEncrypt.Delete
+		      tos = TextOutputStream.Create( jsEncrypt )
+		      tos.Write kJavaScriptEncryptECB.ReplaceAll( "%key%", jsKey ).ReplaceAll( "%data%", jsData )
+		      tos.Close
+		      
+		      sh.Execute node + " " + jsEncrypt.ShellPath
+		      dim nativeEncrypted as string = EncodeHex( bf.EncryptECB( data ) )
+		      dim jsEncrypted as string = sh.Result.Trim
+		      
+		      if nativeEncrypted <> jsEncrypted then
+		        AddToResult "Encryption doesn't match for key «" + key + "» and data «" + data + "»"
+		      end if
+		      
+		      //
+		      // Create the Decrypt file
+		      //
+		      dim jsDecrypt as FolderItem = TempFolder.Child( "decrypt.js" )
+		      jsDecrypt.Delete
+		      tos = TextOutputStream.Create( jsDecrypt )
+		      tos.Write kJavaScriptDecryptECB.ReplaceAll( "%key%", jsKey ).ReplaceAll( "%data%", nativeEncrypted )
+		      tos.Close
+		      
+		      sh.Execute node + " " + jsDecrypt.ShellPath
+		      dim nativeDecrypted as string = bf.DecryptECB( DecodeHex( jsEncrypted ) )
+		      dim jsDecrypted as string = sh.Result.ReplaceAll( EndOfLine, "" )
+		      
+		      if StrComp( nativeDecrypted, data, 0 ) <> 0 then
+		        AddToResult "Native decryption doesn't match for key «" + key + "» and data «" + data + "», " + _
+		        "returned «" + nativeDecrypted.DefineEncoding( Encodings.UTF8 ) + "»"
+		        'continue for dataCount
+		      end if
+		      
+		      if StrComp( jsDecrypted, data, 0 ) <> 0 then
+		        AddToResult "JS decryption doesn't match for key «" + key + "» and data «" + data + "», " + _
+		        "returned «" + jsDecrypted.DefineEncoding( Encodings.UTF8 ) + "»"
+		        'continue for dataCount
+		      end if
+		      
+		    next dataCount
+		  next keyCount
+		  
+		  AddToResult "Blowfish Stress Test Finished"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function PHPBcrypt(key As String, salt As String) As String
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
@@ -542,6 +671,18 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function TempFolder() As FolderItem
+		  if zTempFolder is nil then
+		    zTempFolder = SpecialFolder.Temporary.Child( "Blowfish_Harness_Temp" )
+		    zTempFolder.CreateAsFolder
+		  end if
+		  
+		  return zTempFolder
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub TestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
 		  AddToResult "Salt: " + salt
 		  sw.Start
@@ -561,6 +702,18 @@ End
 		  
 		End Sub
 	#tag EndMethod
+
+
+	#tag Property, Flags = &h21
+		Private zTempFolder As FolderItem
+	#tag EndProperty
+
+
+	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kJavaScriptEncryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar cipher \x3D crypto.createCipher(\'bf-ecb\'\x2C key);\n\nvar enc \x3D cipher.update(data\x2C \'utf8\'\x2C \'hex\');\nenc +\x3D cipher.final(\'hex\');\n\nconsole.log(enc);\n", Scope = Private
+	#tag EndConstant
 
 
 #tag EndWindowCode
@@ -691,6 +844,9 @@ End
 		  case 10 // Bcrypt stress test
 		    BcryptStressTest
 		    
+		  case 11 // Blowfish stress test
+		    BlowfishStressTest
+		    
 		  else
 		    AddToResult "Unrecognized Index: " + str( mnuTests.ListIndex )
 		    
@@ -718,7 +874,8 @@ End
 		  "Generate Salt", _
 		  "Verify", _
 		  "-", _
-		  "Bcrypt Stress Test" _
+		  "Bcrypt Stress Test", _
+		  "Blowfish Stress Test" _
 		  )
 		  
 		  me.AddRows tests
@@ -781,7 +938,6 @@ End
 			"7 - Global Floating Window"
 			"8 - Sheet Window"
 			"9 - Metal Window"
-			"10 - Drawer Window"
 			"11 - Modeless Dialog"
 		#tag EndEnumValues
 	#tag EndViewProperty
