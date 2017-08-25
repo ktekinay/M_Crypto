@@ -4,13 +4,13 @@ Protected Class Blowfish_MTC
 		Private Sub AddBackNullIfNeeded(data As MemoryBlock)
 		  // See if the previous block had a null that could have been part of the padding and
 		  // add it back to this decrypted block
-		  if zLastBlockHadNull then
+		  if LastBlockHadNull then
 		    dim oldSize as integer = data.Size
 		    dim newSize as integer = oldSize + 1
 		    data.Size = newSize
 		    data.StringValue( 1, oldSize ) = data.StringValue( 0, oldSize ) // Shift the data over by one byte
 		    data.Byte( 0 ) = 0
-		    zLastBlockHadNull = false
+		    LastBlockHadNull = false
 		  end if
 		  
 		End Sub
@@ -20,10 +20,10 @@ Protected Class Blowfish_MTC
 		Sub Constructor(key As String = "", paddingMethod as Padding = Padding.NullPadding)
 		  self.PaddingMethod = paddingMethod
 		  
-		  if zFlagEncipher is nil then
-		    zFlagEncipher = new Semaphore
-		    zFlagDecipher = new Semaphore
-		    zFlagStream2Word = new Semaphore
+		  if FlagEncipher is nil then
+		    FlagEncipher = new Semaphore
+		    FlagDecipher = new Semaphore
+		    FlagStream2Word = new Semaphore
 		  end if
 		  
 		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
@@ -71,17 +71,11 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function CurrentVector() As String
-		  return zCurrentVector
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
 		  
-		  while not zFlagDecipher.TrySignal
+		  while not FlagDecipher.TrySignal
 		    App.YieldToNextThread
 		  wend
 		  
@@ -155,7 +149,7 @@ Protected Class Blowfish_MTC
 		  X0 = Xr
 		  X1 = Xl
 		  
-		  zFlagDecipher.Release
+		  FlagDecipher.Release
 		End Sub
 	#tag EndMethod
 
@@ -191,7 +185,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
@@ -217,7 +211,7 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
+		    LastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
@@ -233,12 +227,18 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		  else
+		    vector = zCurrentVector
+		  end if
+		  
+		  if vector = "" then
+		    vector = InitialVector
 		  end if
 		  
 		  #if not DebugBuild
@@ -257,7 +257,7 @@ Protected Class Blowfish_MTC
 		  dim dataIndex as integer
 		  
 		  if vector = "" then
-		    vector = zCurrentVector
+		    vector = CurrentVector
 		  end if
 		  
 		  if isFinalBlock then
@@ -307,7 +307,7 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
+		    LastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
@@ -323,7 +323,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
@@ -364,7 +364,7 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
+		    LastBlockHadNull = true
 		  end if
 		  
 		End Sub
@@ -407,7 +407,7 @@ Protected Class Blowfish_MTC
 		    end if
 		    
 		    dim stripCount as byte = data.Byte( originalSize - 1 )
-		    if stripCount > 0 and stripCount <= 8 and stripCount < originalSize then
+		    if stripCount > 0 and stripCount <= 8 and stripCount <= originalSize then
 		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
 		      if testPad = paddingStrings( stripCount ) then
 		        data.Size = originalSize - stripCount
@@ -438,7 +438,7 @@ Protected Class Blowfish_MTC
 		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
 		  
-		  while not zFlagEncipher.TrySignal
+		  while not FlagEncipher.TrySignal
 		    App.YieldToNextThread
 		  wend
 		  
@@ -512,7 +512,7 @@ Protected Class Blowfish_MTC
 		  x0 = Xr
 		  x1 = Xl
 		  
-		  zFlagEncipher.Release
+		  FlagEncipher.Release
 		  
 		End Sub
 	#tag EndMethod
@@ -549,7 +549,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
 		  end if
@@ -589,13 +589,20 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
 		  end if
+		  
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		  else
+		    vector = zCurrentVector
+		  end if
+		  
+		  if vector = "" then
+		    vector = InitialVector
 		  end if
 		  
 		  #if not DebugBuild
@@ -606,7 +613,7 @@ Protected Class Blowfish_MTC
 		  #endif
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
-		  if vector = "" then vector = zCurrentVector
+		  if vector = "" then vector = CurrentVector
 		  if vector <> "" then
 		    vectorMB.StringValue( 0, 8 ) = vector
 		  end if
@@ -664,7 +671,7 @@ Protected Class Blowfish_MTC
 
 	#tag Method, Flags = &h0
 		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
 		  end if
@@ -719,7 +726,7 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub Expand0State(key As MemoryBlock)
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
-		  zKeyWasSet = true
+		  WasKeySet = true
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -765,7 +772,7 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
-		  zKeyWasSet = true
+		  WasKeySet = true
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -890,7 +897,7 @@ Protected Class Blowfish_MTC
 		      padToAdd = 0 // Assume we have nothing to add
 		      
 		      if lastByte = 9 then // Special case
-		        // See if the rest of the bytes are all zeros
+		        // See if the rest of the bytes are all eros
 		        dim compareMB as new MemoryBlock( 8 )
 		        compareMB.Byte( 7 ) = 9
 		        if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
@@ -928,6 +935,7 @@ Protected Class Blowfish_MTC
 	#tag Method, Flags = &h0
 		Sub ResetVector()
 		  zCurrentVector = ""
+		  InitialVector = ""
 		End Sub
 	#tag EndMethod
 
@@ -1222,7 +1230,7 @@ Protected Class Blowfish_MTC
 		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
 		  end if
 		  
-		  zCurrentVector = vector
+		  InitialVector = vector
 		  
 		End Sub
 	#tag EndMethod
@@ -1260,7 +1268,7 @@ Protected Class Blowfish_MTC
 		      #pragma BackgroundTasks true
 		    #endif
 		    
-		    while not zFlagStream2Word.TrySignal
+		    while not FlagStream2Word.TrySignal
 		      App.YieldToNextThread
 		    wend
 		    
@@ -1283,7 +1291,7 @@ Protected Class Blowfish_MTC
 		    next i
 		    r = newMB.UInt32Value( 0 )
 		    
-		    zFlagStream2Word.Release
+		    FlagStream2Word.Release
 		  end if
 		  
 		  current = j
@@ -1342,6 +1350,35 @@ Protected Class Blowfish_MTC
 		Private BLF_MAXKEYLEN As Integer
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return zCurrentVector
+			End Get
+		#tag EndGetter
+		CurrentVector As String
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private Shared FlagDecipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared FlagEncipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared FlagStream2Word As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private InitialVector As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private LastBlockHadNull As Boolean
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private P As MemoryBlock
 	#tag EndProperty
@@ -1363,27 +1400,11 @@ Protected Class Blowfish_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private WasKeySet As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private zCurrentVector As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zFlagDecipher As Semaphore
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zFlagEncipher As Semaphore
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zFlagStream2Word As Semaphore
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zKeyWasSet As Boolean
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zLastBlockHadNull As Boolean
 	#tag EndProperty
 
 

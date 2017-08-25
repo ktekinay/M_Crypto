@@ -721,6 +721,8 @@ End
 #tag Events btnTest
 	#tag Event
 		Sub Action()
+		  const kVector as string = "0123456789ABCDEF"
+		  
 		  dim data as string = fldData.Text
 		  dim key as string = fldKey.Text
 		  dim salt as string = "$2y$10$1234567890123456789012" // For bcrypt
@@ -756,6 +758,7 @@ End
 		    
 		  case 2 // CBC
 		    sw.Start
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
 		    data = blf.EncryptCBC( data )
 		    sw.Stop
 		    AddToResult "Encrypted: " + EncodeHex( data, true )
@@ -769,6 +772,7 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -780,6 +784,7 @@ End
 		    
 		    byteIndex = 1
 		    data = ""
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -795,9 +800,10 @@ End
 		    dim encrypted as string
 		    dim block as string
 		    
-		    dim vector as string = "0123456789ABCDEF" // Don't need to do this, but if you do, be sure to store the vector for decryption
+		    dim vector as string = kVector // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    // You can supply either an 8-byte string or hex representing 8 bytes
 		    blf.SetVector( vector )
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -809,7 +815,6 @@ End
 		    
 		    byteIndex = 1
 		    data = ""
-		    blf.SetVector( vector )
 		    while byteIndex <= encrypted.LenB
 		      block = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
