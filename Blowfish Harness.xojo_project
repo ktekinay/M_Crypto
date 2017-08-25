@@ -1,5 +1,5 @@
 Type=Desktop
-RBProjectVersion=2015.041
+RBProjectVersion=2017.02
 MinIDEVersion=20070100
 Class=App;App.xojo_code;&h14C611D3;&h0;false
 Window=Window1;Window1.xojo_window;&h57BC7FF2;&h0;false
@@ -39,4 +39,7 @@ OSXBundleID=com.mactechnologies.blowfish
 DebuggerCommandLine=
 UseGDIPlus=False
 UseBuildsFolder=True
+CopyRedistNextToWindowsEXE=False
 IsWebProject=False
+MacBuildArchitecture=1
+OptimizationLevel=4
