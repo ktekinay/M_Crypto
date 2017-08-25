@@ -20,12 +20,12 @@ Begin Window Window1
    MenuBarVisible  =   True
    MinHeight       =   400
    MinimizeButton  =   True
-   MinWidth        =   600
+   MinWidth        =   694
    Placement       =   0
    Resizeable      =   True
    Title           =   "Blowfish MTC"
    Visible         =   True
-   Width           =   600
+   Width           =   694
    Begin PushButton btnTest
       AutoDeactivate  =   True
       Bold            =   False
@@ -39,7 +39,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   False
-      Left            =   500
+      Left            =   594
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   False
@@ -52,7 +52,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   15
+      Top             =   16
       Underline       =   False
       Visible         =   True
       Width           =   80
@@ -102,7 +102,7 @@ Begin Window Window1
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   560
+      Width           =   654
    End
    Begin TextField fldKey
       AcceptTabs      =   False
@@ -140,11 +140,11 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   13
+      Top             =   14
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   137
+      Width           =   127
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -174,7 +174,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   15
+      Top             =   16
       Transparent     =   False
       Underline       =   False
       Visible         =   True
@@ -192,7 +192,7 @@ Begin Window Window1
       InitialParent   =   ""
       InitialValue    =   ""
       Italic          =   False
-      Left            =   299
+      Left            =   364
       ListIndex       =   0
       LockBottom      =   False
       LockedInPosition=   False
@@ -209,7 +209,7 @@ Begin Window Window1
       Top             =   15
       Underline       =   False
       Visible         =   True
-      Width           =   163
+      Width           =   218
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -222,7 +222,7 @@ Begin Window Window1
       Index           =   1
       InitialParent   =   ""
       Italic          =   False
-      Left            =   247
+      Left            =   312
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
@@ -239,7 +239,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   16
+      Top             =   15
       Transparent     =   False
       Underline       =   False
       Visible         =   True
@@ -324,7 +324,7 @@ Begin Window Window1
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   482
+      Width           =   576
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -373,7 +373,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   False
-      Left            =   500
+      Left            =   594
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   False
@@ -390,6 +390,38 @@ Begin Window Window1
       Underline       =   False
       Visible         =   True
       Width           =   80
+   End
+   Begin CheckBox cbMD5
+      AutoDeactivate  =   True
+      Bold            =   False
+      Caption         =   "MD5"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   237
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Scope           =   2
+      State           =   0
+      TabIndex        =   13
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   16
+      Underline       =   False
+      Value           =   False
+      Visible         =   True
+      Width           =   63
    End
 End
 #tag EndWindow
@@ -725,6 +757,9 @@ End
 		  
 		  dim data as string = fldData.Text
 		  dim key as string = fldKey.Text
+		  if cbMD5.Value then
+		    key = Crypto.MD5( key )
+		  end if
 		  dim salt as string = "$2y$10$1234567890123456789012" // For bcrypt
 		  
 		  dim blf as new Blowfish_MTC( key )
