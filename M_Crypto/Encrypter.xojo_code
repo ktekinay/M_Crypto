@@ -363,6 +363,7 @@ Protected Class Encrypter
 			Name="CurrentVector"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -388,6 +389,11 @@ Protected Class Encrypter
 			Name="PaddingMethod"
 			Group="Behavior"
 			Type="Padding"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - NullPadding"
+				"1 - PKCS5"
+			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

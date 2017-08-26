@@ -1,6 +1,6 @@
 #tag Class
 Class Blowfish_MTC
-Inherits Encrypter
+Inherits M_Crypto.Encrypter
 Implements BcryptInterface
 	#tag Method, Flags = &h0
 		Sub Constructor(key As String = "", paddingMethod as Padding = Padding.NullPadding)
@@ -1141,7 +1141,7 @@ Implements BcryptInterface
 	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kLibraryVersion, Type = String, Dynamic = False, Default = \"1.1.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.1.1", Scope = Public
 	#tag EndConstant
 
 
