@@ -1438,6 +1438,11 @@ Protected Class Blowfish_MTC
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="CurrentVector"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
