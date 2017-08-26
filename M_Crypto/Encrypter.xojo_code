@@ -16,6 +16,14 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub Constructor()
+		  //
+		  // Subclasses should implement their own Constructors
+		  //
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  #pragma unused data
