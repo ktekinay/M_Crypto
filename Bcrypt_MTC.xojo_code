@@ -13,7 +13,7 @@ Protected Module Bcrypt_MTC
 		  
 		  dim r as string
 		  
-		  dim state as Blowfish_MTC
+		  dim state as M_Crypto.BcryptInterface
 		  dim rounds as Integer
 		  dim logr, minor as UInt8
 		  dim ciphertext as MemoryBlock = "OrpheanBeholderScryDoubt"
