@@ -25,53 +25,25 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
 		  dim d as MemoryBlock = data
-		  Decrypt( d, isfinalBlock )
+		  RaiseEvent Decrypt( EncryptionTypes.Plain, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  #pragma unused vector
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function DecryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
+		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
 		  dim d as MemoryBlock = data
-		  DecryptCBC( d, isfinalBlock, vector )
+		  RaiseEvent Decrypt( EncryptionTypes.CBC, d, isfinalBlock )
 		  return d
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim d as MemoryBlock = data
-		  DecryptECB( d, isfinalBlock )
+		  RaiseEvent Decrypt( EncryptionTypes.ECB, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
@@ -83,8 +55,8 @@ Protected Class Encrypter
 		  case Padding.PKCS5
 		    static paddingStrings() as string
 		    if paddingStrings.Ubound = -1 then
-		      redim paddingStrings( 8 )
-		      for index as integer = 1 to 8
+		      redim paddingStrings( BlockSize )
+		      for index as integer = 1 to BlockSize
 		        dim pad as string = ChrB( index )
 		        while pad.LenB < index
 		          pad = pad + pad
@@ -104,7 +76,7 @@ Protected Class Encrypter
 		    end if
 		    
 		    dim stripCount as byte = data.Byte( originalSize - 1 )
-		    if stripCount > 0 and stripCount <= 8 and stripCount <= originalSize then
+		    if stripCount > 0 and stripCount <= BlockSize and stripCount <= originalSize then
 		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
 		      if testPad = paddingStrings( stripCount ) then
 		        data.Size = originalSize - stripCount
@@ -118,9 +90,9 @@ Protected Class Encrypter
 		    if data is nil or data.Size = 0 then return
 		    
 		    dim paddedSize as integer = data.Size
-		    if ( paddedSize mod 8 ) <> 0 and paddedSize <> 9 then return // If it's not a multiple of 8, it's not properly padded anyway (9 bytes is a special case and has to be checked)
+		    if ( paddedSize mod BlockSize ) <> 0 and paddedSize <> ( BlockSize + 1 ) then return // If it's not a multiple of BlockSize, it's not properly padded anyway (9 bytes is a special case and has to be checked)
 		    dim lastByte as integer = data.Byte( paddedSize - 1 )
-		    if lastByte > paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
+		    if lastByte > paddedSize or lastByte < 2 or lastByte > ( BlockSize + 1 ) then return // Can't be a valid pad
 		    
 		    dim compareMB as new MemoryBlock( lastByte )
 		    compareMB.Byte( lastByte - 1 ) = lastByte
@@ -132,53 +104,25 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
 		  dim d as MemoryBlock = data
-		  Encrypt( d, isfinalBlock )
+		  RaiseEvent Encrypt( EncryptionTypes.Plain, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  #pragma unused vector
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function EncryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
+		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
 		  dim d as MemoryBlock = data
-		  EncryptCBC( d, isfinalBlock, vector )
+		  RaiseEvent Encrypt( EncryptionTypes.CBC, d, isfinalBlock )
 		  return d
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  #pragma unused data
-		  #pragma unused isFinalBlock
-		  
-		  RaiseNotOverriddenException CurrentMethodName
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim d As MemoryBlock = data
-		  EncryptECB( d, isFinalBlock )
+		  RaiseEvent Encrypt( EncryptionTypes.ECB, d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -219,9 +163,9 @@ Protected Class Encrypter
 		      return
 		    end if
 		    
-		    dim padToAdd as byte = 8 - ( originalSize mod 8 )
+		    dim padToAdd as byte = BlockSize - ( originalSize mod BlockSize )
 		    if padToAdd = 0 then
-		      padToAdd = 8
+		      padToAdd = BlockSize
 		    end if
 		    
 		    dim newSize as integer = originalSize + padToAdd
@@ -234,13 +178,13 @@ Protected Class Encrypter
 		    next
 		    
 		  case Padding.NullPadding
-		    // Pads the data to an exact multiple of 8 bytes.
+		    // Pads the data to an exact multiple of BlockSize bytes.
 		    // It does this by adding nulls followed by the number of padding bytes.
 		    // Example: If data is &h31 32 33, it will turn it into
 		    // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
 		    // add 9 to avoid confusion.
 		    //
-		    // If data is already a multiple of 8, it will only add a padding if the trailing bytes
+		    // If data is already a multiple of BlockSize, it will only add a padding if the trailing bytes
 		    // match the pattern of X nulls followed by &hX. The exception is if the
 		    // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
 		    // To be on the safe side, it will add padding then too.
@@ -248,29 +192,29 @@ Protected Class Encrypter
 		    if data is nil or data.Size = 0 then return
 		    
 		    dim originalSize as integer = data.Size
-		    dim padToAdd as integer = 8 - ( originalSize mod 8 )
+		    dim padToAdd as integer = BlockSize - ( originalSize mod BlockSize )
 		    dim lastByte as integer = data.Byte( originalSize - 1 )
 		    
 		    if padToAdd = 1 then
-		      padToAdd = 9 // Will never add a single byte pad, so have to add 9
+		      padToAdd = BlockSize + 1 // Will never add a single byte pad
 		    end if
 		    
-		    if padToAdd = 8 then // Already a multiple, so see if we need to do anything
+		    if padToAdd = BlockSize then // Already a multiple, so see if we need to do anything
 		      padToAdd = 0 // Assume we have nothing to add
 		      
-		      if lastByte = 9 then // Special case
+		      if lastByte = ( BlockSize + 1 ) then // Special case
 		        // See if the rest of the bytes are all eros
-		        dim compareMB as new MemoryBlock( 8 )
-		        compareMB.Byte( 7 ) = 9
-		        if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
-		          padToAdd = 8 // This means that the last 8 bytes are all nulls followed by a 9, so add an 8-byte padding
+		        dim compareMB as new MemoryBlock( BlockSize )
+		        compareMB.Byte( BlockSize - 1 ) = BlockSize + 1
+		        if StrComp( data.StringValue( originalSize - BlockSize, BlockSize ), compareMB, 0 ) = 0 then
+		          padToAdd = BlockSize // This means that the last are all nulls followed by BlockSize + 1, so add padding
 		        end if
 		        
-		      elseif lastByte >= 2 and lastByte < 9 then // It's in the valid trigger range
+		      elseif lastByte >= 2 and lastByte < ( BlockSize + 1 ) then // It's in the valid trigger range
 		        dim compareMB as new MemoryBlock( lastByte )
 		        compareMB.Byte( lastByte - 1 ) = lastByte
 		        if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		          padToAdd = 8 // Add a real pad
+		          padToAdd = BlockSize // Add a real pad
 		        end if
 		      end if
 		    end if
@@ -294,15 +238,6 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub RaiseNotOverriddenException(method As String)
-		  dim err as new M_Crypto.NotOverriddenException
-		  err.Message = "The method " + method + " must be overridden"
-		  raise err
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub ResetVector()
 		  zCurrentVector = ""
@@ -322,6 +257,19 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+
+	#tag Hook, Flags = &h0
+		Event Decrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Encrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+	#tag EndHook
+
+
+	#tag Property, Flags = &h1
+		Protected BlockSize As Integer
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -359,6 +307,12 @@ Protected Class Encrypter
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to 8 nulls)\x2C or exactly 8 bytes or hexadecimal characters representing 8 bytes.", Scope = Public
 	#tag EndConstant
 
+
+	#tag Enum, Name = EncryptionTypes, Type = Integer, Flags = &h1
+		Plain
+		  ECB
+		CBC
+	#tag EndEnum
 
 	#tag Enum, Name = Padding, Type = Integer, Flags = &h0
 		NullPadding

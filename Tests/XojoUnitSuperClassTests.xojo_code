@@ -1,7 +1,17 @@
-#tag Module
-Protected Module M_Crypto
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0", Scope = Protected
-	#tag EndConstant
+#tag Class
+Protected Class XojoUnitSuperClassTests
+Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub OverriddenMethodTest()
+		  Assert.Fail "This superclass method should have been ignored"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SuperClassMethodTest()
+		  Assert.Pass "This superclass method executed as intended"
+		End Sub
+	#tag EndMethod
 
 
 	#tag ViewBehavior
@@ -39,5 +49,5 @@ Protected Module M_Crypto
 			Type="Integer"
 		#tag EndViewProperty
 	#tag EndViewBehavior
-End Module
-#tag EndModule
+End Class
+#tag EndClass

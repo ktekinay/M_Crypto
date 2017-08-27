@@ -1,7 +1,18 @@
-#tag Module
-Protected Module M_Crypto
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0", Scope = Protected
-	#tag EndConstant
+#tag Class
+Protected Class DesktopTestController
+Inherits TestController
+	#tag Event
+		Sub InitializeTestGroups()
+		  // Instantiate TestGroup subclasses here so that they can be run
+		  
+		  Dim group As TestGroup
+		  
+		  'group = New XojoUnitTests(Self, "Assertion")
+		  'group = New XojoUnitFailTests(Self, "Always Fail")
+		  
+		  group = new AESTests( self, "AES" )
+		End Sub
+	#tag EndEvent
 
 
 	#tag ViewBehavior
@@ -39,5 +50,5 @@ Protected Module M_Crypto
 			Type="Integer"
 		#tag EndViewProperty
 	#tag EndViewBehavior
-End Module
-#tag EndModule
+End Class
+#tag EndClass

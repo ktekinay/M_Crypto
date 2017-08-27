@@ -2,8 +2,48 @@
 Class Blowfish_MTC
 Inherits M_Crypto.Encrypter
 Implements BcryptInterface
+	#tag Event
+		Sub Decrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		  select case type
+		  case EncryptionTypes.Plain
+		    Decrypt( data, isFinalBlock )
+		    
+		  case EncryptionTypes.ECB
+		    DecryptECB( data, isFinalBlock )
+		    
+		  case EncryptionTypes.CBC
+		    DecryptCBC( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnsupportedEncryptionTypeException
+		    
+		  end select
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Encrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		  select case type
+		  case EncryptionTypes.Plain
+		    Encrypt( data, isFinalBlock )
+		    
+		  case EncryptionTypes.ECB
+		    EncryptECB( data, isFinalBlock )
+		    
+		  case EncryptionTypes.CBC
+		    EncryptCBC( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnsupportedEncryptionTypeException
+		    
+		  end select
+		End Sub
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub Constructor(key As String = "", paddingMethod as Padding = Padding.NullPadding)
+		  BlockSize = 8
 		  self.PaddingMethod = paddingMethod
 		  
 		  if FlagEncipher is nil then
@@ -169,8 +209,8 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+	#tag Method, Flags = &h21
+		Private Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
@@ -202,17 +242,13 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+	#tag Method, Flags = &h21
+		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
-		  else
-		    vector = zCurrentVector
-		  end if
+		  
+		  dim vector as string = zCurrentVector
 		  
 		  if vector = "" then
 		    vector = InitialVector
@@ -289,8 +325,8 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+	#tag Method, Flags = &h21
+		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
@@ -451,8 +487,8 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+	#tag Method, Flags = &h21
+		Private Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
@@ -483,19 +519,14 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
+	#tag Method, Flags = &h21
+		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
 		  end if
 		  
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
-		  else
-		    vector = zCurrentVector
-		  end if
+		  dim vector as string = zCurrentVector
 		  
 		  if vector = "" then
 		    vector = InitialVector
@@ -557,8 +588,8 @@ Implements BcryptInterface
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+	#tag Method, Flags = &h21
+		Private Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then 
 		    return
@@ -1132,7 +1163,7 @@ Implements BcryptInterface
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption.", Scope = Public
+	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Public
