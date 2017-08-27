@@ -3,7 +3,17 @@ Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
 		Sub Decrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
-		  
+		  select case type
+		  case EncryptionTypes.Plain, EncryptionTypes.ECB
+		    DecryptECB data, isFinalBlock
+		    
+		  case EncryptionTypes.CBC
+		    DecryptCBC data, isFinalBlock
+		    
+		  case else
+		    raise new M_Crypto.UnsupportedEncryptionTypeException
+		    
+		  end select
 		End Sub
 	#tag EndEvent
 
@@ -108,8 +118,34 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  if data.Size = 0 then
+		    return
+		  end if
+		  
+		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
+		  
+		  dim dataPtr as ptr = data
+		  
+		  dim lastByte as integer = data.Size - 1
+		  for blockIndex as integer = 0 to lastByte step kBlockLen
+		    dim startAt as integer = blockIndex \ 4
+		    InvCipher( dataPtr, startAt )
+		  next
+		  
+		  if isFinalBlock then
+		    DepadIfNeeded( data )
+		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
+		    data.Size = data.Size - 1
+		    LastBlockHadNull = true
+		  end if
 		  
 		End Sub
 	#tag EndMethod
@@ -145,8 +181,6 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub InvCipher(dataPtr As Ptr, startAt As Integer)
-		  dim round as integer = 0
-		  
 		  //
 		  // Add the First round key to the state before starting the rounds.
 		  //
@@ -158,8 +192,8 @@ Inherits M_Crypto.Encrypter
 		  // These Nr-1 rounds are executed in the loop below.
 		  //
 		  dim lastRound as integer = Nr - 1
-		  for round = lastRound downto 1
-		    
+		  for round as integer = lastRound downto 1
+		    System.DebugLog "Entered loop"
 		    InvShiftRows( dataPtr, startAt )
 		    InvSubBytes( dataPtr, startAt )
 		    AddRoundKey( round, dataPtr, startAt )
@@ -186,10 +220,10 @@ Inherits M_Crypto.Encrypter
 		    dim c as byte = dataPtr.Byte( i * 4 + 2 )
 		    dim d as byte = dataPtr.Byte( i * 4 + 3 )
 		    
-		    dataPtr.Byte( i * 4 + 0 ) = Multiply(a, &h0e) ^ Multiply(b, &h0b) ^ Multiply(c, &h0d) ^ Multiply(d, &h09)
-		    dataPtr.Byte( i * 4 + 1 ) = Multiply(a, &h09) ^ Multiply(b, &h0e) ^ Multiply(c, &h0b) ^ Multiply(d, &h0d)
-		    dataPtr.Byte( i * 4 + 2 ) = Multiply(a, &h0d) ^ Multiply(b, &h09) ^ Multiply(c, &h0e) ^ Multiply(d, &h0b)
-		    dataPtr.Byte( i * 4 + 3 ) = Multiply(a, &h0b) ^ Multiply(b, &h0d) ^ Multiply(c, &h09) ^ Multiply(d, &h0e)
+		    dataPtr.Byte( i * 4 + 0 ) = Multiply(a, &h0e) xor Multiply(b, &h0b) xor Multiply(c, &h0d) xor Multiply(d, &h09)
+		    dataPtr.Byte( i * 4 + 1 ) = Multiply(a, &h09) xor Multiply(b, &h0e) xor Multiply(c, &h0b) xor Multiply(d, &h0d)
+		    dataPtr.Byte( i * 4 + 2 ) = Multiply(a, &h0d) xor Multiply(b, &h09) xor Multiply(c, &h0e) xor Multiply(d, &h0b)
+		    dataPtr.Byte( i * 4 + 3 ) = Multiply(a, &h0b) xor Multiply(b, &h0d) xor Multiply(c, &h09) xor Multiply(d, &h0e)
 		  next
 		  
 		End Sub
@@ -221,9 +255,9 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
 		  dim index0 as integer = startAt * 4
-		  dim index1 as integer = startAt + 4
-		  dim index2 as integer = startAt + 8
-		  dim index3 as integer = startAt + 12
+		  dim index1 as integer = index0 + 4
+		  dim index2 as integer = index0 + 8
+		  dim index3 as integer = index0 + 12
 		  
 		  dim temp as byte 
 		  
@@ -417,9 +451,9 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Sub ShiftRows(dataPtr As Ptr, startAt As Integer)
 		  dim index0 as integer = startAt * 4
-		  dim index1 as integer = startAt + 4
-		  dim index2 as integer = startAt + 8
-		  dim index3 as integer = startAt + 12
+		  dim index1 as integer = index0 + 4
+		  dim index2 as integer = index0 + 8
+		  dim index3 as integer = index0 + 12
 		  
 		  dim temp as byte 
 		  
@@ -487,15 +521,15 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private KeyLen As Byte
+		Private KeyLen As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Nk As UInt32
+		Private Nk As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Nr As Byte
+		Private Nr As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

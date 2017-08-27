@@ -4,12 +4,26 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub EncryptECBTest()
 		  dim key as string = DecodeHex( "2b7e151628aed2a6abf7158809cf4f3c" )
-		  dim data as string = DecodeHex( "6bc1bee22e409f96e93d7e117393172a" )
-		  dim expected as string = DecodeHex( "3ad77bb40d7a3660a89ecaf32466ef97" )
+		  dim data as string = "6bc1bee22e409f96e93d7e117393172a"
+		  dim expected as string = "3ad77bb40d7a3660a89ecaf32466ef97"
 		  
 		  dim e as new AES_MTC( key )
-		  dim actual as string = e.EncryptECB( data )
-		  Assert.AreSame expected, actual 
+		  e.PaddingMethod = AES_MTC.Padding.NullPadding
+		  dim encrypted as string = e.EncryptECB( DecodeHex( data ) )
+		  Assert.AreEqual expected, EncodeHex( encrypted ) , "Encrypted doesn't match"
+		  
+		  dim decrypted as string = EncodeHex( e.DecryptECB( encrypted ) )
+		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
+		  
+		  
+		  key = "password"
+		  data = "This is a very long string that should be hard to encrypt"
+		  expected = "56ae03aa6ce6bf0cb7be7fbea8d2253cf42bea48361ce4c006c8e79aa1eae329191b801a0811a80ad319252fb5428f3c22e9ff89befb2188be9338a913330b3c"
+		  
+		  e = new AES_MTC( key )
+		  e.PaddingMethod = AES_MTC.Padding.NullPadding
+		  encrypted = e.EncryptECB( data )
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		End Sub
 	#tag EndMethod
 
