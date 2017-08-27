@@ -51,6 +51,13 @@ Protected Class Encrypter
 	#tag Method, Flags = &h1
 		Protected Sub DepadIfNeeded(data As MemoryBlock)
 		  // See PadIfNeeded for a description of how padding works.
+		  
+		  if data is nil or data.Size = 0 then
+		    return
+		  end if
+		  
+		  dim originalSize as integer = data.Size
+		  
 		  select case PaddingMethod
 		  case Padding.PKCS5
 		    static paddingStrings() as string
@@ -66,15 +73,6 @@ Protected Class Encrypter
 		      next
 		    end if
 		    
-		    if data is nil then
-		      return
-		    end if
-		    
-		    dim originalSize as integer = data.Size
-		    if originalSize = 0 then
-		      return
-		    end if
-		    
 		    dim stripCount as byte = data.Byte( originalSize - 1 )
 		    if stripCount > 0 and stripCount <= BlockSize and stripCount <= originalSize then
 		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
@@ -83,11 +81,9 @@ Protected Class Encrypter
 		      end if
 		    end if
 		    
-		  case Padding.NullPadding
+		  case Padding.NullsWithCount
 		    // Counterpart to padding. Will remove nulls followed by the number of nulls
 		    // from the end of the MemoryBlock.
-		    
-		    if data is nil or data.Size = 0 then return
 		    
 		    dim paddedSize as integer = data.Size
 		    if ( paddedSize mod BlockSize ) <> 0 and paddedSize <> ( BlockSize + 1 ) then return // If it's not a multiple of BlockSize, it's not properly padded anyway (9 bytes is a special case and has to be checked)
@@ -99,6 +95,20 @@ Protected Class Encrypter
 		    if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
 		      data.Size = paddedSize - lastByte
 		    end if
+		    
+		  case Padding.NullsOnly
+		    dim lastIndex as integer = originalSize - 1
+		    dim firstIndex as integer = originalSize - BlockSize
+		    for index as integer = lastIndex downto firstIndex
+		      if data.Byte( index ) <> 0 then
+		        dim newSize as integer = index + 1
+		        if originalSize > newSize then
+		          data.Size = newSize
+		        end if
+		        exit
+		      end if
+		    next
+		    
 		  end select
 		End Sub
 	#tag EndMethod
@@ -150,20 +160,20 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h1
 		Protected Sub PadIfNeeded(data As MemoryBlock)
+		  if data is nil or data.Size = 0 then
+		    return
+		  end if
+		  
+		  dim originalSize as integer = data.Size
+		  dim padToAdd as byte = BlockSize - ( originalSize mod BlockSize )
+		  if padToAdd = BlockSize then
+		    padToAdd = 0
+		  end if
+		  
 		  select case PaddingMethod
 		  case Padding.PKCS5
 		    // https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7
 		    
-		    if data is nil then
-		      return
-		    end if
-		    
-		    dim originalSize as integer = data.Size
-		    if originalSize = 0 then
-		      return
-		    end if
-		    
-		    dim padToAdd as byte = BlockSize - ( originalSize mod BlockSize )
 		    if padToAdd = 0 then
 		      padToAdd = BlockSize
 		    end if
@@ -177,7 +187,7 @@ Protected Class Encrypter
 		      p.Byte( i ) = padToAdd
 		    next
 		    
-		  case Padding.NullPadding
+		  case Padding.NullsWithCount
 		    // Pads the data to an exact multiple of BlockSize bytes.
 		    // It does this by adding nulls followed by the number of padding bytes.
 		    // Example: If data is &h31 32 33, it will turn it into
@@ -189,10 +199,6 @@ Protected Class Encrypter
 		    // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
 		    // To be on the safe side, it will add padding then too.
 		    
-		    if data is nil or data.Size = 0 then return
-		    
-		    dim originalSize as integer = data.Size
-		    dim padToAdd as integer = BlockSize - ( originalSize mod BlockSize )
 		    dim lastByte as integer = data.Byte( originalSize - 1 )
 		    
 		    if padToAdd = 1 then
@@ -203,7 +209,7 @@ Protected Class Encrypter
 		      padToAdd = 0 // Assume we have nothing to add
 		      
 		      if lastByte = ( BlockSize + 1 ) then // Special case
-		        // See if the rest of the bytes are all eros
+		        // See if the rest of the bytes are all zeros
 		        dim compareMB as new MemoryBlock( BlockSize )
 		        compareMB.Byte( BlockSize - 1 ) = BlockSize + 1
 		        if StrComp( data.StringValue( originalSize - BlockSize, BlockSize ), compareMB, 0 ) = 0 then
@@ -224,6 +230,19 @@ Protected Class Encrypter
 		      data.Size = newSize
 		      data.Byte( newSize - 1 ) = padToAdd
 		    end if
+		    
+		  case Padding.NullsOnly
+		    //
+		    // Adds nulls to the end
+		    // but if the last byte is already a null, add BlockSize nulls
+		    //
+		    if data.Byte( data.Size - 1 ) = 0 then
+		      padToAdd = padToAdd + BlockSize
+		    end if
+		    if padToAdd <> 0 then
+		      data.Size = originalSize + padToAdd
+		    end if
+		    
 		  end select
 		End Sub
 	#tag EndMethod
@@ -315,7 +334,8 @@ Protected Class Encrypter
 	#tag EndEnum
 
 	#tag Enum, Name = Padding, Type = Integer, Flags = &h0
-		NullPadding
+		NullsOnly
+		  NullsWithCount
 		PKCS5
 	#tag EndEnum
 

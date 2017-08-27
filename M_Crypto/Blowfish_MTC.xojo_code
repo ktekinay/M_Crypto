@@ -42,7 +42,7 @@ Implements BcryptInterface
 
 
 	#tag Method, Flags = &h0
-		Sub Constructor(key As String = "", paddingMethod as Padding = Padding.NullPadding)
+		Sub Constructor(key as String="", paddingMethod as Padding=Padding.NullsWithCount)
 		  BlockSize = 8
 		  self.PaddingMethod = paddingMethod
 		  
