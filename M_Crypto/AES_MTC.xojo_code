@@ -567,11 +567,9 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub XorWithVector(dataPtr As Ptr, startAt As Integer, vectorPtr As Ptr)
-		  const kLastIndex as integer = kBlockLen - 1
-		  for i as integer = 0 to kLastIndex
-		    dim dataIndex as integer = i + startAt
-		    dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor vectorPtr.Byte( i )
-		  next
+		  dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
+		  dim dataIndex as integer = startAt + 8
+		  dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
 		  
 		End Sub
 	#tag EndMethod
