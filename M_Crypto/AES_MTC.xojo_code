@@ -120,16 +120,42 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
+		  
+		  dim dataPtr as ptr = data
+		  
+		  dim vector as string = zCurrentVector
+		  if vector = "" then
+		    vector = InitialVector
+		  end if
+		  
+		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
+		  dim vectorPtr as ptr = vectorMB
+		  
+		  dim lastByte as integer = data.Size - 1
+		  for startAt as integer = 0 to lastByte step kBlockLen
+		    dim newVector as string = data.StringValue( startAt, kBlockLen )
+		    InvCipher dataPtr, startAt
+		    XorWithVector dataPtr, startAt, vectorPtr
+		    vectorMB.StringValue( 0, kBlockLen ) = newVector
+		  next
+		  
+		  if isFinalBlock then
+		    DepadIfNeeded( data )
+		    zCurrentVector = ""
+		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
+		    data.Size = data.Size - 1
+		    LastBlockHadNull = true
+		    zCurrentVector = vectorMB
+		  else
+		    zCurrentVector = vectorMB
+		  end if
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  if data.Size = 0 then
-		    return
-		  end if
-		  
 		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
 		  
 		  dim dataPtr as ptr = data
@@ -151,16 +177,40 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  if isFinalBlock then
+		    PadIfNeeded( data )
+		  else
+		    RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		  end if
+		  
+		  dim dataPtr as ptr = data 
+		  
+		  dim vector as string = zCurrentVector
+		  if vector = "" then
+		    vector = InitialVector
+		  end if
+		  
+		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
+		  dim vectorPtr as ptr = vectorMB
+		  
+		  dim lastByte as integer = data.Size - 1
+		  for startAt as integer = 0 to lastByte step kBlockLen
+		    XorWithVector dataPtr, startAt, vectorPtr
+		    Cipher dataPtr, startAt
+		    vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
+		  next
+		  
+		  if isFinalBlock then
+		    zCurrentVector = ""
+		  else
+		    zCurrentVector = vectorMB
+		  end if
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  if data.Size = 0 then
-		    return
-		  end if
-		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
 		  else
@@ -175,6 +225,18 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetVectorMB(vector As String) As MemoryBlock
+		  dim mb as new MemoryBlock( kBlockLen )
+		  if vector <> "" then
+		    vector = vector.LeftB( kBlockLen )
+		    mb.StringValue( 0, vector.LenB ) = vector
+		  end if
+		  
+		  return mb
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -500,6 +562,17 @@ Inherits M_Crypto.Encrypter
 		      dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
 		    next
 		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub XorWithVector(dataPtr As Ptr, startAt As Integer, vectorPtr As Ptr)
+		  const kLastIndex as integer = kBlockLen - 1
+		  for i as integer = 0 to kLastIndex
+		    dim dataIndex as integer = i + startAt
+		    dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor vectorPtr.Byte( i )
+		  next
+		  
 		End Sub
 	#tag EndMethod
 

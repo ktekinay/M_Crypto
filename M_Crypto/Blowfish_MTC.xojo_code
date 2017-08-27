@@ -522,9 +522,6 @@ Implements BcryptInterface
 	#tag Method, Flags = &h21
 		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then 
-		    return
-		  end if
 		  
 		  dim vector as string = zCurrentVector
 		  

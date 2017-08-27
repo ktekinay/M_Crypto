@@ -26,6 +26,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d as MemoryBlock = data
 		  RaiseEvent Decrypt( EncryptionTypes.Plain, d, isfinalBlock )
 		  return d
@@ -34,6 +38,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d as MemoryBlock = data
 		  RaiseEvent Decrypt( EncryptionTypes.CBC, d, isfinalBlock )
 		  return d
@@ -42,6 +50,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d as MemoryBlock = data
 		  RaiseEvent Decrypt( EncryptionTypes.ECB, d, isfinalBlock )
 		  return d
@@ -61,9 +73,10 @@ Protected Class Encrypter
 		  select case PaddingMethod
 		  case Padding.PKCS5
 		    static paddingStrings() as string
-		    if paddingStrings.Ubound = -1 then
+		    if paddingStrings.Ubound < BlockSize then
+		      dim firstIndex as integer = paddingStrings.Ubound + 1
 		      redim paddingStrings( BlockSize )
-		      for index as integer = 1 to BlockSize
+		      for index as integer = firstIndex to BlockSize
 		        dim pad as string = ChrB( index )
 		        while pad.LenB < index
 		          pad = pad + pad
@@ -115,6 +128,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d as MemoryBlock = data
 		  RaiseEvent Encrypt( EncryptionTypes.Plain, d, isfinalBlock )
 		  return d
@@ -123,6 +140,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d as MemoryBlock = data
 		  RaiseEvent Encrypt( EncryptionTypes.CBC, d, isfinalBlock )
 		  return d
@@ -131,6 +152,10 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  if data = "" then
+		    return data
+		  end if
+		  
 		  dim d As MemoryBlock = data
 		  RaiseEvent Encrypt( EncryptionTypes.ECB, d, isFinalBlock )
 		  return d
@@ -144,12 +169,12 @@ Protected Class Encrypter
 		    return vector
 		  end if
 		  
-		  if vector.LenB = 8 then
+		  if vector.LenB = BlockSize then
 		    return vector
 		  end if
 		  
 		  dim newVector as string = DecodeHex( vector )
-		  if newVector.LenB = 8 then
+		  if newVector.LenB = BlockSize then
 		    return newVector
 		  else
 		    return vector
@@ -268,7 +293,7 @@ Protected Class Encrypter
 		Sub SetVector(vector As String)
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		    RaiseErrorIf vector.LenB <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
 		  end if
 		  
 		  InitialVector = vector
@@ -323,7 +348,7 @@ Protected Class Encrypter
 	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty.", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to 8 nulls)\x2C or exactly 8 bytes or hexadecimal characters representing 8 bytes.", Scope = Public
+	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to nulls)\x2C or exactly BLOCKSIZE bytes or hexadecimal characters representing BLOCKSIZE bytes", Scope = Public
 	#tag EndConstant
 
 
