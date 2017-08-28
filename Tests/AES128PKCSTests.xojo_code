@@ -72,7 +72,8 @@ Inherits TestGroup
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
 		  
 		  dim dataSize as integer = data.LenB
-		  #pragma unused dataSize
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
 		  expected = kLongEncryptedCBC
 		  
 		  e = GetAES( key )
@@ -203,7 +204,8 @@ Inherits TestGroup
 		  data = kLongData
 		  
 		  dim dataSize as integer = data.LenB
-		  #pragma unused dataSize
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
 		  expected = kLongEncryptedECB
 		  
 		  e = GetAES( key )
