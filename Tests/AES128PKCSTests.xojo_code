@@ -78,9 +78,19 @@ Inherits TestGroup
 		  e = GetAES( key )
 		  e.SetVector vectorHex
 		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
 		  encrypted = e.EncryptCBC( data )
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
 		  decrypted = e.DecryptCBC( encrypted )
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
@@ -197,9 +207,20 @@ Inherits TestGroup
 		  expected = kLongEncryptedECB
 		  
 		  e = GetAES( key )
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
 		  encrypted = e.EncryptECB( data )
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
 		  decrypted = e.DecryptECB( encrypted )
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
