@@ -64,6 +64,7 @@ OSXBundleID=com.mactechnologies.blowfish
 DebuggerCommandLine=
 UseGDIPlus=False
 UseBuildsFolder=True
+HiDPI=True
 CopyRedistNextToWindowsEXE=False
 IsWebProject=False
 MacBuildArchitecture=1
