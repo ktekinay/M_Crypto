@@ -50,6 +50,13 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub Cipher(dataPtr As Ptr, startAt As Integer)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  dim round as integer = 0
 		  
 		  //
@@ -122,6 +129,13 @@ Inherits M_Crypto.Encrypter
 		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
 		  
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  dim dataPtr as ptr = data
 		  
 		  dim vector as string = zCurrentVector
@@ -182,6 +196,13 @@ Inherits M_Crypto.Encrypter
 		  else
 		    RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		  end if
+		  
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim dataPtr as ptr = data 
 		  
@@ -272,6 +293,11 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
+		  const kH9 as byte = &h09
+		  const kHB as byte = &h0B
+		  const kHD as byte = &h0D
+		  const kHE as byte = &h0E
+		  
 		  for i as integer = 0 to 3
 		    dim dataIndex as integer = ( i * 4 ) + startAt
 		    
@@ -280,10 +306,10 @@ Inherits M_Crypto.Encrypter
 		    dim c as byte = dataPtr.Byte( dataIndex + 2 )
 		    dim d as byte = dataPtr.Byte( dataIndex + 3 )
 		    
-		    dataPtr.Byte( dataIndex + 0 ) = Multiply(a, &h0e) xor Multiply(b, &h0b) xor Multiply(c, &h0d) xor Multiply(d, &h09)
-		    dataPtr.Byte( dataIndex + 1 ) = Multiply(a, &h09) xor Multiply(b, &h0e) xor Multiply(c, &h0b) xor Multiply(d, &h0d)
-		    dataPtr.Byte( dataIndex + 2 ) = Multiply(a, &h0d) xor Multiply(b, &h09) xor Multiply(c, &h0e) xor Multiply(d, &h0b)
-		    dataPtr.Byte( dataIndex + 3 ) = Multiply(a, &h0b) xor Multiply(b, &h0d) xor Multiply(c, &h09) xor Multiply(d, &h0e)
+		    dataPtr.Byte( dataIndex + 0 ) = Multiply( a, kHE ) xor Multiply( b, kHB ) xor Multiply( c, kHD ) xor Multiply( d, kH9 )
+		    dataPtr.Byte( dataIndex + 1 ) = Multiply( a, kH9 ) xor Multiply( b, kHE ) xor Multiply( c, kHB ) xor Multiply( d, kHD )
+		    dataPtr.Byte( dataIndex + 2 ) = Multiply( a, kHD ) xor Multiply( b, kH9 ) xor Multiply( c, kHE ) xor Multiply( d, kHB )
+		    dataPtr.Byte( dataIndex + 3 ) = Multiply( a, kHB ) xor Multiply( b, kHD ) xor Multiply( c, kH9 ) xor Multiply( d, kHE )
 		  next
 		  
 		End Sub
@@ -436,14 +462,14 @@ Inherits M_Crypto.Encrypter
 		    dim dataIndex as integer = ( i * 4 ) + startAt
 		    
 		    dim t as byte = dataPtr.Byte( dataIndex + 0 )
-		    dim tmp as byte = dataPtr.Byte( dataIndex + 0 ) xor dataPtr.Byte( dataIndex + 1 ) xor _
+		    dim tmp as byte = t xor dataPtr.Byte( dataIndex + 1 ) xor _
 		    dataPtr.Byte( dataIndex + 2 ) xor dataPtr.Byte( dataIndex + 3 )
 		    
 		    dim tm as byte
 		    
-		    tm = dataPtr.Byte( dataIndex + 0 ) xor dataPtr.Byte( dataIndex + 1 )
+		    tm = t xor dataPtr.Byte( dataIndex + 1 )
 		    tm = Xtime( tm )
-		    dataPtr.Byte( dataIndex + 0 ) = dataPtr.Byte( dataIndex + 0 ) xor ( tm xor tmp )
+		    dataPtr.Byte( dataIndex + 0 ) = t xor ( tm xor tmp )
 		    
 		    tm = dataPtr.Byte( dataIndex + 1 ) xor dataPtr.Byte( dataIndex + 2 )
 		    tm = Xtime( tm )
@@ -463,11 +489,23 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Function Multiply(x As Byte, y As Byte) As Byte
-		  return ( ( ( y and 1 ) * x ) xor _
-		  ( ( Bitwise.ShiftRight( y, 1, 8 ) and 1 ) * Xtime( x ) ) xor _
-		  ( ( Bitwise.ShiftRight( y, 2, 8 ) and 1 ) * Xtime( Xtime( x ) ) ) xor _
-		  ( ( Bitwise.ShiftRight( y, 3, 8 ) and 1 ) * Xtime( Xtime( Xtime( x ) ) ) ) xor _
-		  ( ( Bitwise.ShiftRight( y, 4, 8 ) and 1 ) * Xtime( Xtime( Xtime( Xtime( x ) ) ) ) ) )
+		  const kOne as byte = 1
+		  const kByte1 as byte = 2
+		  const kByte2 as byte = 4
+		  const kByte3 as byte = 8
+		  const kByte4 as byte = 16
+		  
+		  return ( ( ( y and kOne ) * x ) xor _
+		  ( ( ( y \ kByte1 ) and kOne ) * Xtime( x ) ) xor _
+		  ( ( ( y \ kByte2 ) and kOne ) * Xtime( Xtime( x ) ) ) xor _
+		  ( ( ( y \ kByte3 ) and kOne ) * Xtime( Xtime( Xtime( x ) ) ) ) xor _
+		  ( ( ( y \ kByte4 ) and kOne ) * Xtime( Xtime( Xtime( Xtime( x ) ) ) ) ) )
+		  
+		  'return ( ( ( y and kOne ) * x ) xor _
+		  '( ( Bitwise.ShiftRight( y, 1, 8 ) and kOne ) * Xtime( x ) ) xor _
+		  '( ( Bitwise.ShiftRight( y, 2, 8 ) and kOne ) * Xtime( Xtime( x ) ) ) xor _
+		  '( ( Bitwise.ShiftRight( y, 3, 8 ) and kOne ) * Xtime( Xtime( Xtime( x ) ) ) ) xor _
+		  '( ( Bitwise.ShiftRight( y, 4, 8 ) and kOne ) * Xtime( Xtime( Xtime( Xtime( x ) ) ) ) ) )
 		  
 		End Function
 	#tag EndMethod
@@ -576,7 +614,14 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Function Xtime(x As Byte) As Byte
-		  return BitWise.ShiftLeft( x, 1, 8 ) xor ( ( Bitwise.ShiftRight( x, 7, 8 ) and 1 ) * &h1B )
+		  const kOne as byte = 1
+		  const kByte1 as byte = 2
+		  const kByte7 as byte = 128
+		  const kMult as byte = &h1B
+		  
+		  return ( x * kByte1 )  xor ( ( ( x \ kByte7 ) and kOne ) * kMult )
+		  
+		  'return BitWise.ShiftLeft( x, 1, 8 ) xor ( ( Bitwise.ShiftRight( x, 7, 8 ) and 1 ) * &h1B )
 		  
 		End Function
 	#tag EndMethod
