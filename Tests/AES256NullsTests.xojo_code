@@ -1,5 +1,5 @@
 #tag Class
-Protected Class AES128PKCSTests
+Protected Class AES256NullsTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub EncryptCBC1BlockTest()
@@ -11,9 +11,9 @@ Inherits TestGroup
 		  dim e as AES_MTC
 		  
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
-		  key = "password"
-		  data = "1234567890123456"
-		  expectedHex = "468f781dbfabbebe639ff6cfd4e8ae93d31d96019f3535683a96a0f4a9a81865"
+		  key = DecodeHex( "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4" )
+		  data = DecodeHex( "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710" ) 
+		  expectedHex = "f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b"
 		  
 		  e = GetAES( key )
 		  e.SetVector vectorHex
@@ -45,7 +45,8 @@ Inherits TestGroup
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
 		  key = "password"
 		  data = "01234567890123456789012345678901"
-		  expectedHex = "d5033dfa94f8427271e8ced0bb502ffcdd7722d53c867ae12ce9fdadd8b610e83532305b12e0c8cf8847c544f70479bc"
+		  expectedHex = "2a385ecf697608fa7d9e0f9270b5357112df8c9bdf0af574d4caba2a1f4f48d7"
+		  expectedHex = EncodeHex( DecodeBase64( "Kjhez2l2CPp9ng+ScLU1cRLfjJvfCvV01Mq6Kh9PSNc=" ) )
 		  
 		  e = GetAES( key )
 		  e.SetVector vectorHex
@@ -151,9 +152,9 @@ Inherits TestGroup
 		  dim encrypted as string
 		  dim e as AES_MTC
 		  
-		  key = DecodeHex( "2b7e151628aed2a6abf7158809cf4f3c" )
+		  key = DecodeHex( "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4" )
 		  dataHex = "6bc1bee22e409f96e93d7e117393172a"
-		  expectedHex = "3ad77bb40d7a3660a89ecaf32466ef97a254be88e037ddd9d79fb6411c3f9df8"
+		  expectedHex = "f3eed1bdb5d2a03c064b5a7e3db181f8"
 		  
 		  e = GetAES( key )
 		  encrypted = e.EncryptECB( DecodeHex( dataHex ) )
@@ -182,9 +183,9 @@ Inherits TestGroup
 		  key = "password"
 		  data = "01234567890123456789012345678901"
 		  expectedHex = "7002a1554825e39e2eae49c29bf7b4c2b4a74bed9a283cfbc122cdf9b5b5bf2ac6b4234e1d0709c945113e4f2a9607f7"
+		  expectedHex = EncodeHex( DecodeBase64( "Kjhez2l2CPp9ng+ScLU1cRLfjJvfCvV01Mq6Kh9PSNc=" ) )
 		  
 		  e = GetAES( key )
-		  
 		  encrypted = e.EncryptECB( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  decrypted = e.DecryptECB( encrypted )
@@ -274,7 +275,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Function GetAES(key As String) As AES_MTC
-		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.PKCS5 )
+		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.NullsOnly )
 		End Function
 	#tag EndMethod
 
