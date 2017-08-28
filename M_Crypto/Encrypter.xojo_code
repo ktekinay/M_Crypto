@@ -259,11 +259,7 @@ Protected Class Encrypter
 		  case Padding.NullsOnly
 		    //
 		    // Adds nulls to the end
-		    // but if the last byte is already a null, add BlockSize nulls
 		    //
-		    if data.Byte( data.Size - 1 ) = 0 then
-		      padToAdd = padToAdd + BlockSize
-		    end if
 		    if padToAdd <> 0 then
 		      data.Size = originalSize + padToAdd
 		    end if
