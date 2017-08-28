@@ -21,6 +21,7 @@ Class=XojoUnitSuperClassTests;Tests/XojoUnitSuperClassTests.xojo_code;&h3A8067FF
 Class=XojoUnitTests;Tests/XojoUnitTests.xojo_code;&h45CA76B3;&h44C729E7;false
 Class=XojoUnitFailTests;Tests/XojoUnitFailTests.xojo_code;&h2FC99FFF;&h44C729E7;false
 Class=AES128NullsTests;Tests/AES128NullsTests.xojo_code;&hA4EE7FF;&h44C729E7;false
+Class=AES128PKCSTests;Tests/AES128PKCSTests.xojo_code;&h32BD4FFF;&h44C729E7;false
 Folder=TestFramework;XojoUnit/TestFramework;&h3E1A9B41;&h2516B04D;false
 Class=TestGroup;XojoUnit/TestFramework/TestGroup.xojo_code;&h6F90619D;&h3E1A9B41;false
 Class=TestController;XojoUnit/TestFramework/TestController.xojo_code;&h6FF90549;&h3E1A9B41;false

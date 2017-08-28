@@ -11,7 +11,9 @@ Inherits TestController
 		  'group = New XojoUnitFailTests(Self, "Always Fail")
 		  
 		  group = new AES128NullsTests( self, "AES-128-Nulls" )
+		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
 		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS5" )
+		  
 		End Sub
 	#tag EndEvent
 
