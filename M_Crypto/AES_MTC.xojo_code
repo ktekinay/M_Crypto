@@ -138,6 +138,14 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data
 		  
+		  //
+		  // Copy the original data so we have source
+		  // for the vector
+		  //
+		  dim originalData as new MemoryBlock( data.Size )
+		  originalData.StringValue( 0, data.Size ) = data.StringValue( 0, data.Size ) 
+		  dim originalDataPtr as ptr = originalData
+		  
 		  dim vector as string = zCurrentVector
 		  if vector = "" then
 		    vector = InitialVector
@@ -148,10 +156,9 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim lastByte as integer = data.Size - 1
 		  for startAt as integer = 0 to lastByte step kBlockLen
-		    dim newVector as string = data.StringValue( startAt, kBlockLen )
 		    InvCipher dataPtr, startAt
 		    XorWithVector dataPtr, startAt, vectorPtr
-		    vectorMB.StringValue( 0, kBlockLen ) = newVector
+		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
 		  next
 		  
 		  if isFinalBlock then
@@ -160,11 +167,12 @@ Inherits M_Crypto.Encrypter
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
 		    LastBlockHadNull = true
-		    zCurrentVector = vectorMB
-		  else
-		    zCurrentVector = vectorMB
 		  end if
 		  
+		  if not isFinalBlock then
+		    vectorMB = vectorPtr
+		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -218,13 +226,15 @@ Inherits M_Crypto.Encrypter
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    XorWithVector dataPtr, startAt, vectorPtr
 		    Cipher dataPtr, startAt
-		    vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
+		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
+		    'vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
 		  next
 		  
 		  if isFinalBlock then
 		    zCurrentVector = ""
 		  else
-		    zCurrentVector = vectorMB
+		    vectorMB = vectorPtr
+		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
 		  end if
 		  
 		End Sub
