@@ -17,6 +17,7 @@ Inherits TestController
 		  
 		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS5" )
 		  
+		  group= new EncrypterTests( self, "Encrypter" )
 		End Sub
 	#tag EndEvent
 

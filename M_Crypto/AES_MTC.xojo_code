@@ -33,6 +33,12 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Sub SetKey(key As String)
+		  ExpandKey key, Nk
+		End Sub
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
 		Attributes( deprecated ) Private Sub AddRoundKey(round As Integer, dataPtr As Ptr, startAt As Integer)
@@ -193,9 +199,13 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(bits As EncryptionBits, paddingMethod As Padding = Padding.PKCS5)
+		  Constructor "", bits, paddingMethod
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(key As String, bits As EncryptionBits = EncryptionBits.Bits128, paddingMethod As Padding = Padding.PKCS5)
-		  RaiseErrorIf key = "", kErrorKeyCannotBeEmpty
-		  
 		  if XtimeMB is nil then
 		    //
 		    // Needs to be initialed
@@ -212,23 +222,21 @@ Inherits M_Crypto.Encrypter
 		  self.Bits = Integer( bits )
 		  self.PaddingMethod = paddingMethod
 		  
-		  dim nk As integer
-		  
 		  select case bits
 		  case AES_MTC.EncryptionBits.Bits256
-		    nk = 8
+		    Nk = 8
 		    KeyLen = 32
 		    NumberOfRounds = 14
 		    KeyExpSize = 240
 		    
 		  case AES_MTC.EncryptionBits.Bits192
-		    nk = 6
+		    Nk = 6
 		    KeyLen = 24
 		    NumberOfRounds = 12
 		    KeyExpSize = 208
 		    
 		  case AES_MTC.EncryptionBits.Bits128
-		    nk = 4
+		    Nk = 4
 		    KeyLen = 16
 		    NumberOfRounds = 10
 		    KeyExpSize = 176
@@ -238,7 +246,10 @@ Inherits M_Crypto.Encrypter
 		    
 		  end select
 		  
-		  ExpandKey( key, nk )
+		  if key <> "" then
+		    SetKey key
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -975,6 +986,10 @@ Inherits M_Crypto.Encrypter
 
 	#tag Property, Flags = &h21
 		Private Shared MultiplyHEPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Nk As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

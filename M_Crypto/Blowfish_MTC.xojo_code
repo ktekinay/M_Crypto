@@ -40,9 +40,28 @@ Implements BcryptInterface
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Sub SetKey(key As String)
+		  Expand0State key
+		End Sub
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h0
-		Sub Constructor(key as String="", paddingMethod as Padding=Padding.NullsWithCount)
+		Sub Constructor(paddingMethod As Padding)
+		  Constructor "", paddingMethod
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(key As String = "")
+		  Constructor key, Padding.NullsWithCount
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(key as String, paddingMethod as Padding)
 		  BlockSize = 8
 		  self.PaddingMethod = paddingMethod
 		  
@@ -91,7 +110,7 @@ Implements BcryptInterface
 		  
 		  // See if a key was provided
 		  if key <> "" then
-		    Expand0State( key )
+		    SetKey key
 		  end if
 		  
 		End Sub

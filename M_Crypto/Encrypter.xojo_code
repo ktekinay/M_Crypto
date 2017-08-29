@@ -286,6 +286,15 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SetKey(value As String)
+		  RaiseErrorIf value = "", kErrorKeyCannotBeEmpty
+		  
+		  RaiseEvent SetKey( value )
+		  WasKeySet = true
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SetVector(vector As String)
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
@@ -304,6 +313,10 @@ Protected Class Encrypter
 
 	#tag Hook, Flags = &h0
 		Event Encrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event SetKey(key As String)
 	#tag EndHook
 
 
