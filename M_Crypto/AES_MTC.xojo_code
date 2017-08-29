@@ -92,9 +92,16 @@ Inherits M_Crypto.Encrypter
 		Sub Constructor(key As String, bits As EncryptionBits = EncryptionBits.Bits128, paddingMethod As Padding = Padding.PKCS5)
 		  RaiseErrorIf key = "", kErrorKeyCannotBeEmpty
 		  
-		  InitSbox
-		  InitInvSbox
-		  InitRcon
+		  if XtimeMB is nil then
+		    //
+		    // Needs to be initialed
+		    //
+		    InitXtime
+		    InitMultiplyTables
+		    InitSbox
+		    InitInvSbox
+		    InitRcon
+		  end if
 		  
 		  BlockSize = kBlockLen
 		  
@@ -127,7 +134,7 @@ Inherits M_Crypto.Encrypter
 		    
 		  end select
 		  
-		  KeyExpansion( key, nk )
+		  ExpandKey( key, nk )
 		End Sub
 	#tag EndMethod
 
@@ -265,179 +272,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function GetVectorMB(vector As String) As MemoryBlock
-		  dim mb as new MemoryBlock( kBlockLen )
-		  if vector <> "" then
-		    vector = vector.LeftB( kBlockLen )
-		    mb.StringValue( 0, vector.LenB ) = vector
-		  end if
-		  
-		  return mb
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Sub InitInvSbox()
-		  if InvSbox is nil then
-		    const kHex as string = _
-		    "52096ad53036a538bf40a39e81f3d7fb7ce339829b2fff87348e4344c4de" + _
-		    "e9cb547b9432a6c2233dee4c950b42fac34e082ea16628d924b2765ba249" + _
-		    "6d8bd12572f8f66486689816d4a45ccc5d65b6926c704850fdedb9da5e15" + _
-		    "4657a78d9d8490d8ab008cbcd30af7e45805b8b34506d02c1e8fca3f0f02" + _
-		    "c1afbd0301138a6b3a9111414f67dcea97f2cfcef0b4e67396ac7422e7ad" + _
-		    "3585e2f937e81c75df6e47f11a711d29c5896fb7620eaa18be1bfc563e4b" + _
-		    "c6d279209adbc0fe78cd5af41fdda8338807c731b11210592780ec5f6051" + _
-		    "7fa919b54a0d2de57a9f93c99cefa0e03b4dae2af5b0c8ebbb3c83539961" + _
-		    "172b047eba77d626e169146355210c7d"
-		    
-		    InvSbox = DecodeHex( kHex )
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Sub InitRcon()
-		  if Rcon is nil then
-		    const kHex as string = "8d01020408102040801b36"
-		    
-		    Rcon = DecodeHex( kHex )
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Sub InitSbox()
-		  if Sbox is nil then
-		    const kHex as string = _
-		    "637c777bf26b6fc53001672bfed7ab76ca82c97dfa5947f0add4a2af9ca4" + _
-		    "72c0b7fd9326363ff7cc34a5e5f171d8311504c723c31896059a071280e2" + _
-		    "eb27b27509832c1a1b6e5aa0523bd6b329e32f8453d100ed20fcb15b6acb" + _
-		    "be394a4c58cfd0efaafb434d338545f9027f503c9fa851a3408f929d38f5" + _
-		    "bcb6da2110fff3d2cd0c13ec5f974417c4a77e3d645d197360814fdc222a" + _
-		    "908846eeb814de5e0bdbe0323a0a4906245cc2d3ac629195e479e7c8376d" + _
-		    "8dd54ea96c56f4ea657aae08ba78252e1ca6b4c6e8dd741f4bbd8b8a703e" + _
-		    "b5664803f60e613557b986c11d9ee1f8981169d98e949b1e87e9ce5528df" + _
-		    "8ca1890dbfe6426841992d0fb054bb16"
-		    
-		    Sbox = DecodeHex( kHex )
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub InvCipher(dataPtr As Ptr, startAt As Integer)
-		  //
-		  // Add the First round key to the state before starting the rounds.
-		  //
-		  AddRoundKey( NumberOfRounds, dataPtr, startAt )
-		  
-		  //
-		  // There will be NumberOfRounds rounds.
-		  // The first NumberOfRounds-1 rounds are identical.
-		  // These NumberOfRounds-1 rounds are executed in the loop below.
-		  //
-		  dim lastRound As integer = NumberOfRounds - 1
-		  for round As integer = lastRound downto 1
-		    InvShiftRows( dataPtr, startAt )
-		    InvSubBytes( dataPtr, startAt )
-		    AddRoundKey( round, dataPtr, startAt )
-		    InvMixColumns( dataPtr, startAt )
-		  next
-		  
-		  //
-		  // The last round is given below.
-		  // The MixColumns function is not here in the last round.
-		  //
-		  InvShiftRows( dataPtr, startAt )
-		  InvSubBytes( dataPtr, startAt )
-		  AddRoundKey( 0, dataPtr, startAt )
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
-		  const kH9 As integer = &h09
-		  const kHB As integer = &h0B
-		  const kHD As integer = &h0D
-		  const kHE As integer = &h0E
-		  
-		  for i As integer = 0 to 3
-		    dim dataIndex As integer = ( i * 4 ) + startAt
-		    
-		    dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
-		    dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
-		    dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
-		    dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
-		    
-		    dataPtr.Byte( dataIndex + 0 ) = Multiply( byte0, kHE ) xor Multiply( byte1, kHB ) xor Multiply( byte2, kHD ) xor Multiply( byte3, kH9 )
-		    dataPtr.Byte( dataIndex + 1 ) = Multiply( byte0, kH9 ) xor Multiply( byte1, kHE ) xor Multiply( byte2, kHB ) xor Multiply( byte3, kHD )
-		    dataPtr.Byte( dataIndex + 2 ) = Multiply( byte0, kHD ) xor Multiply( byte1, kH9 ) xor Multiply( byte2, kHE ) xor Multiply( byte3, kHB )
-		    dataPtr.Byte( dataIndex + 3 ) = Multiply( byte0, kHB ) xor Multiply( byte1, kHD ) xor Multiply( byte2, kH9 ) xor Multiply( byte3, kHE )
-		  next
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
-		  
-		  dim temp As integer 
-		  
-		  //
-		  // Rotate first row 1 columns to right
-		  //
-		  temp = dataPtr.Byte( index3 + 1 )
-		  dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
-		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
-		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
-		  dataPtr.Byte( index0 + 1 ) = temp
-		  
-		  //
-		  // Rotate second row 2 columns to right 
-		  //
-		  temp = dataPtr.Byte( index0 + 2 )
-		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		  dataPtr.Byte( index2 + 2 ) = temp
-		  
-		  temp = dataPtr.Byte( index1 + 2 )
-		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		  dataPtr.Byte( index3 + 2 ) = temp
-		  
-		  //
-		  // Rotate third row 3 columns to right
-		  //
-		  temp = dataPtr.Byte( index0 + 3 )
-		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
-		  dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
-		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
-		  dataPtr.Byte( index3 + 3 ) = temp
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub InvSubBytes(dataPtr As Ptr, startAt As Integer)
-		  dim ptrInvSbox as ptr = InvSbox
-		  for i As integer = 0 to 3
-		    for j As integer = 0 to 3
-		      dim dataIndex As integer = ( j * 4 + i ) + startAt
-		      dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
-		    next
-		  next
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub KeyExpansion(key As String, nk As Integer)
+		Private Sub ExpandKey(key As String, nk As Integer)
 		  RoundKey = new MemoryBlock( KeyExpSize )
 		  dim ptrRoundKey as Ptr = RoundKey
 		  
@@ -501,6 +336,243 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function GetVectorMB(vector As String) As MemoryBlock
+		  dim mb as new MemoryBlock( kBlockLen )
+		  if vector <> "" then
+		    vector = vector.LeftB( kBlockLen )
+		    mb.StringValue( 0, vector.LenB ) = vector
+		  end if
+		  
+		  return mb
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InitInvSbox()
+		  if InvSbox is nil then
+		    const kHex as string = _
+		    "52096ad53036a538bf40a39e81f3d7fb7ce339829b2fff87348e4344c4de" + _
+		    "e9cb547b9432a6c2233dee4c950b42fac34e082ea16628d924b2765ba249" + _
+		    "6d8bd12572f8f66486689816d4a45ccc5d65b6926c704850fdedb9da5e15" + _
+		    "4657a78d9d8490d8ab008cbcd30af7e45805b8b34506d02c1e8fca3f0f02" + _
+		    "c1afbd0301138a6b3a9111414f67dcea97f2cfcef0b4e67396ac7422e7ad" + _
+		    "3585e2f937e81c75df6e47f11a711d29c5896fb7620eaa18be1bfc563e4b" + _
+		    "c6d279209adbc0fe78cd5af41fdda8338807c731b11210592780ec5f6051" + _
+		    "7fa919b54a0d2de57a9f93c99cefa0e03b4dae2af5b0c8ebbb3c83539961" + _
+		    "172b047eba77d626e169146355210c7d"
+		    
+		    InvSbox = DecodeHex( kHex )
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InitMultiplyTables()
+		  if MultiplyH9MB is nil then
+		    const kH9 As integer = &h09
+		    const kHB As integer = &h0B
+		    const kHD As integer = &h0D
+		    const kHE As integer = &h0E
+		    
+		    MultiplyH9MB = new MemoryBlock( 256 )
+		    MultiplyH9Ptr = MultiplyH9MB
+		    
+		    MultiplyHBMB = new MemoryBlock( 256 )
+		    MultiplyHBPtr = MultiplyHBMB
+		    
+		    MultiplyHDMB = new MemoryBlock( 256 )
+		    MultiplyHDPtr = MultiplyHDMB
+		    
+		    MultiplyHEMB = new MemoryBlock( 256 )
+		    MultiplyHEPtr = MultiplyHEMB
+		    
+		    dim ptrs() as ptr = array( MultiplyH9Ptr, MultiplyHBPtr, MultiplyHDPtr, MultiplyHEPtr )
+		    dim values() as integer = array( kH9, kHB, kHD, kHE )
+		    
+		    for i as integer = 0 to ptrs.Ubound
+		      dim p as ptr = ptrs( i )
+		      dim v as integer = values( i )
+		      
+		      for x as integer = 0 to 256
+		        p.Byte( x ) = Multiply( x, v )
+		      next
+		    next
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InitRcon()
+		  if Rcon is nil then
+		    const kHex as string = "8d01020408102040801b36"
+		    
+		    Rcon = DecodeHex( kHex )
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InitSbox()
+		  if Sbox is nil then
+		    const kHex as string = _
+		    "637c777bf26b6fc53001672bfed7ab76ca82c97dfa5947f0add4a2af9ca4" + _
+		    "72c0b7fd9326363ff7cc34a5e5f171d8311504c723c31896059a071280e2" + _
+		    "eb27b27509832c1a1b6e5aa0523bd6b329e32f8453d100ed20fcb15b6acb" + _
+		    "be394a4c58cfd0efaafb434d338545f9027f503c9fa851a3408f929d38f5" + _
+		    "bcb6da2110fff3d2cd0c13ec5f974417c4a77e3d645d197360814fdc222a" + _
+		    "908846eeb814de5e0bdbe0323a0a4906245cc2d3ac629195e479e7c8376d" + _
+		    "8dd54ea96c56f4ea657aae08ba78252e1ca6b4c6e8dd741f4bbd8b8a703e" + _
+		    "b5664803f60e613557b986c11d9ee1f8981169d98e949b1e87e9ce5528df" + _
+		    "8ca1890dbfe6426841992d0fb054bb16"
+		    
+		    Sbox = DecodeHex( kHex )
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InitXtime()
+		  if XtimeMB is nil then
+		    
+		    XtimeMB = new MemoryBlock( 256 )
+		    XtimePtr = XtimeMB
+		    
+		    for x as integer = 0 to 255
+		      
+		      const kOne As integer = 1
+		      const kShift1 As integer = 2
+		      const kShift7 As integer = 128
+		      const kXtimeMult As integer = &h1B
+		      
+		      XtimePtr.Byte( x ) = ( x * kShift1 )  xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
+		      
+		    next
+		    
+		  end if
+		  
+		  'return BitWise.ShiftLeft( x, 1, 8 ) xor ( ( Bitwise.ShiftRight( x, 7, 8 ) and 1 ) * &h1B )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub InvCipher(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // Add the First round key to the state before starting the rounds.
+		  //
+		  AddRoundKey( NumberOfRounds, dataPtr, startAt )
+		  
+		  //
+		  // There will be NumberOfRounds rounds.
+		  // The first NumberOfRounds-1 rounds are identical.
+		  // These NumberOfRounds-1 rounds are executed in the loop below.
+		  //
+		  dim lastRound As integer = NumberOfRounds - 1
+		  for round As integer = lastRound downto 1
+		    InvShiftRows( dataPtr, startAt )
+		    InvSubBytes( dataPtr, startAt )
+		    AddRoundKey( round, dataPtr, startAt )
+		    InvMixColumns( dataPtr, startAt )
+		  next
+		  
+		  //
+		  // The last round is given below.
+		  // The MixColumns function is not here in the last round.
+		  //
+		  InvShiftRows( dataPtr, startAt )
+		  InvSubBytes( dataPtr, startAt )
+		  AddRoundKey( 0, dataPtr, startAt )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
+		  const kH9 As integer = &h09
+		  const kHB As integer = &h0B
+		  const kHD As integer = &h0D
+		  const kHE As integer = &h0E
+		  
+		  for i As integer = 0 to 3
+		    dim dataIndex As integer = ( i * 4 ) + startAt
+		    
+		    dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
+		    dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
+		    dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
+		    dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
+		    
+		    'dataPtr.Byte( dataIndex + 0 ) = Multiply( byte0, kHE ) xor Multiply( byte1, kHB ) xor Multiply( byte2, kHD ) xor Multiply( byte3, kH9 )
+		    'dataPtr.Byte( dataIndex + 1 ) = Multiply( byte0, kH9 ) xor Multiply( byte1, kHE ) xor Multiply( byte2, kHB ) xor Multiply( byte3, kHD )
+		    'dataPtr.Byte( dataIndex + 2 ) = Multiply( byte0, kHD ) xor Multiply( byte1, kH9 ) xor Multiply( byte2, kHE ) xor Multiply( byte3, kHB )
+		    'dataPtr.Byte( dataIndex + 3 ) = Multiply( byte0, kHB ) xor Multiply( byte1, kHD ) xor Multiply( byte2, kH9 ) xor Multiply( byte3, kHE )
+		    
+		    dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
+		  dim index0 As integer = startAt
+		  dim index1 As integer = index0 + 4
+		  dim index2 As integer = index0 + 8
+		  dim index3 As integer = index0 + 12
+		  
+		  dim temp As integer 
+		  
+		  //
+		  // Rotate first row 1 columns to right
+		  //
+		  temp = dataPtr.Byte( index3 + 1 )
+		  dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
+		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
+		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
+		  dataPtr.Byte( index0 + 1 ) = temp
+		  
+		  //
+		  // Rotate second row 2 columns to right 
+		  //
+		  temp = dataPtr.Byte( index0 + 2 )
+		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
+		  dataPtr.Byte( index2 + 2 ) = temp
+		  
+		  temp = dataPtr.Byte( index1 + 2 )
+		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
+		  dataPtr.Byte( index3 + 2 ) = temp
+		  
+		  //
+		  // Rotate third row 3 columns to right
+		  //
+		  temp = dataPtr.Byte( index0 + 3 )
+		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
+		  dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
+		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
+		  dataPtr.Byte( index3 + 3 ) = temp
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub InvSubBytes(dataPtr As Ptr, startAt As Integer)
+		  dim ptrInvSbox as ptr = InvSbox
+		  for i As integer = 0 to 3
+		    for j As integer = 0 to 3
+		      dim dataIndex As integer = ( j * 4 + i ) + startAt
+		      dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		    next
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub MixColumns(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // Xtime was manually unrolled into this function as an optimization
@@ -525,22 +597,27 @@ Inherits M_Crypto.Encrypter
 		    
 		    tm = byte0 xor byte1
 		    'tm = Xtime( tm )
-		    tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    tm = XtimePtr.Byte( tm )
+		    
 		    dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
 		    
 		    tm = byte1 xor byte2
 		    'tm = Xtime( tm )
-		    tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    tm = XtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
 		    
 		    tm = byte2 xor byte3
 		    'tm = Xtime( tm )
-		    tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    tm = XtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
 		    
 		    tm = byte3 xor byte0
 		    'tm = Xtime( tm )
-		    tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
+		    tm = XtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
 		  next
 		  
@@ -548,7 +625,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function Multiply(x As Integer, y As Integer) As integer
+		Private Shared Function Multiply(x As Integer, y As Integer) As integer
 		  const kOne As integer = 1
 		  const kShift1 As integer = 2
 		  const kShift2 As integer = 4
@@ -557,10 +634,10 @@ Inherits M_Crypto.Encrypter
 		  const kShift7 As integer = 128
 		  const kXtimeMult As integer = &h1B
 		  
-		  dim xtimex1 As integer = ( x * kShift1 )  xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
-		  dim xtimex2 As integer = ( xtimex1 * kShift1 )  xor ( ( ( xtimex1 \ kShift7 ) and kOne ) * kXtimeMult )
-		  dim xtimex3 As integer = ( xtimex2 * kShift1 )  xor ( ( ( xtimex2 \ kShift7 ) and kOne ) * kXtimeMult )
-		  dim xtimex4 As integer = ( xtimex3 * kShift1 )  xor ( ( ( xtimex3 \ kShift7 ) and kOne ) * kXtimeMult )
+		  dim xtimex1 As integer = XtimePtr.Byte( x )
+		  dim xtimex2 As integer = XtimePtr.Byte( xtimex1 )
+		  dim xtimex3 As integer = XtimePtr.Byte( xtimex2 )
+		  dim xtimex4 As integer = XtimePtr.Byte( xtimex3 )
 		  
 		  return ( ( y and kOne ) * x ) xor _
 		  ( ( ( y \ kShift1 ) and kOne ) * xtimex1 ) xor _
@@ -647,25 +724,6 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Attributes( deprecated ) Private Function Xtime(x As Integer) As integer
-		  //
-		  // This function is here for reference only
-		  // For speed, it has been manually unrolled into its calling functions
-		  //
-		  
-		  const kOne As integer = 1
-		  const kShift1 As integer = 2
-		  const kShift7 As integer = 128
-		  const kXtimeMult As integer = &h1B
-		  
-		  return ( x * kShift1 )  xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
-		  
-		  'return BitWise.ShiftLeft( x, 1, 8 ) xor ( ( Bitwise.ShiftRight( x, 7, 8 ) and 1 ) * &h1B )
-		  
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h21
 		Private Bits As Integer
@@ -684,6 +742,38 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private Shared MultiplyH9MB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyH9Ptr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHBMB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHBPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHDMB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHDPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHEMB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MultiplyHEPtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private NumberOfRounds As Integer
 	#tag EndProperty
 
@@ -697,6 +787,14 @@ Inherits M_Crypto.Encrypter
 
 	#tag Property, Flags = &h21
 		Private Shared Sbox As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared XtimeMB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared XtimePtr As Ptr
 	#tag EndProperty
 
 
