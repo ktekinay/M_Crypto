@@ -13,9 +13,7 @@ Inherits TestController
 		  group = new AES128NullsTests( self, "AES-128-Nulls" )
 		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
 		  group = new AES256NullsTests( self, "AES-256-Nulls" )
-		  group.IncludeGroup = false
 		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
-		  group.IncludeGroup = false
 		  
 		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS5" )
 		  

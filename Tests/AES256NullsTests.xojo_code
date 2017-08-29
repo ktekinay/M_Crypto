@@ -35,21 +35,21 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub EncryptCBC2BlockTest()
 		  dim key as string 
-		  dim vectorHex as string
+		  dim vector as string
 		  dim data as string 
 		  dim expectedHex as string 
 		  dim encrypted as string
 		  dim decrypted as string
 		  dim e as AES_MTC
 		  
-		  vectorHex = "000102030405060708090A0B0C0D0E0F"
-		  key = "password"
+		  vector = "a2xhcgAAAAAAAAAA"
+		  key = Crypto.SHA256( "password" )
 		  data = "01234567890123456789012345678901"
-		  expectedHex = "2a385ecf697608fa7d9e0f9270b5357112df8c9bdf0af574d4caba2a1f4f48d7"
+		  expectedHex = "7f087100137f0721fd1dfd0e3d06fd10fdfd61fd18fdfdfd164c49fdfd10fdfd5914602efdfd11fd7f40fd0efdfd0bfd"
 		  expectedHex = EncodeHex( DecodeBase64( "Kjhez2l2CPp9ng+ScLU1cRLfjJvfCvV01Mq6Kh9PSNc=" ) )
 		  
 		  e = GetAES( key )
-		  e.SetVector vectorHex
+		  e.SetVector vector
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
@@ -180,13 +180,13 @@ Inherits TestGroup
 		  dim decrypted as string
 		  dim e as AES_MTC
 		  
-		  key = "password"
+		  key = MD5( "password" )
 		  data = "01234567890123456789012345678901"
-		  expectedHex = "7002a1554825e39e2eae49c29bf7b4c2b4a74bed9a283cfbc122cdf9b5b5bf2ac6b4234e1d0709c945113e4f2a9607f7"
-		  expectedHex = EncodeHex( DecodeBase64( "Kjhez2l2CPp9ng+ScLU1cRLfjJvfCvV01Mq6Kh9PSNc=" ) )
+		  expectedHex = "626b9fe9d3f241fd6dae466e90cf3fe0045fa847caf7b4724318269136826885e6467d77b1d5f4629cfc2e5a2d0c327b"
 		  
 		  e = GetAES( key )
 		  encrypted = e.EncryptECB( data )
+		  Assert.AreEqual DecodeHex( expectedHex ).LenB, encrypted.LenB, "Encrypted size doesn't match"
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  decrypted = e.DecryptECB( encrypted )
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"

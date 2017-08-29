@@ -35,20 +35,20 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub EncryptCBC2BlockTest()
 		  dim key as string 
-		  dim vectorHex as string
+		  dim vector as string
 		  dim data as string 
 		  dim expectedHex as string 
 		  dim encrypted as string
 		  dim decrypted as string
 		  dim e as AES_MTC
 		  
-		  vectorHex = "000102030405060708090A0B0C0D0E0F"
+		  vector = "a2xhcgAAAAAAAAAA"
 		  key = "password"
 		  data = "01234567890123456789012345678901"
-		  expectedHex = "d5033dfa94f8427271e8ced0bb502ffcdd7722d53c867ae12ce9fdadd8b610e8"
+		  expectedHex = "bd281599038f0aec83d29df3b2ec625c5d23075a250220fa9ea59f7e12a07a93"
 		  
 		  e = GetAES( key )
-		  e.SetVector vectorHex
+		  e.SetVector vector
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
