@@ -34,8 +34,13 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 
-	#tag Method, Flags = &h21
-		Private Sub AddRoundKey(round As Integer, dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub AddRoundKey(round As Integer, dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into Cipher and InvCipher
+		  //
+		  
 		  dim ptrRoundKey as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
@@ -57,33 +62,132 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  //
+		  // Used for ShiftRows
+		  //
+		  dim index0 As integer = startAt
+		  dim index1 As integer = index0 + 4
+		  dim index2 As integer = index0 + 8
+		  dim index3 As integer = index0 + 12
+		  
+		  dim ptrSbox as ptr = Sbox
 		  dim round As integer = 0
 		  
 		  //
+		  // AddRoundKey
 		  // Add the First round key to the dataPtr, startAt before starting the rounds.
 		  //
-		  AddRoundKey( round, dataPtr, startAt )
+		  dim ptrRoundKey as ptr = RoundKey
+		  
+		  for i As integer = 0 to 3
+		    for j As integer = 0 to 3
+		      dim dataIndex As integer = ( i * 4 + j ) + startAt
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		    next
+		  next
 		  
 		  //
 		  // There will be NumberOfRounds rounds.
 		  // The first NumberOfRounds-1 rounds are identical.
 		  // These NumberOfRounds-1 rounds are executed in the loop below.
 		  //
-		  dim lastRound As integer = NumberOfRounds - 1
-		  for round = 1 to lastRound
-		    SubBytes( dataPtr, startAt )
-		    ShiftRows( dataPtr, startAt )
-		    MixColumns( dataPtr, startAt )
-		    AddRoundKey( round, dataPtr, startAt )
+		  for round = 1 to NumberOfRounds
+		    
+		    //
+		    // Subbytes
+		    //
+		    for i As integer = 0 to 3
+		      for j As integer = 0 to 3
+		        dim dataIndex As integer = ( j * 4 + i ) + startAt
+		        dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		      next
+		    next
+		    
+		    //
+		    // ShiftRows
+		    //
+		    dim temp As integer 
+		    
+		    //
+		    // Rotate first row 1 columns to left  
+		    //
+		    temp = dataPtr.Byte( index0 + 1 )
+		    dataPtr.Byte( index0 + 1 ) = dataPtr.Byte( index1 + 1 )
+		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index2 + 1 )
+		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index3 + 1 )
+		    dataPtr.Byte( index3 + 1 ) = temp
+		    
+		    //
+		    // Rotate second row 2 columns to left  
+		    //
+		    temp = dataPtr.Byte( index0 + 2 )
+		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
+		    dataPtr.Byte( index2 + 2 ) = temp
+		    
+		    temp = dataPtr.Byte( index1 + 2 )
+		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
+		    dataPtr.Byte( index3 + 2 ) = temp
+		    
+		    //
+		    // Rotate third row 3 columns to left
+		    //
+		    temp = dataPtr.Byte( index0 + 3 )
+		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index3 + 3 )
+		    dataPtr.Byte( index3 + 3 ) = dataPtr.Byte( index2 + 3 )
+		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index1 + 3 )
+		    dataPtr.Byte( index1 + 3 ) = temp
+		    
+		    if round <> NumberOfRounds then
+		      //
+		      // MixColumns (not for last round)
+		      //
+		      const kOne As integer = 1
+		      const kShift1 As integer = 2
+		      const kShift7 As integer = 128
+		      const kXtimeMult As integer = &h1B
+		      
+		      for i As integer = 0 to 3
+		        dim dataIndex As integer = ( i * 4 ) + startAt
+		        
+		        dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
+		        dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
+		        dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
+		        dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
+		        
+		        dim tmp As integer = byte0 xor byte1 xor byte2 xor byte3
+		        
+		        dim tm As integer
+		        
+		        tm = byte0 xor byte1
+		        tm = XtimePtr.Byte( tm )
+		        
+		        dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
+		        
+		        tm = byte1 xor byte2
+		        tm = XtimePtr.Byte( tm )
+		        dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
+		        
+		        tm = byte2 xor byte3
+		        tm = XtimePtr.Byte( tm )
+		        dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
+		        
+		        tm = byte3 xor byte0
+		        tm = XtimePtr.Byte( tm )
+		        dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
+		      next
+		    end if
+		    
+		    //
+		    // AddRoundKey
+		    //
+		    for i As integer = 0 to 3
+		      for j As integer = 0 to 3
+		        dim dataIndex As integer = ( i * 4 + j ) + startAt
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		      next
+		    next
 		  next
 		  
-		  //
-		  // The last round is given below.
-		  // The MixColumns function is not here in the last round.
-		  //
-		  SubBytes( dataPtr, startAt )
-		  ShiftRows( dataPtr, startAt )
-		  AddRoundKey( NumberOfRounds, dataPtr, startAt )
 		  
 		End Sub
 	#tag EndMethod
@@ -461,40 +565,119 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Sub InvCipher(dataPtr As Ptr, startAt As Integer)
 		  //
+		  // Used for InvShiftRows
+		  //
+		  dim index0 As integer = startAt
+		  dim index1 As integer = index0 + 4
+		  dim index2 As integer = index0 + 8
+		  dim index3 As integer = index0 + 12
+		  
+		  dim ptrInvSbox as ptr = InvSbox
+		  dim round As integer = NumberOfRounds
+		  
+		  //
+		  // AddRoundKey
 		  // Add the First round key to the state before starting the rounds.
 		  //
-		  AddRoundKey( NumberOfRounds, dataPtr, startAt )
+		  dim ptrRoundKey as ptr = RoundKey
+		  
+		  for i As integer = 0 to 3
+		    for j As integer = 0 to 3
+		      dim dataIndex as integer = ( i * 4 + j ) + startAt
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		    next
+		  next
 		  
 		  //
 		  // There will be NumberOfRounds rounds.
 		  // The first NumberOfRounds-1 rounds are identical.
 		  // These NumberOfRounds-1 rounds are executed in the loop below.
 		  //
-		  dim lastRound As integer = NumberOfRounds - 1
-		  for round As integer = lastRound downto 1
-		    InvShiftRows( dataPtr, startAt )
-		    InvSubBytes( dataPtr, startAt )
-		    AddRoundKey( round, dataPtr, startAt )
-		    InvMixColumns( dataPtr, startAt )
+		  dim lastRound as integer = NumberOfRounds - 1
+		  for round = lastRound to 0 step -1
+		    //
+		    // InvShiftRows
+		    //
+		    dim temp As integer 
+		    
+		    //
+		    // Rotate first row 1 columns to right
+		    //
+		    temp = dataPtr.Byte( index3 + 1 )
+		    dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
+		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
+		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
+		    dataPtr.Byte( index0 + 1 ) = temp
+		    
+		    //
+		    // Rotate second row 2 columns to right 
+		    //
+		    temp = dataPtr.Byte( index0 + 2 )
+		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
+		    dataPtr.Byte( index2 + 2 ) = temp
+		    
+		    temp = dataPtr.Byte( index1 + 2 )
+		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
+		    dataPtr.Byte( index3 + 2 ) = temp
+		    
+		    //
+		    // Rotate third row 3 columns to right
+		    //
+		    temp = dataPtr.Byte( index0 + 3 )
+		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
+		    dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
+		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
+		    dataPtr.Byte( index3 + 3 ) = temp
+		    
+		    //
+		    // InvSubBytes
+		    //
+		    for i As integer = 0 to 3
+		      for j As integer = 0 to 3
+		        dim dataIndex As integer = ( j * 4 + i ) + startAt
+		        dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		      next
+		    next
+		    
+		    //
+		    // AddRoundKey
+		    //
+		    for i As integer = 0 to 3
+		      for j As integer = 0 to 3
+		        dim dataIndex As integer = ( i * 4 + j ) + startAt
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		      next
+		    next
+		    
+		    if round <> 0 then
+		      //
+		      // InvMixColumns (not for last round)
+		      //
+		      for i As integer = 0 to 3
+		        dim dataIndex As integer = ( i * 4 ) + startAt
+		        
+		        dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
+		        dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
+		        dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
+		        dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
+		        
+		        dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		      next
+		    end if
 		  next
-		  
-		  //
-		  // The last round is given below.
-		  // The MixColumns function is not here in the last round.
-		  //
-		  InvShiftRows( dataPtr, startAt )
-		  InvSubBytes( dataPtr, startAt )
-		  AddRoundKey( 0, dataPtr, startAt )
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
-		  const kH9 As integer = &h09
-		  const kHB As integer = &h0B
-		  const kHD As integer = &h0D
-		  const kHE As integer = &h0E
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into InvCipher
+		  //
 		  
 		  for i As integer = 0 to 3
 		    dim dataIndex As integer = ( i * 4 ) + startAt
@@ -518,8 +701,13 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into InvCipher
+		  //
+		  
 		  dim index0 As integer = startAt
 		  dim index1 As integer = index0 + 4
 		  dim index2 As integer = index0 + 8
@@ -559,8 +747,13 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub InvSubBytes(dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub InvSubBytes(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into InvCipher
+		  //
+		  
 		  dim ptrInvSbox as ptr = InvSbox
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -572,10 +765,11 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub MixColumns(dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub MixColumns(dataPtr As Ptr, startAt As Integer)
 		  //
-		  // Xtime was manually unrolled into this function as an optimization
+		  // For reference only
+		  // This was manually unrolled into Cipher
 		  //
 		  
 		  const kOne As integer = 1
@@ -659,8 +853,13 @@ Inherits M_Crypto.Encrypter
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub ShiftRows(dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub ShiftRows(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into Cipher
+		  //
+		  
 		  dim index0 As integer = startAt
 		  dim index1 As integer = index0 + 4
 		  dim index2 As integer = index0 + 8
@@ -702,8 +901,13 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub SubBytes(dataPtr As Ptr, startAt As Integer)
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Attributes( deprecated ) Private Sub SubBytes(dataPtr As Ptr, startAt As Integer)
+		  //
+		  // For reference only
+		  // This was manually unrolled into Cipher
+		  //
+		  
 		  dim ptrSbox as ptr = Sbox
 		  
 		  for i As integer = 0 to 3
