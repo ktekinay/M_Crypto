@@ -323,6 +323,12 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub SetBlockSize(size As Integer)
+		  zBlockSize = size
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub SetKey(value As String)
 		  RaiseErrorIf value = "", kErrorKeyCannotBeEmpty
@@ -358,9 +364,14 @@ Protected Class Encrypter
 	#tag EndHook
 
 
-	#tag Property, Flags = &h1
-		Protected BlockSize As Integer
-	#tag EndProperty
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return zBlockSize
+			End Get
+		#tag EndGetter
+		BlockSize As Integer
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -389,6 +400,10 @@ Protected Class Encrypter
 
 	#tag Property, Flags = &h1
 		Protected WasKeySet As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private zBlockSize As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
@@ -475,6 +490,17 @@ Protected Class Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="UseFunction"
+			Group="Behavior"
+			Type="Functions"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Default"
+				"1 - ECB"
+				"2 - CBC"
+			#tag EndEnumValues
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
