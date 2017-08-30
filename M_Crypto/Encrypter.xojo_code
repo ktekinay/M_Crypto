@@ -442,6 +442,11 @@ Protected Class Encrypter
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="BlockSize"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="CurrentVector"
 			Group="Behavior"
 			Type="String"

@@ -23,7 +23,7 @@ Begin Window WndEncryption
    MinWidth        =   694
    Placement       =   0
    Resizeable      =   True
-   Title           =   "Blowfish MTC"
+   Title           =   "Encryption"
    Visible         =   True
    Width           =   694
    Begin PushButton btnTest

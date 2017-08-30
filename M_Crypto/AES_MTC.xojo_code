@@ -1064,6 +1064,11 @@ Inherits M_Crypto.Encrypter
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="BlockSize"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="CurrentVector"
 			Group="Behavior"
 			Type="String"
@@ -1117,6 +1122,12 @@ Inherits M_Crypto.Encrypter
 			Name="UseFunction"
 			Group="Behavior"
 			Type="Functions"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Default"
+				"1 - ECB"
+				"2 - CBC"
+			#tag EndEnumValues
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
