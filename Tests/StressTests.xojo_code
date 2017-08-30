@@ -21,7 +21,7 @@ Inherits TestGroup
 		  
 		  const kMinLetters = 5
 		  const kMaxLetters = 15
-		  const kRounds = 50
+		  const kRounds = 10
 		  
 		  dim r as new Random
 		  
@@ -47,13 +47,13 @@ Inherits TestGroup
 		  for cost as integer = kMinCost to kMaxCost
 		    dim salt as string = Bcrypt_MTC.GenerateSalt( cost )
 		    
-		    for each pw as string in passwords
+		    for i as integer = 0 to passwords.Ubound
+		      dim pw as string = passwords( i )
 		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
 		      Assert.IsTrue PHPVerify( pw, myHash ), "PHP does not match pw «" + pw.ToText + "», cost = " + cost.ToText
 		      Assert.IsTrue Bcrypt_MTC.Verify( pw, myHash ), "Internal match failed on «" + pw.ToText + "», cost = " + cost.ToText
 		    next
 		  next
-		  
 		  
 		  return
 		End Sub
