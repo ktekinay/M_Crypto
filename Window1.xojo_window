@@ -638,64 +638,20 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function PHPBcrypt(key As String, salt As String) As String
-		  dim sw as new Stopwatch_MTC
-		  sw.Start
-		  
-		  dim phpHash as string
-		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $salt = '%salt%' ; print crypt( $key, $salt ) ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%salt%", salt )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    phpHash = sh.Result.Trim
-		    
-		  end if
-		  
-		  sw.Stop
-		  return phpHash
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function PHPCommand() As String
-		  #if not TargetWin32
-		    dim sh as new Shell
-		    sh.Execute "which php"
-		    return sh.Result.Trim
-		  #endif
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function PHPVerify(key As String, againstHash As String) As Boolean
 		  dim r as boolean
 		  
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    againstHash = againstHash.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%hash%", againstHash )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    r = sh.Result.Trim = "true"
-		    
-		  end if
+		  key = key.ReplaceAll( "'", "\'" )
+		  againstHash = againstHash.ReplaceAll( "'", "\'" )
+		  
+		  dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
+		  cmd = cmd.ReplaceAll( "%key%", key )
+		  cmd = cmd.ReplaceAll( "%hash%", againstHash )
+		  
+		  r = M_PHP.Execute( cmd ) = "true"
 		  
 		  sw.Stop
 		  return r
@@ -723,7 +679,7 @@ End
 		  AddToResult "Hash: " + hash
 		  
 		  // See if we can compare PHP
-		  dim phpHash as string = PHPBcrypt( key, salt )
+		  dim phpHash as string = M_PHP.Bcrypt( key, salt )
 		  AddToResult "PHP: " + phpHash
 		  
 		  if StrComp( hash, phpHash, 0 ) = 0 then
