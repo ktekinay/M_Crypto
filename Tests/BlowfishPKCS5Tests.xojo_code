@@ -30,6 +30,49 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub EncryptCBCStreamTest()
+		  dim key as string 
+		  dim vector as string
+		  dim data as string 
+		  dim expected as string 
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim e as Blowfish_MTC
+		  
+		  key = Crypto.SHA256( "password" )
+		  data = "12345678901234567890"
+		  vector = "a2xhcgAA"
+		  
+		  dim dataSize as integer = data.LenB
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
+		  expected = "9df40c746469090e70bb1f03a0536c4b1c3124ea21cfa09f"
+		  
+		  e = GetBF( key )
+		  e.SetVector vector
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    encrypted = encrypted + e.EncryptCBC( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    decrypted = decrypted + e.DecryptCBC( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub EncryptECB1BlockTest()
 		  dim bf as Blowfish_MTC
 		  dim data as string
@@ -62,6 +105,46 @@ Inherits TestGroup
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption"
 		  decrypted = bf.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
 		  Assert.AreSame data, decrypted, "Decryption"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EncryptECBStreamTest()
+		  dim key as string 
+		  dim data as string 
+		  dim expected as string 
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim e as Blowfish_MTC
+		  
+		  key = Crypto.SHA256( "password" )
+		  data = "12345678901234567890"
+		  
+		  dim dataSize as integer = data.LenB
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
+		  expected = "130784f2859d3ddde4a887cc767061be3ef3c57d9a605a32"
+		  
+		  e = GetBF( key )
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    encrypted = encrypted + e.EncryptECB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    decrypted = decrypted + e.DecryptECB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
 

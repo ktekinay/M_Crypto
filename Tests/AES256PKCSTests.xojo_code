@@ -44,13 +44,11 @@ Inherits TestGroup
 		  
 		  vector = "a2xhcgAAAAAAAAAA"
 		  key = Crypto.SHA256( "password" )
-		  'Assert.Message "Key = " + EncodeHex( key ).ToText
 		  data = "01234567890123456789012345678901"
 		  expectedHex = "7f087100137f0721831dd70e3d06e410f4e061f618899b80164c49f7ce10e8ba5914602e8bef11d97f40a80ebe820b89"
 		  
 		  e = GetAES( key )
 		  e.SetVector vector
-		  'e.PaddingMethod = AES_MTC.Padding.NullsOnly
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual DecodeHex( expectedHex ).LenB, encrypted.LenB, "Result lengths don't match"
@@ -93,6 +91,49 @@ Inherits TestGroup
 		  sw.Reset
 		  sw.Start
 		  decrypted = e.DecryptCBC( encrypted )
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EncryptCBCStreamTest()
+		  dim key as string 
+		  dim vector as string
+		  dim data as string 
+		  dim expected as string 
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim e as AES_MTC
+		  
+		  key = Crypto.SHA256( "password" )
+		  data = "12345678901234567890"
+		  vector = "a2xhcgAAAAAAAAAA"
+		  
+		  dim dataSize as integer = data.LenB
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
+		  expected = "6c7a75df2d9a31d6d5b6a4e64969fc8595340767d23b03b89f82d4b71b8645cf"
+		  
+		  e = GetAES( key )
+		  e.SetVector vector
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    encrypted = encrypted + e.EncryptCBC( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    decrypted = decrypted + e.DecryptCBC( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
 		  sw.Stop
 		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
@@ -225,6 +266,46 @@ Inherits TestGroup
 		  sw.Reset
 		  sw.Start
 		  decrypted = e.DecryptECB( encrypted )
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EncryptECBStreamTest()
+		  dim key as string 
+		  dim data as string 
+		  dim expected as string 
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim e as AES_MTC
+		  
+		  key = Crypto.SHA256( "password" )
+		  data = "12345678901234567890"
+		  
+		  dim dataSize as integer = data.LenB
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
+		  expected = "4fcd8d234486091b6bf3ebe59401a79adfd9e3ee76076caed2a434ecffba2c5b"
+		  
+		  e = GetAES( key )
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    encrypted = encrypted + e.EncryptECB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    decrypted = decrypted + e.DecryptECB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
 		  sw.Stop
 		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"

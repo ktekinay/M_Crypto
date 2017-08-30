@@ -1,51 +1,47 @@
 #tag Class
-Protected Class DesktopTestController
-Inherits TestController
-	#tag Event
-		Sub InitializeTestGroups()
-		  // Instantiate TestGroup subclasses here so that they can be run
+Protected Class BcryptTests
+Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub CompareToPHPTest()
+		  dim key as string = "password"
+		  dim salt as string = kSalt
 		  
-		  Dim group As TestGroup
+		  dim sw as new Stopwatch_MTC
+		  sw.Start
+		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  sw.Stop
+		  Assert.Message "Hash: " + hash.ToText
 		  
-		  'group = New XojoUnitTests(Self, "Assertion")
-		  'group = New XojoUnitFailTests(Self, "Always Fail")
+		  // See if we can compare PHP
+		  dim phpHash as string = M_PHP.Bcrypt( key, salt )
+		  Assert.Message "PHP: " + phpHash.ToText
 		  
-		  group = new AES128NullsTests( self, "AES-128-Nulls" )
-		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
-		  group = new AES256NullsTests( self, "AES-256-Nulls" )
-		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
+		  Assert.AreSame phpHash, hash
 		  
-		  group = new BcryptTests( self, "Bcrypt" )
-		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS5" )
-		  
-		  group = new EncrypterTests( self, "Encrypter" )
-		  
-		  group = new StressTests( self, "Stress Tests" )
-		  group.IncludeGroup = false
 		End Sub
-	#tag EndEvent
+	#tag EndMethod
+
+
+	#tag Constant, Name = kSalt, Type = String, Dynamic = False, Default = \"$2y$10$1234567890123456789012", Scope = Private
+	#tag EndConstant
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AllTestCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Duration"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="FailedCount"
+			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="GroupCount"
+			Name="IncludeGroup"
 			Group="Behavior"
-			Type="Integer"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -78,12 +74,7 @@ Inherits TestController
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="PassedCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="RunGroupCount"
+			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
@@ -93,15 +84,25 @@ Inherits TestController
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="SkippedCount"
+			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="StopTestOnFail"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TestCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
