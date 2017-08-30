@@ -276,8 +276,7 @@ Inherits M_Crypto.Encrypter
 		  // Copy the original data so we have source
 		  // for the vector
 		  //
-		  dim originalData as new MemoryBlock( data.Size )
-		  originalData.StringValue( 0, data.Size ) = data.StringValue( 0, data.Size ) 
+		  dim originalData as MemoryBlock = data.StringValue( 0, data.Size )
 		  dim originalDataPtr as ptr = originalData
 		  
 		  dim vector as string = zCurrentVector
@@ -1054,6 +1053,11 @@ Inherits M_Crypto.Encrypter
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="Bits"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="CurrentVector"
 			Group="Behavior"
 			Type="String"
@@ -1085,8 +1089,9 @@ Inherits M_Crypto.Encrypter
 			Type="Padding"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - NullPadding"
-				"1 - PKCS5"
+				"0 - NullsOnly"
+				"1 - NullsWithCount"
+				"2 - PKCS5"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -1101,6 +1106,11 @@ Inherits M_Crypto.Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="UseFunction"
+			Group="Behavior"
+			Type="Functions"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
