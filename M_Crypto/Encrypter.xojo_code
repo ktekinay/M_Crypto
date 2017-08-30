@@ -333,7 +333,7 @@ Protected Class Encrypter
 		Sub SetKey(value As String)
 		  RaiseErrorIf value = "", kErrorKeyCannotBeEmpty
 		  
-		  RaiseEvent SetKey( value )
+		  RaiseEvent KeyChanged( value )
 		  WasKeySet = true
 		End Sub
 	#tag EndMethod
@@ -360,7 +360,7 @@ Protected Class Encrypter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event SetKey(key As String)
+		Event KeyChanged(key As String)
 	#tag EndHook
 
 

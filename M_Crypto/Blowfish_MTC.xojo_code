@@ -41,7 +41,7 @@ Implements BcryptInterface
 	#tag EndEvent
 
 	#tag Event
-		Sub SetKey(key As String)
+		Sub KeyChanged(key As String)
 		  Expand0State key
 		End Sub
 	#tag EndEvent

@@ -34,7 +34,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 	#tag Event
-		Sub SetKey(key As String)
+		Sub KeyChanged(key As String)
 		  ExpandKey key, Nk
 		End Sub
 	#tag EndEvent
