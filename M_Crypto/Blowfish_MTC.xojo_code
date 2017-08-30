@@ -464,7 +464,7 @@ Implements BcryptInterface
 		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
 		  next i
 		  
-		  Xr = Xr Xor myPPtr.Uint32( 17 * 4 )
+		  Xr = Xr Xor myPPtr.UInt32( 17 * 4 )
 		  
 		  x0 = Xr
 		  x1 = Xl
@@ -649,7 +649,9 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub Expand0State(key As MemoryBlock)
-		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
+		  if key.Size = 0 then
+		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
+		  end if
 		  WasKeySet = true
 		  
 		  #if not DebugBuild
