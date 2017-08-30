@@ -223,7 +223,7 @@ Inherits M_Crypto.Encrypter
 		    InitRcon
 		  end if
 		  
-		  BlockSize = kBlockLen
+		  SetBlockSize kBlockLen
 		  
 		  self.zBits = Integer( bits )
 		  self.PaddingMethod = paddingMethod
@@ -294,6 +294,9 @@ Inherits M_Crypto.Encrypter
 		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
 		  next
 		  
+		  // See if we have to add back the last null
+		  AddBackNullIfNeeded( data )
+		  
 		  if isFinalBlock then
 		    DepadIfNeeded( data )
 		    zCurrentVector = ""
@@ -319,6 +322,9 @@ Inherits M_Crypto.Encrypter
 		  for startAt As integer = 0 to lastIndex step kBlockLen
 		    InvCipher( dataPtr, startAt )
 		  next
+		  
+		  // See if we have to add back the last null
+		  AddBackNullIfNeeded( data )
 		  
 		  if isFinalBlock then
 		    DepadIfNeeded( data )
