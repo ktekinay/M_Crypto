@@ -26,18 +26,35 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d as MemoryBlock = data
-		  RaiseEvent Decrypt( EncryptionTypes.Plain, d, isfinalBlock )
-		  return d
+		  select case UseFunction
+		  case Functions.Default
+		    RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		    
+		    if data = "" then
+		      return data
+		    end if
+		    
+		    dim d as MemoryBlock = data
+		    RaiseEvent Decrypt( EncryptionTypes.Plain, d, isfinalBlock )
+		    return d
+		    
+		  case Functions.CBC
+		    return DecryptCBC( data, isFinalBlock )
+		    
+		  case Functions.ECB
+		    return DecryptECB( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnimplementedEnumException
+		    
+		  end select
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
 		  if data = "" then
 		    return data
 		  end if
@@ -50,6 +67,8 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
 		  if data = "" then
 		    return data
 		  end if
@@ -128,18 +147,35 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d as MemoryBlock = data
-		  RaiseEvent Encrypt( EncryptionTypes.Plain, d, isfinalBlock )
-		  return d
+		  select case UseFunction
+		  case Functions.Default
+		    RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		    
+		    if data = "" then
+		      return data
+		    end if
+		    
+		    dim d as MemoryBlock = data
+		    RaiseEvent Encrypt( EncryptionTypes.Plain, d, isfinalBlock )
+		    return d
+		    
+		  case Functions.CBC
+		    return EncryptCBC( data, isFinalBlock )
+		    
+		  case Functions.ECB
+		    return EncryptECB( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnimplementedEnumException
+		    
+		  end select
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
 		  if data = "" then
 		    return data
 		  end if
@@ -152,6 +188,8 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
 		  if data = "" then
 		    return data
 		  end if
@@ -345,6 +383,10 @@ Protected Class Encrypter
 		PaddingMethod As Padding
 	#tag EndProperty
 
+	#tag Property, Flags = &h0, Description = 5768656E207365742C20456E637279707420616E6420446563727970742077696C6C2075736520746865207370656369666965642066756E6374696F6E
+		UseFunction As Functions
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected WasKeySet As Boolean
 	#tag EndProperty
@@ -354,7 +396,10 @@ Protected Class Encrypter
 	#tag EndProperty
 
 
-	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty.", Scope = Public
+	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty", Scope = Public
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to nulls)\x2C or exactly BLOCKSIZE bytes or hexadecimal characters representing BLOCKSIZE bytes", Scope = Public
@@ -363,6 +408,12 @@ Protected Class Encrypter
 
 	#tag Enum, Name = EncryptionTypes, Type = Integer, Flags = &h1
 		Plain
+		  ECB
+		CBC
+	#tag EndEnum
+
+	#tag Enum, Name = Functions, Type = Integer, Flags = &h0
+		Default
 		  ECB
 		CBC
 	#tag EndEnum
@@ -407,8 +458,9 @@ Protected Class Encrypter
 			Type="Padding"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - NullPadding"
-				"1 - PKCS5"
+				"0 - NullsOnly"
+				"1 - NullsWithCount"
+				"2 - PKCS5"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty

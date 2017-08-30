@@ -230,8 +230,6 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
 		  #if not DebugBuild
@@ -1185,9 +1183,6 @@ Implements BcryptInterface
 	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
-	#tag EndConstant
-
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.1.1", Scope = Public
 	#tag EndConstant
 
@@ -1225,8 +1220,9 @@ Implements BcryptInterface
 			Type="Padding"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - NullPadding"
-				"1 - PKCS5"
+				"0 - NullsOnly"
+				"1 - NullsWithCount"
+				"2 - PKCS5"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty

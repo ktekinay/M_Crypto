@@ -205,6 +205,12 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(bits As Integer, paddingMethod As Padding = Padding.PKCS5)
+		  Constructor "", EncryptionBits( bits ), paddingMethod
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(key As String, bits As EncryptionBits = EncryptionBits.Bits128, paddingMethod As Padding = Padding.PKCS5)
 		  if XtimeMB is nil then
 		    //
@@ -219,7 +225,7 @@ Inherits M_Crypto.Encrypter
 		  
 		  BlockSize = kBlockLen
 		  
-		  self.Bits = Integer( bits )
+		  self.zBits = Integer( bits )
 		  self.PaddingMethod = paddingMethod
 		  
 		  select case bits
@@ -940,9 +946,14 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h21
-		Private Bits As Integer
-	#tag EndProperty
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return zBits
+			End Get
+		#tag EndGetter
+		Bits As Integer
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private Shared InvSbox As MemoryBlock
@@ -1014,6 +1025,10 @@ Inherits M_Crypto.Encrypter
 
 	#tag Property, Flags = &h21
 		Private Shared XtimePtr As Ptr
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private zBits As Integer
 	#tag EndProperty
 
 
