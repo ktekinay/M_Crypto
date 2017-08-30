@@ -1,6 +1,31 @@
 #tag Class
 Protected Class App
 Inherits Application
+	#tag Event
+		Sub Open()
+		  WndEncryption.Show
+		  XojoUnitTestWindow.Show
+		  XojoUnitTestWindow.Top = XojoUnitTestWindow.Top + 25
+		End Sub
+	#tag EndEvent
+
+
+	#tag MenuHandler
+		Function FileEncryptionWindow() As Boolean Handles FileEncryptionWindow.Action
+			WndEncryption.Show
+			return true
+			
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function FileUnitTestsWindow() As Boolean Handles FileUnitTestsWindow.Action
+			XojoUnitTestWindow.Show
+			return true
+		End Function
+	#tag EndMenuHandler
+
+
 	#tag Constant, Name = kEditClear, Type = String, Dynamic = False, Default = \"&Delete", Scope = Public
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"&Delete"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"&Delete"

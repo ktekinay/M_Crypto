@@ -6,6 +6,27 @@ Begin Menu MenuBar1
       Index = -2147483648
       AutoEnable = True
       Visible = True
+      Begin MenuItem FileUnitTestsWindow
+         SpecialMenu = 0
+         Text = "Unit Tests"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem FileEncryptionWindow
+         SpecialMenu = 0
+         Text = "Encryption"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem UntitledSeparator
+         SpecialMenu = 0
+         Text = "-"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
       Begin QuitMenuItem FileQuit
          SpecialMenu = 0
          Text = "#App.kFileQuit"
