@@ -104,7 +104,7 @@ Protected Module Bcrypt_MTC
 		  pEncodeBase64( buffer, ciphertext )
 		  r = r + buffer.CString( 0 )
 		  
-		  return r
+		  return r.DefineEncoding( Encodings.UTF8 )
 		End Function
 	#tag EndMethod
 
