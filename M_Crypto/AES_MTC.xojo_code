@@ -1049,6 +1049,9 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Public
+	#tag EndConstant
+
 
 	#tag Enum, Name = EncryptionBits, Type = Integer, Flags = &h0
 		Bits128 = 128
