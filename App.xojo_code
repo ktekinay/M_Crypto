@@ -4,8 +4,7 @@ Inherits Application
 	#tag Event
 		Sub Open()
 		  WndEncryption.Show
-		  XojoUnitTestWindow.Show
-		  XojoUnitTestWindow.Top = XojoUnitTestWindow.Top + 25
+		  
 		End Sub
 	#tag EndEvent
 
