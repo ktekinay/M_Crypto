@@ -17,6 +17,9 @@ Inherits TestGroup
 		  Assert.AreNotEqual encrypted, encrypted2, "AES same encryption!"
 		  Assert.AreEqual "data", e.DecryptCBC( encrypted2 ), "AES 2"
 		  
+		  e.SetKey "password1"
+		  encrypted2 = e.EncryptCBC( "data" )
+		  Assert.AreSame encrypted, encrypted2, "AES inconsistent result"
 		  e = new Blowfish_MTC
 		  
 		  e.SetKey "password1"
@@ -29,6 +32,9 @@ Inherits TestGroup
 		  Assert.AreNotEqual encrypted, encrypted2, "BF same encryption!"
 		  Assert.AreEqual "data", e.DecryptCBC( encrypted2 ), "BF 2"
 		  
+		  e.SetKey "password1"
+		  encrypted2 = e.EncryptCBC( "data" )
+		  Assert.AreSame encrypted, encrypted2, "BF inconsistent result"
 		End Sub
 	#tag EndMethod
 

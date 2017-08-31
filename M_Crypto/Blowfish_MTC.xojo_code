@@ -42,6 +42,7 @@ Implements BcryptInterface
 
 	#tag Event
 		Sub KeyChanged(key As String)
+		  InitKeyValues
 		  Expand0State key
 		End Sub
 	#tag EndEvent
@@ -71,46 +72,12 @@ Implements BcryptInterface
 		    FlagStream2Word = new Semaphore
 		  end if
 		  
-		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
-		  PPtr = P
-		  S = new MemoryBlock( 4 * 256 * 4 )
-		  SPtr = S
-		  
-		  dim x as integer
-		  for i as integer = 0 to 3
-		    dim arr() as UInt32
-		    select case i
-		    case 0
-		      arr = S0
-		    case 1
-		      arr = S1
-		    case 2
-		      arr = S2
-		    case 3
-		      arr = S3
-		    end
-		    
-		    for i1 as Integer = 0 to arr.Ubound
-		      SPtr.UInt32( x ) = arr( i1 )
-		      x = x + 4
-		    next i1
-		  next i
-		  
-		  dim vals() as UInt32 = UInt32Array( _
-		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
-		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
-		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
-		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
-		  &h9216d5d9, &h8979fb1b _
-		  )
-		  
-		  for i as integer = 0 to vals.Ubound
-		    PPtr.UInt32( i * 4 ) = vals( i )
-		  next i
 		  
 		  // See if a key was provided
 		  if key <> "" then
 		    SetKey key
+		  else
+		    InitKeyValues
 		  end if
 		  
 		End Sub
@@ -745,6 +712,47 @@ Implements BcryptInterface
 		    next k
 		  next i
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub InitKeyValues()
+		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
+		  PPtr = P
+		  S = new MemoryBlock( 4 * 256 * 4 )
+		  SPtr = S
+		  
+		  dim x as integer
+		  for i as integer = 0 to 3
+		    dim arr() as UInt32
+		    select case i
+		    case 0
+		      arr = S0
+		    case 1
+		      arr = S1
+		    case 2
+		      arr = S2
+		    case 3
+		      arr = S3
+		    end
+		    
+		    for i1 as Integer = 0 to arr.Ubound
+		      SPtr.UInt32( x ) = arr( i1 )
+		      x = x + 4
+		    next i1
+		  next i
+		  
+		  dim vals() as UInt32 = UInt32Array( _
+		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
+		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
+		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
+		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
+		  &h9216d5d9, &h8979fb1b _
+		  )
+		  
+		  for i as integer = 0 to vals.Ubound
+		    PPtr.UInt32( i * 4 ) = vals( i )
+		  next i
 		End Sub
 	#tag EndMethod
 
