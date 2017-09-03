@@ -16,7 +16,7 @@ Begin Window WndEncryption
    MaxHeight       =   32000
    MaximizeButton  =   True
    MaxWidth        =   32000
-   MenuBar         =   0
+   MenuBar         =   410277764
    MenuBarVisible  =   True
    MinHeight       =   64
    MinimizeButton  =   True
@@ -926,19 +926,20 @@ End
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  
+		  dim isUTF8 as boolean = true
 		  select case mnuAction.Text
 		  case kLabelEncrypt
 		    result = e.Encrypt( source )
 		    
 		  case kLabelDecrypt
 		    result = e.Decrypt( source )
-		    
+		    isUTF8 = Encodings.UTF8.IsValidData(result)
 		  end select
 		  sw.Stop
 		  
 		  result = Encode( result, mnuToEncoding.Text )
 		  
-		  lblTiming.Text = format( sw.ElapsedMilliseconds, "#,0.00" ) + " ms"
+		  lblTiming.Text = if( not isUTF8, "(not UTF8) ", "" ) + format( sw.ElapsedMilliseconds, "#,0.00" ) + " ms"
 		  
 		  exception err as RuntimeException
 		    result = "Error: " + err.Message
@@ -1081,10 +1082,6 @@ End
 		  end if
 		End Sub
 	#tag EndEvent
-#tag EndEvents
-#tag Events mnuFromEncoding
-#tag EndEvents
-#tag Events mnuToEncoding
 #tag EndEvents
 #tag Events mnuPadding
 	#tag Event
