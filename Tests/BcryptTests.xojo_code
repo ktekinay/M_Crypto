@@ -21,6 +21,37 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub ValidateTest()
+		  dim keyArr() as string = array( _
+		  "password", _
+		  "another", _
+		  "really really long" _
+		  )
+		  dim saltArr() as string = array( _
+		  "$2a$10$Rx0ZYqbDsF1OOzEULWc4xO", _
+		  "$2a$10$gmXEULzll3Cu3LfWNRdk6u", _
+		  "$2y$09$jRqLcPxXQBAX8MG0DMINWu" _
+		  )
+		  
+		  dim expectedArr() as string = array( _
+		  "$2a$10$Rx0ZYqbDsF1OOzEULWc4xO5m26RF0qsgd6iUL2P4mTCmfFlVRBogC", _
+		  "$2a$10$gmXEULzll3Cu3LfWNRdk6u5pcI0/HMSU/o04Zs1nX79EA78wq3KN6", _
+		  "$2y$09$jRqLcPxXQBAX8MG0DMINWuVmvzHri3/SvxyDjY./OU57IRZT6Nh72" _
+		  )
+		  
+		  for i as integer = 0 to keyArr.Ubound
+		    dim key as string = keyArr( i )
+		    dim salt as string = saltArr( i )
+		    dim expected as string = expectedArr( i )
+		    
+		    dim actual as string = Bcrypt_MTC.Bcrypt( key, salt )
+		    Assert.AreSame( expected, actual )
+		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected )
+		  next
+		End Sub
+	#tag EndMethod
+
 
 	#tag Constant, Name = kSalt, Type = String, Dynamic = False, Default = \"$2y$10$1234567890123456789012", Scope = Private
 	#tag EndConstant
