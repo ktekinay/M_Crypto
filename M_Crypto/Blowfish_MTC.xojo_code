@@ -632,20 +632,22 @@ Implements BcryptInterface
 		  dim i, k, arrIndex, arrIndexMajor as integer
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
+		  dim myPPtr as ptr = PPtr
+		  dim mySPtr as ptr = SPtr
 		  
 		  const kLastIndex as integer = BLF_N + 1
 		  for i = 0 to kLastIndex
 		    temp = Stream2Word( key, j )
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
+		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
 		    self.Encipher( d0, d1 )
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = d0
-		    self.PPtr.Uint32( arrIndex + 4 ) = d1
+		    myPPtr.UInt32( arrIndex ) = d0
+		    myPPtr.Uint32( arrIndex + 4 ) = d1
 		  next i
 		  
 		  for i = 0 to 3
@@ -654,8 +656,8 @@ Implements BcryptInterface
 		      self.Encipher( d0, d1 )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.UInt32( arrIndex ) = d0
-		      self.SPtr.UInt32( arrIndex + 4 ) = d1
+		      mySPtr.UInt32( arrIndex ) = d0
+		      mySPtr.UInt32( arrIndex + 4 ) = d1
 		    next k
 		  next i
 		  
