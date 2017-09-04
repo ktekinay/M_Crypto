@@ -342,6 +342,9 @@ Protected Module Bcrypt_MTC
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = Double, Dynamic = False, Default = \"2.0", Scope = Protected
+	#tag EndConstant
+
 
 	#tag Enum, Name = Prefix, Type = Integer, Flags = &h1
 		A = 97
