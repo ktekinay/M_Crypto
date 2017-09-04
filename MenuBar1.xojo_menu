@@ -6,17 +6,23 @@ Begin Menu MenuBar1
       Index = -2147483648
       AutoEnable = True
       Visible = True
-      Begin MenuItem FileUnitTestsWindow
-         SpecialMenu = 0
-         Text = "Unit Tests"
-         Index = -2147483648
-         AutoEnable = True
-         Visible = True
-      End
       Begin MenuItem FileEncryptionWindow
          SpecialMenu = 0
          Text = "Encryption"
          Index = -2147483648
+         ShortcutKey = "1"
+         Shortcut = "Cmd+1"
+         MenuModifier = True
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem FileUnitTestsWindow
+         SpecialMenu = 0
+         Text = "Unit Tests"
+         Index = -2147483648
+         ShortcutKey = "2"
+         Shortcut = "Cmd+2"
+         MenuModifier = True
          AutoEnable = True
          Visible = True
       End
