@@ -35,7 +35,7 @@ Protected Class Encrypter
 		    end if
 		    
 		    dim d as MemoryBlock = data
-		    RaiseEvent Decrypt( EncryptionTypes.Plain, d, isfinalBlock )
+		    RaiseEvent Decrypt( Functions.Default, d, isfinalBlock )
 		    return d
 		    
 		  case Functions.CBC
@@ -60,7 +60,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim d as MemoryBlock = data
-		  RaiseEvent Decrypt( EncryptionTypes.CBC, d, isfinalBlock )
+		  RaiseEvent Decrypt( Functions.CBC, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
@@ -74,7 +74,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim d as MemoryBlock = data
-		  RaiseEvent Decrypt( EncryptionTypes.ECB, d, isfinalBlock )
+		  RaiseEvent Decrypt( Functions.ECB, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
@@ -156,7 +156,7 @@ Protected Class Encrypter
 		    end if
 		    
 		    dim d as MemoryBlock = data
-		    RaiseEvent Encrypt( EncryptionTypes.Plain, d, isfinalBlock )
+		    RaiseEvent Encrypt( Functions.Default, d, isfinalBlock )
 		    return d
 		    
 		  case Functions.CBC
@@ -181,7 +181,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim d as MemoryBlock = data
-		  RaiseEvent Encrypt( EncryptionTypes.CBC, d, isfinalBlock )
+		  RaiseEvent Encrypt( Functions.CBC, d, isfinalBlock )
 		  return d
 		End Function
 	#tag EndMethod
@@ -195,7 +195,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim d As MemoryBlock = data
-		  RaiseEvent Encrypt( EncryptionTypes.ECB, d, isFinalBlock )
+		  RaiseEvent Encrypt( Functions.ECB, d, isFinalBlock )
 		  return d
 		  
 		End Function
@@ -352,11 +352,11 @@ Protected Class Encrypter
 
 
 	#tag Hook, Flags = &h0
-		Event Decrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		Event Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Encrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		Event Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -420,12 +420,6 @@ Protected Class Encrypter
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to nulls)\x2C or exactly BLOCKSIZE bytes or hexadecimal characters representing BLOCKSIZE bytes", Scope = Protected
 	#tag EndConstant
 
-
-	#tag Enum, Name = EncryptionTypes, Type = Integer, Flags = &h1
-		Plain
-		  ECB
-		CBC
-	#tag EndEnum
 
 	#tag Enum, Name = Functions, Type = Integer, Flags = &h0
 		Default

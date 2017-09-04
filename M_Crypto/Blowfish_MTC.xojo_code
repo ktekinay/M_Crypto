@@ -3,38 +3,38 @@ Class Blowfish_MTC
 Inherits M_Crypto.Encrypter
 Implements BcryptInterface
 	#tag Event
-		Sub Decrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
-		  case EncryptionTypes.Plain
+		  case Functions.Default
 		    Decrypt( data, isFinalBlock )
 		    
-		  case EncryptionTypes.ECB
+		  case Functions.ECB
 		    DecryptECB( data, isFinalBlock )
 		    
-		  case EncryptionTypes.CBC
+		  case Functions.CBC
 		    DecryptCBC( data, isFinalBlock )
 		    
 		  case else
-		    raise new M_Crypto.UnsupportedEncryptionTypeException
+		    raise new M_Crypto.UnsupportedFunctionException
 		    
 		  end select
 		End Sub
 	#tag EndEvent
 
 	#tag Event
-		Sub Encrypt(type As EncryptionTypes, data As MemoryBlock, isFinalBlock As Boolean)
+		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
-		  case EncryptionTypes.Plain
+		  case Functions.Default
 		    Encrypt( data, isFinalBlock )
 		    
-		  case EncryptionTypes.ECB
+		  case Functions.ECB
 		    EncryptECB( data, isFinalBlock )
 		    
-		  case EncryptionTypes.CBC
+		  case Functions.CBC
 		    EncryptCBC( data, isFinalBlock )
 		    
 		  case else
-		    raise new M_Crypto.UnsupportedEncryptionTypeException
+		    raise new M_Crypto.UnsupportedFunctionException
 		    
 		  end select
 		End Sub
