@@ -1,15 +1,46 @@
 #tag Module
 Protected Module Bcrypt_MTC
 	#tag Method, Flags = &h1
-		Protected Function Bcrypt(key As String, salt As String) As String
+		Attributes( deprecated = "Hash" ) Protected Function Bcrypt(key As String, salt As String) As String
+		  return Hash( key, salt )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Attributes( deprecated = "Hash" ) Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		  return Hash( key, rounds )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
+		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
+		  
+		  const kMinRounds as UInt8 = 4
+		  const kMaxRounds as UInt8 = 31
+		  
+		  if rounds < kMinRounds then
+		    rounds = kMinRounds
+		  elseif rounds > kMaxRounds then
+		    rounds = kMaxRounds
+		  end if
+		  
+		  return pEncodeSalt( csalt, rounds, preferredPrefix )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Hash(key As String, salt As String) As String
 		  if salt = "" or key = "" then 
 		    return ""
 		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim r as string
 		  
@@ -109,27 +140,10 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		Protected Function Hash(key As String, rounds As UInt8 = 10) As String
 		  dim salt as string = GenerateSalt( rounds )
-		  return Bcrypt( key, salt )
+		  return Hash( key, salt )
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
-		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
-		  
-		  const kMinRounds as UInt8 = 4
-		  const kMaxRounds as UInt8 = 31
-		  
-		  if rounds < kMinRounds then
-		    rounds = kMinRounds
-		  elseif rounds > kMaxRounds then
-		    rounds = kMaxRounds
-		  end if
-		  
-		  return pEncodeSalt( csalt, rounds, preferredPrefix )
 		End Function
 	#tag EndMethod
 
@@ -289,7 +303,7 @@ Protected Module Bcrypt_MTC
 		  dim data as string = againstHash.NthField( "$", 4 )
 		  dim salt as string = againstHash.Left( 7 ) + data.Left(22 )
 		  
-		  dim hash as string = Bcrypt( key, salt )
+		  dim hash as string = Hash( key, salt )
 		  return hash = againstHash
 		End Function
 	#tag EndMethod

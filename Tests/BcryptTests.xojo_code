@@ -15,7 +15,7 @@ Inherits TestGroup
 		  
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
-		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
 		  Assert.Message "Hash: " + hash.ToText
 		  
@@ -51,7 +51,7 @@ Inherits TestGroup
 		    dim salt as string = saltArr( i )
 		    dim expected as string = expectedArr( i )
 		    
-		    dim actual as string = Bcrypt_MTC.Bcrypt( key, salt )
+		    dim actual as string = Bcrypt_MTC.Hash( key, salt )
 		    Assert.AreSame( expected, actual )
 		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected )
 		  next

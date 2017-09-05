@@ -49,7 +49,7 @@ Inherits TestGroup
 		    
 		    for i as integer = 0 to passwords.Ubound
 		      dim pw as string = passwords( i )
-		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
+		      dim myHash as string = Bcrypt_MTC.Hash( pw, salt )
 		      Assert.IsTrue PHPVerify( pw, myHash ), "PHP does not match pw «" + pw.ToText + "», cost = " + cost.ToText
 		      Assert.IsTrue Bcrypt_MTC.Verify( pw, myHash ), "Internal match failed on «" + pw.ToText + "», cost = " + cost.ToText
 		    next

@@ -168,6 +168,7 @@ Begin Window WndLegacy
       Selectable      =   False
       TabIndex        =   5
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Password:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -233,6 +234,7 @@ Begin Window WndLegacy
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Test:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -267,6 +269,7 @@ Begin Window WndLegacy
       Selectable      =   False
       TabIndex        =   9
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Data:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -348,6 +351,7 @@ Begin Window WndLegacy
       Selectable      =   False
       TabIndex        =   11
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Result:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -504,7 +508,7 @@ End
 		    dim salt as string = Bcrypt_MTC.GenerateSalt( cost )
 		    
 		    for each pw as string in passwords
-		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
+		      dim myHash as string = Bcrypt_MTC.Hash( pw, salt )
 		      if not PHPVerify( pw, myHash ) then
 		        AddToResult "PHP no match: " + pw
 		      elseif not Bcrypt_MTC.Verify( pw, myHash ) then
@@ -674,7 +678,7 @@ End
 		Private Sub TestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
 		  AddToResult "Salt: " + salt
 		  sw.Start
-		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
 		  AddToResult "Hash: " + hash
 		  
