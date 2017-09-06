@@ -183,7 +183,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Function GetBF(key As String) As Blowfish_MTC
-		  return new Blowfish_MTC( key, Blowfish_MTC.Padding.PKCS5 )
+		  return new Blowfish_MTC( key, Blowfish_MTC.Padding.PKCS )
 		  
 		End Function
 	#tag EndMethod

@@ -16,7 +16,7 @@ Inherits TestController
 		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
 		  
 		  group = new BcryptTests( self, "Bcrypt" )
-		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS5" )
+		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS" )
 		  
 		  group = new EncrypterTests( self, "Encrypter" )
 		  

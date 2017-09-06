@@ -1087,7 +1087,7 @@ End
 	#tag Event
 		Sub Open()
 		  me.AddRows array( kLabelPKCS, kLabelNullsWithCount, kLabelNullsOnly )
-		  me.RowTag( 0 ) = M_Crypto.Encrypter.Padding.PKCS5
+		  me.RowTag( 0 ) = M_Crypto.Encrypter.Padding.PKCS
 		  me.RowTag( 1 ) = M_Crypto.Encrypter.Padding.NullsWithCount
 		  me.RowTag( 2 ) = M_Crypto.Encrypter.Padding.NullsOnly
 		  

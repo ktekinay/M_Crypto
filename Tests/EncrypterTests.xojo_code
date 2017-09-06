@@ -105,6 +105,77 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub InvalidPaddingTest()
+		  dim e as M_Crypto.Encrypter = new Blowfish_MTC( "password" )
+		  dim data as string = "12345678"
+		  dim pad as string
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim description as text
+		  
+		  description = "Nonsense padding"
+		  pad = "ABCDEF01"
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.NullsOnly
+		  encrypted = e.Encrypt( data + pad )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
+		  #pragma BreakOnExceptions false
+		  try
+		    decrypted = e.Decrypt( encrypted )
+		    Assert.Fail description
+		  catch err as M_Crypto.InvalidPaddingException
+		    Assert.Pass description
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  description = "Alternate padding"
+		  pad = "12345" + ChrB( 0 ) + ChrB( 0 ) + ChrB( 3 )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.NullsOnly
+		  encrypted = e.Encrypt( data + pad )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
+		  #pragma BreakOnExceptions false
+		  try
+		    decrypted = e.Decrypt( encrypted )
+		    Assert.Fail description
+		  catch err as M_Crypto.InvalidPaddingException
+		    Assert.Pass description
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  description = "No padding"
+		  pad = ""
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.NullsOnly
+		  encrypted = e.Encrypt( data + pad )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
+		  #pragma BreakOnExceptions false
+		  try
+		    decrypted = e.Decrypt( encrypted )
+		    Assert.Fail description
+		  catch err as M_Crypto.InvalidPaddingException
+		    Assert.Pass description
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  description = "Only padding"
+		  data = ""
+		  pad = ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 ) + ChrB( 8 )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.NullsOnly
+		  encrypted = e.Encrypt( data + pad )
+		  e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
+		  #pragma BreakOnExceptions false
+		  try
+		    decrypted = e.Decrypt( encrypted )
+		    dim expected as string
+		    Assert.AreEqual expected, decrypted, description
+		  catch err as M_Crypto.InvalidPaddingException
+		    Assert.Fail description
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty

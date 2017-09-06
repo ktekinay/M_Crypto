@@ -358,7 +358,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Function GetAES(key As String) As AES_MTC
-		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.PKCS5 )
+		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.PKCS )
 		End Function
 	#tag EndMethod
 

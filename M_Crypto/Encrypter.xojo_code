@@ -90,10 +90,21 @@ Protected Class Encrypter
 		  dim originalSize as integer = data.Size
 		  
 		  select case PaddingMethod
-		  case Padding.PKCS5
+		  case Padding.PKCS
+		    //
+		    // A pad is expected so this is the only method that will raise an exception if
+		    // it's not present
+		    //
 		    static paddingStrings() as string
 		    if paddingStrings.Ubound < BlockSize then
 		      dim firstIndex as integer = paddingStrings.Ubound + 1
+		      if firstIndex = 0 then
+		        //
+		        // Can never be a pad of zero
+		        //
+		        firstIndex = 1
+		      end if
+		      
 		      redim paddingStrings( BlockSize )
 		      for index as integer = firstIndex to BlockSize
 		        dim pad as string = ChrB( index )
@@ -105,12 +116,23 @@ Protected Class Encrypter
 		      next
 		    end if
 		    
-		    dim stripCount as byte = data.Byte( originalSize - 1 )
-		    if stripCount > 0 and stripCount <= BlockSize and stripCount <= originalSize then
-		      dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
-		      if testPad = paddingStrings( stripCount ) then
-		        data.Size = originalSize - stripCount
-		      end if
+		    dim stripCount as integer = data.Byte( originalSize - 1 )
+		    if stripCount = 0 or stripCount > BlockSize or stripCount > originalSize then
+		      //
+		      // These are impossible with PKCS
+		      // (stripCount might equal original size if this was the last block in a chain)
+		      // 
+		      raise new M_Crypto.InvalidPaddingException
+		    end if
+		    
+		    dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
+		    if testPad = paddingStrings( stripCount ) then
+		      data.Size = originalSize - stripCount
+		    else
+		      //
+		      // Something is wrong
+		      //
+		      raise new M_Crypto.InvalidPaddingException
 		    end if
 		    
 		  case Padding.NullsWithCount
@@ -234,7 +256,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  select case PaddingMethod
-		  case Padding.PKCS5
+		  case Padding.PKCS
 		    // https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7
 		    
 		    if padToAdd = 0 then
@@ -255,11 +277,11 @@ Protected Class Encrypter
 		    // It does this by adding nulls followed by the number of padding bytes.
 		    // Example: If data is &h31 32 33, it will turn it into
 		    // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
-		    // add 9 to avoid confusion.
+		    // add BlockSize + 1 to avoid confusion.
 		    //
 		    // If data is already a multiple of BlockSize, it will only add a padding if the trailing bytes
 		    // match the pattern of X nulls followed by &hX. The exception is if the
-		    // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
+		    // last BlockSize bytes matches the pattern &h00 X (BlockSize - 1) + BlockSize.
 		    // To be on the safe side, it will add padding then too.
 		    
 		    dim lastByte as integer = data.Byte( originalSize - 1 )
@@ -430,7 +452,7 @@ Protected Class Encrypter
 	#tag Enum, Name = Padding, Type = Integer, Flags = &h0
 		NullsOnly
 		  NullsWithCount
-		PKCS5
+		PKCS
 	#tag EndEnum
 
 

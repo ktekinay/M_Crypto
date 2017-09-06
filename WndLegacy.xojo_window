@@ -576,7 +576,7 @@ End
 		    dim key as string = join( keyArr, "" )
 		    dim jsKey as string = key.ReplaceAll( "'", "\'" )
 		    
-		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS5 )
+		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS )
 		    
 		    for dataCount as integer = kMinDataLetters to kMaxDataLetters
 		      
@@ -753,7 +753,7 @@ End
 		    
 		  case 2 // CBC
 		    sw.Start
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    data = blf.EncryptCBC( data )
 		    sw.Stop
 		    AddToResult "Encrypted: " + EncodeHex( data, true )
@@ -767,7 +767,7 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -779,7 +779,7 @@ End
 		    
 		    byteIndex = 1
 		    data = ""
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -798,7 +798,7 @@ End
 		    dim vector as string = kVector // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    // You can supply either an 8-byte string or hex representing 8 bytes
 		    blf.SetVector( vector )
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8

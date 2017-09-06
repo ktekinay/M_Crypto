@@ -110,7 +110,7 @@ Inherits TestGroup
 		    dim key as string = join( keyArr, "" )
 		    dim jsKey as string = key.ReplaceAll( "'", "\'" )
 		    
-		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS5 )
+		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS )
 		    
 		    for dataCount as integer = kMinDataLetters to kMaxDataLetters
 		      

@@ -199,19 +199,19 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(bits As EncryptionBits, paddingMethod As Padding = Padding.PKCS5)
+		Sub Constructor(bits As EncryptionBits, paddingMethod As Padding=Padding.PKCS)
 		  Constructor "", bits, paddingMethod
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(bits As Integer, paddingMethod As Padding = Padding.PKCS5)
+		Sub Constructor(bits As Integer, paddingMethod As Padding=Padding.PKCS)
 		  Constructor "", EncryptionBits( bits ), paddingMethod
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(key As String, bits As EncryptionBits = EncryptionBits.Bits128, paddingMethod As Padding = Padding.PKCS5)
+		Sub Constructor(key As String, bits As EncryptionBits=EncryptionBits.Bits128, paddingMethod As Padding=Padding.PKCS)
 		  if XtimeMB is nil then
 		    //
 		    // Needs to be initialed
