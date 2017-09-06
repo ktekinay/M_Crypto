@@ -11,7 +11,7 @@ Let's start with some examples. These are meant to give you an idea of the ways 
 <u>Blowfish</u>
 
 ```
-dim bf as new Blowfish_MTC( "password", Blowfish_MTC.Padding.PKCS5 )
+dim bf as new Blowfish_MTC( "password", Blowfish_MTC.Padding.PKCS )
 
 dim data as string = EncodeHex( bf.Encrypt( "some data" ) )
 // 774FB372E0636E70BA65D0BD35D78829
@@ -44,7 +44,7 @@ dim data as string = EncodeHex( aes.Encrypt( "some data" ) )
 // 9EAC7C8DC34E13B89B89F9F6D08E830F
 
 aes = new AES_MTC( _
-    "another password", AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.PKCS5 )
+    "another password", AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.PKCS )
 aes.SetVector "1234567890ABCDEF1234567890ABCDEF" // 16 bytes as hex
 data = EncodeHex( aes.EncryptCBC( "some data" ) )
 // 6984F179E4F969A79CC8D6AD1F295244
@@ -65,13 +65,13 @@ dim data as string = EncodeHex( e.Encrypt( "some data" ) )
 
 e = new Blowfish_MTC
 e.SetKey "password"
-e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS5
+e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
 data = EncodeHex( e.EncryptECB( "some data" ) )
 // D9B0A79853F139603951BFF96C3D0DD5
 
 e = M_Crypto.GetEncrypter( "aes-256-cbc" )
 e.SetKey "password"
-e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS5
+e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
 e.SetVector "I need 16 bytes!"
 data = EncodeHex( e.Encrypt( "some data" ) )
 // 90BD2689FC13EDD41063AE6DD18AD1D2
@@ -124,7 +124,7 @@ DecryptECB( data As String, isFinalBlock As Boolean = True )
 
 Create an object for the type of encryption you want and optionally specify the key and padding. Each can be set later if desired with `SetKey` and `PaddingMethod` respectively.
 
-Each type of encryption defaults to a certain padding. With Blowfish, the default is NullsWithCount. For AES, it is PKCS5.
+Each type of encryption defaults to a certain padding. With Blowfish, the default is NullsWithCount. For AES, it is PKCS.
 
 With Blowfish, padding defaults to NullsWithCount. Example:
 
@@ -132,13 +132,13 @@ With Blowfish, padding defaults to NullsWithCount. Example:
 dim bf as Blowfish_MTC
 
 bf = new Blowfish_MTC( "my encryption key" )
-bf = new Blowfish_MTC( Blowfish_MTC.Padding.PKCS5 )
-bf = new Blowfish_MTC( "my encryption key", Blowfish_MTC.Padding.PKCS5 )
+bf = new Blowfish_MTC( Blowfish_MTC.Padding.PKCS )
+bf = new Blowfish_MTC( "my encryption key", Blowfish_MTC.Padding.PKCS )
 bf = new Blowfish_MTC // Set the key at least before using
 
 ```
 
-AES defaults to PKCS5 padding and requires its encryption bits in its Constructor. Examples:
+AES defaults to PKCS padding and requires its encryption bits in its Constructor. Examples:
 
 ```
 dim aes as AES_MTC
@@ -172,9 +172,9 @@ When using CBC, you can affect the result of the first block by specifying an in
 
 ## About Padding
 
-Encryption algorithms require that data be given in multiples of known block sizes (8 bytes for Blowfish, 16 bytes for AES), but because the real world is rarely that neat, data must be padded to create the required bytes.
+Encryption algorithms require that data be given in multiples of known block sizes (8 bytes for Blowfish, 16 bytes for AES), but because the real world is rarely that neat, data must be padded to the required bytes.
 
-M_Crypto offers three methods for padding the data and each come with their own rules.
+M_Crypto offers three methods for padding that come with their own rules.
 
 ### NullsOnly
 
@@ -188,15 +188,17 @@ The data is padded with nulls followed by a count of the number of padding bytes
 
 This is the default method for Blowfish.
 
-### PKCS5
+### PKCS
 
 A pad is always added to the data even if it's already a multiple of the block size. The bytes added are the number of padding bytes repeated. For example, if 5 pad bytes are needed, the pad will be "05 05 05 05 05".
+
+Because a pad is always expected, the lack of this pad will raise an M_Crypto.InvalidPaddingException.
 
 The is the default method for AES.
 
 ## Compatibility
 
-The output of the CBC and ECB functions using PKCS5 padding will be identical to that of other platforms.
+The output of the CBC and ECB functions using PKCS padding will be identical to that of other platforms.
 
 ### Postgres
 
