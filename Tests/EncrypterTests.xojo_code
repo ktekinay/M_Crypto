@@ -165,7 +165,7 @@ Inherits TestGroup
 		  #pragma BreakOnExceptions false
 		  try
 		    decrypted = e.Decrypt( encrypted )
-		    dim expected as string
+		    dim expected as string = ""
 		    Assert.AreEqual expected, decrypted, description
 		  catch err as M_Crypto.InvalidPaddingException
 		    Assert.Fail description
