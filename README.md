@@ -2,6 +2,15 @@
 
 An encryption library for Xojo that implements Blowfish and AES encryption and Bcrypt hash module, translated from C libraries (included as Xcode projects).
 
+## Important Changes From Blowish_MTC Project
+
+This project was originally released as Blowfish\_MTC and included the BLowfish\_MTC class and Bcrypt module. These have been rolled into the current project with some important changes that may affect existing projects.
+
+- Padding.PKSC5 has been renamed PKCS and is now the default for Blowfish\_MTC.
+- Padding.NullPadding has been renamed NullsWithCount (no longer the default for Blowfish\_MTC).
+- Padding.NullsOnly has been added.
+- `Bcrypt\_MTC.Bcrypt` has been deprecated in favor of `Bcrypt\_MTC.Hash`.
+
 ## How To Use It
 
 ### Examples
@@ -124,7 +133,7 @@ DecryptECB( data As String, isFinalBlock As Boolean = True )
 
 Create an object for the type of encryption you want and optionally specify the key and padding. Each can be set later if desired with `SetKey` and `PaddingMethod` respectively.
 
-Each type of encryption defaults to a certain padding. With Blowfish, the default is NullsWithCount. For AES, it is PKCS.
+Each type of encryption defaults to a PKCS.
 
 With Blowfish, padding defaults to NullsWithCount. Example:
 
@@ -132,13 +141,13 @@ With Blowfish, padding defaults to NullsWithCount. Example:
 dim bf as Blowfish_MTC
 
 bf = new Blowfish_MTC( "my encryption key" )
-bf = new Blowfish_MTC( Blowfish_MTC.Padding.PKCS )
+bf = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 bf = new Blowfish_MTC( "my encryption key", Blowfish_MTC.Padding.PKCS )
 bf = new Blowfish_MTC // Set the key at least before using
 
 ```
 
-AES defaults to PKCS padding and requires its encryption bits in its Constructor. Examples:
+AES its encryption bits in its Constructor. Examples:
 
 ```
 dim aes as AES_MTC
@@ -186,15 +195,13 @@ This method should usually be avoided unless you are going to pad the data yours
 
 The data is padded with nulls followed by a count of the number of padding bytes. Data is that already a multiple of the block size will not be padded _unless_ the last bytes match the pattern of a pad. In other words, if the data ends with "00 00 00 04", a pad equal to the block size will be added.
 
-This is the default method for Blowfish.
-
 ### PKCS
 
 A pad is always added to the data even if it's already a multiple of the block size. The bytes added are the number of padding bytes repeated. For example, if 5 pad bytes are needed, the pad will be "05 05 05 05 05".
 
 Because a pad is always expected, the lack of this pad will raise an M_Crypto.InvalidPaddingException.
 
-The is the default method for AES.
+The is the default method for AES and Blowfish.
 
 ## Compatibility
 
