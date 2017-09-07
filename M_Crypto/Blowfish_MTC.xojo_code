@@ -56,7 +56,7 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h0
 		Sub Constructor(key As String = "")
-		  Constructor key, Padding.NullsWithCount
+		  Constructor key, Padding.PKCS
 		  
 		End Sub
 	#tag EndMethod
@@ -1239,7 +1239,7 @@ Implements BcryptInterface
 			#tag EnumValues
 				"0 - NullsOnly"
 				"1 - NullsWithCount"
-				"2 - PKCS5"
+				"2 - PKCS"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty

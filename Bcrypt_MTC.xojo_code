@@ -100,7 +100,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  state = new Blowfish_MTC
+		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 		  state.ExpandState( csalt, key )
 		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
