@@ -339,9 +339,8 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub ResetVector()
-		  zCurrentVector = ""
-		  InitialVector = ""
+		Sub ResetInitialVector()
+		  SetInitialVector ""
 		End Sub
 	#tag EndMethod
 
@@ -352,16 +351,7 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub SetKey(value As String)
-		  RaiseErrorIf value = "", kErrorKeyCannotBeEmpty
-		  
-		  RaiseEvent KeyChanged( value )
-		  WasKeySet = true
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub SetVector(vector As String)
+		Sub SetInitialVector(vector As String)
 		  if vector <> "" then
 		    vector = InterpretVector( vector )
 		    RaiseErrorIf vector.LenB <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
@@ -369,6 +359,15 @@ Protected Class Encrypter
 		  
 		  InitialVector = vector
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SetKey(value As String)
+		  RaiseErrorIf value = "", kErrorKeyCannotBeEmpty
+		  
+		  RaiseEvent KeyChanged( value )
+		  WasKeySet = true
 		End Sub
 	#tag EndMethod
 
@@ -496,7 +495,7 @@ Protected Class Encrypter
 			#tag EnumValues
 				"0 - NullsOnly"
 				"1 - NullsWithCount"
-				"2 - PKCS5"
+				"2 - PKCS"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty

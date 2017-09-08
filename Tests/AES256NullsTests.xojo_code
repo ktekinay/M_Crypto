@@ -16,7 +16,7 @@ Inherits TestGroup
 		  expectedHex = "f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b"
 		  
 		  e = GetAES( key )
-		  e.SetVector vectorHex
+		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
@@ -48,7 +48,7 @@ Inherits TestGroup
 		  expectedHex = "7f087100137f0721831dd70e3d06e410f4e061f618899b80164c49f7ce10e8ba"
 		  
 		  e = GetAES( key )
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
@@ -77,7 +77,7 @@ Inherits TestGroup
 		  expected = kLongEncryptedCBC
 		  
 		  e = GetAES( key )
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  dim sw as new Stopwatch_MTC
 		  
@@ -107,7 +107,7 @@ Inherits TestGroup
 		  
 		  vector = "a2xhcgAAAAAAAAAA"
 		  e = GetAES( Crypto.SHA256( "password" ) )
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  data = "N"
 		  expectedHex = "ad142a6079ea396476b980959fde8e1e"

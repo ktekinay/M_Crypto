@@ -16,7 +16,7 @@ Inherits TestGroup
 		  expectedHex = "7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7"
 		  
 		  e = GetAES( key )
-		  e.SetVector vectorHex
+		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptCBC( DecodeHex( dataHex ) )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
@@ -48,7 +48,7 @@ Inherits TestGroup
 		  expectedHex = "bd281599038f0aec83d29df3b2ec625c5d23075a250220fa9ea59f7e12a07a93"
 		  
 		  e = GetAES( key )
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Long encryption doesn't match"
@@ -76,7 +76,7 @@ Inherits TestGroup
 		  expected = kLongEncryptedCBC
 		  
 		  e = GetAES( key )
-		  e.SetVector vectorHex
+		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptCBC( data )
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
@@ -96,7 +96,7 @@ Inherits TestGroup
 		  
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
 		  e = GetAES( "password" )
-		  e.SetVector vectorHex
+		  e.SetInitialVector vectorHex
 		  
 		  data = "N"
 		  expectedHex = "7d818b61b7cb9856bab74d9018cd0c33"

@@ -797,13 +797,13 @@ End
 		    
 		    dim vector as string = kVector // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    // You can supply either an 8-byte string or hex representing 8 bytes
-		    blf.SetVector( vector )
+		    blf.SetInitialVector( vector )
 		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetVector or SetVector is called
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetInitialVector or SetInitialVector is called
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )

@@ -20,7 +20,7 @@ Inherits TestGroup
 		  expected = kLongEncryptedCBC
 		  
 		  bf = GetBF( key )
-		  bf.SetVector vectorHex
+		  bf.SetInitialVector vectorHex
 		  
 		  encrypted = bf.EncryptCBC( data )
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
@@ -49,7 +49,7 @@ Inherits TestGroup
 		  expected = "9df40c746469090e70bb1f03a0536c4b1c3124ea21cfa09f"
 		  
 		  e = GetBF( key )
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  dim sw as new Stopwatch_MTC
 		  

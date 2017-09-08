@@ -917,7 +917,7 @@ End
 		  e.SetKey key
 		  
 		  dim vector as string = fldVector.Text
-		  e.SetVector vector
+		  e.SetInitialVector vector
 		  
 		  e.UseFunction = mnuEncryptFunction.RowTag( mnuEncryptFunction.ListIndex )
 		  

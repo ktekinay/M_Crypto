@@ -2,12 +2,13 @@
 
 An encryption library for Xojo that implements Blowfish and AES encryption and Bcrypt hash module, translated from C libraries (included as Xcode projects).
 
-## Important Changes From Blowish_MTC Project
+## Important Changes From Blowfish\_MTC Project
 
-This project was originally released as Blowfish\_MTC and included the BLowfish\_MTC class and Bcrypt module. These have been rolled into the current project with some important changes that may affect existing projects.
+This project was originally released as Blowfish\_MTC and included the BLowfish\_MTC class and Bcrypt module. These have been rolled into M_Crypto with some important changes that may affect existing projects.
 
 - Padding.PKSC5 has been renamed PKCS and is now the default for Blowfish\_MTC.
 - Padding.NullPadding has been renamed NullsWithCount (no longer the default for Blowfish\_MTC).
+- `Encrypt` and `Decrypt` used to take an optional parameter for vector. Now you must use `SetInitialVector` or `ResetInitialVector`.
 - Padding.NullsOnly has been added.
 - `Bcrypt\_MTC.Bcrypt` has been deprecated in favor of `Bcrypt\_MTC.Hash`.
 
@@ -28,7 +29,7 @@ dim data as string = EncodeHex( bf.Encrypt( "some data" ) )
 data = EncodeHex( bf.EncryptECB( "some data" ) )
 // D9B0A79853F139603951BFF96C3D0DD5
 
-bf.SetVector "my vecto" // 8 bytes
+bf.SetInitialVector "my vecto" // 8 bytes
 data = EncodeHex( bf.EncryptCBC( "some data" ) )
 // 9B0BA2B3716E777FD89048BC8738869A
 
@@ -54,7 +55,7 @@ dim data as string = EncodeHex( aes.Encrypt( "some data" ) )
 
 aes = new AES_MTC( _
     "another password", AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.PKCS )
-aes.SetVector "1234567890ABCDEF1234567890ABCDEF" // 16 bytes as hex
+aes.SetInitialVector "1234567890ABCDEF1234567890ABCDEF" // 16 bytes as hex
 data = EncodeHex( aes.EncryptCBC( "some data" ) )
 // 6984F179E4F969A79CC8D6AD1F295244
 
@@ -67,7 +68,7 @@ dim e as M_Crypto.Encrypter
 
 e = new AES_MTC( 128 )
 e.SetKey "password"
-e.SetVector "I need 16 bytes!"
+e.SetInitialVector "I need 16 bytes!"
 e.UseFunction = M_Crypto.Encrypter.Functions.CBC
 dim data as string = EncodeHex( e.Encrypt( "some data" ) )
 // DDF9F81FF318E5D0596BE0B24CE801DD
@@ -81,7 +82,7 @@ data = EncodeHex( e.EncryptECB( "some data" ) )
 e = M_Crypto.GetEncrypter( "aes-256-cbc" )
 e.SetKey "password"
 e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
-e.SetVector "I need 16 bytes!"
+e.SetInitialVector "I need 16 bytes!"
 data = EncodeHex( e.Encrypt( "some data" ) )
 // 90BD2689FC13EDD41063AE6DD18AD1D2
 ```
@@ -89,7 +90,7 @@ data = EncodeHex( e.Encrypt( "some data" ) )
 <u>Bcrypt</u>
 
 ```
-dim hash as string = Bcrypt_MTC.Bcrypt( "somebody's password", 10 )
+dim hash as string = Bcrypt_MTC.Hash( "somebody's password", 10 )
 // $2y$10$ZPkkuUAmRjx7JBDylI6GL.Pe4p.8G5dUBhl9grZg/b08Gh.1G8Ez.
 
 if Bcrypt_MTC.Verify( _
@@ -100,7 +101,7 @@ end if
 
 dim salt as string = Bcrypt_MTC.GenerateSalt( 10 )
 // $2y$10$7XjO9J5P1DJJPCy7xbHYHu , for example
-hash = Bcrypt_MTC.Bcrypt( "somebody's password", salt )
+hash = Bcrypt_MTC.Hash( "somebody's password", salt )
 // $2y$10$7XjO9J5P1DJJPCy7xbHYHuCSdEEaV6gsxhZbogNGFlq5dwAiX2S8K
     
 ```
@@ -112,8 +113,8 @@ The encryption objects are based on the superclass `M_Crypto.Encrypter` and offe
 ```
 SetKey( string )
 PaddingMethod as M_Crypto.Encrypter.Padding
-SetVector( string )
-ResetVector()
+SetInitialVector( string )
+ResetInitialVector()
 CurrentVector as String (read-only)
 BlockSize as Integer (read-only)
 
@@ -212,19 +213,19 @@ The output of the CBC and ECB functions using PKCS padding will be identical to 
 ```
 SELECT encrypt('some data', 'password', 'bf-cbc/pad:pkcs')::TEXT;
 -- \xd9b0a79853f13960fcee3cae16e27884
-SELECT encrypt_iv('some data', 'password', 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT;
+SELECT encrypt_iv('some data', 'password', 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT; -- AES-128
 -- \xddf9f81ff318e5d0596be0b24ce801dd
-SELECT encrypt_iv('some data', digest('password', 'SHA256'), 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT;
+SELECT encrypt_iv('some data', digest('password', 'SHA256'), 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT; -- AES-256
 -- \x7d0fd83942c4948081213c8526af8af3
 ```
 
-__Note__: The key size will determine whether Postgres uses AES-128, AES-192, or AES-256, i.e., a 128-bit key will force AES-128 while a 129-bit key will force AES-192.  A key of 256 bits or more will force AES-256.
+__Note__: The key size will determine whether Postgres uses AES-128, AES-192, or AES-256, i.e., a 128-bit (or less) key will force AES-128 while a 129-bit key will force AES-192.  A key of 256 bits or more will force AES-256.
 
 ### Javascript Crypto Module
 
 The Crypto module follows these rules as of this writing:
 
-AES: Requires a key the size of the specified bit, i.e., AES-128 needs 16 bytes, AES-256 needs 32 bytes.
+AES: Requires a key the size of the specified bits, i.e., AES-128 needs 16 bytes, AES-256 needs 32 bytes.
 
 Blowfish ECB: Will take any key but it will apply an MD5 hash to it internally.
 
