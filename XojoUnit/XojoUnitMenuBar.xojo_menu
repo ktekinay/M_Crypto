@@ -1,35 +1,18 @@
 #tag Menu
-Begin Menu MenuBar1
+Begin Menu XojoUnitMenuBar
    Begin MenuItem FileMenu
       SpecialMenu = 0
       Text = "&File"
       Index = -2147483648
       AutoEnable = True
       Visible = True
-      Begin MenuItem FileEncryptionWindow
+      Begin MenuItem FileRunTests
          SpecialMenu = 0
-         Text = "Encryption"
+         Text = "&Run Tests"
          Index = -2147483648
-         ShortcutKey = "1"
-         Shortcut = "Cmd+1"
+         ShortcutKey = "R"
+         Shortcut = "Cmd+R"
          MenuModifier = True
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem FileUnitTestsWindow
-         SpecialMenu = 0
-         Text = "Unit Tests"
-         Index = -2147483648
-         ShortcutKey = "2"
-         Shortcut = "Cmd+2"
-         MenuModifier = True
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem UntitledSeparator
-         SpecialMenu = 0
-         Text = "-"
-         Index = -2147483648
          AutoEnable = True
          Visible = True
       End
@@ -117,6 +100,30 @@ Begin Menu MenuBar1
          ShortcutKey = "A"
          Shortcut = "Cmd+A"
          MenuModifier = True
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem EditClearAll
+         SpecialMenu = 0
+         Text = "Clear All"
+         Index = -2147483648
+         ShortcutKey = "-"
+         Shortcut = "Cmd+-"
+         MenuModifier = True
+         AutoEnable = True
+         Visible = True
+      End
+   End
+   Begin MenuItem HelpMenu
+      SpecialMenu = 0
+      Text = "&Help"
+      Index = -2147483648
+      AutoEnable = True
+      Visible = True
+      Begin AppleMenuItem HelpAboutXojoUnit
+         SpecialMenu = 0
+         Text = "&About XojoUnit"
+         Index = -2147483648
          AutoEnable = True
          Visible = True
       End

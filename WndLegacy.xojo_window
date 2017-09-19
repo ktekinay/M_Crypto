@@ -1,5 +1,5 @@
 #tag Window
-Begin Window Window1
+Begin Window WndLegacy
    BackColor       =   &cFFFFFF00
    Backdrop        =   0
    CloseButton     =   True
@@ -23,7 +23,7 @@ Begin Window Window1
    MinWidth        =   694
    Placement       =   0
    Resizeable      =   True
-   Title           =   "Blowfish MTC"
+   Title           =   "Legacy"
    Visible         =   True
    Width           =   694
    Begin PushButton btnTest
@@ -168,6 +168,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   5
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Password:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -233,6 +234,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Test:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -267,6 +269,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   9
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Data:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -348,6 +351,7 @@ Begin Window Window1
       Selectable      =   False
       TabIndex        =   11
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "Result:"
       TextAlign       =   0
       TextColor       =   &c00000000
@@ -504,7 +508,7 @@ End
 		    dim salt as string = Bcrypt_MTC.GenerateSalt( cost )
 		    
 		    for each pw as string in passwords
-		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
+		      dim myHash as string = Bcrypt_MTC.Hash( pw, salt )
 		      if not PHPVerify( pw, myHash ) then
 		        AddToResult "PHP no match: " + pw
 		      elseif not Bcrypt_MTC.Verify( pw, myHash ) then
@@ -572,7 +576,7 @@ End
 		    dim key as string = join( keyArr, "" )
 		    dim jsKey as string = key.ReplaceAll( "'", "\'" )
 		    
-		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS5 )
+		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS )
 		    
 		    for dataCount as integer = kMinDataLetters to kMaxDataLetters
 		      
@@ -638,64 +642,20 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function PHPBcrypt(key As String, salt As String) As String
-		  dim sw as new Stopwatch_MTC
-		  sw.Start
-		  
-		  dim phpHash as string
-		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $salt = '%salt%' ; print crypt( $key, $salt ) ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%salt%", salt )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    phpHash = sh.Result.Trim
-		    
-		  end if
-		  
-		  sw.Stop
-		  return phpHash
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function PHPCommand() As String
-		  #if not TargetWin32
-		    dim sh as new Shell
-		    sh.Execute "which php"
-		    return sh.Result.Trim
-		  #endif
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function PHPVerify(key As String, againstHash As String) As Boolean
 		  dim r as boolean
 		  
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    againstHash = againstHash.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%hash%", againstHash )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    r = sh.Result.Trim = "true"
-		    
-		  end if
+		  key = key.ReplaceAll( "'", "\'" )
+		  againstHash = againstHash.ReplaceAll( "'", "\'" )
+		  
+		  dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
+		  cmd = cmd.ReplaceAll( "%key%", key )
+		  cmd = cmd.ReplaceAll( "%hash%", againstHash )
+		  
+		  r = M_PHP.Execute( cmd ) = "true"
 		  
 		  sw.Stop
 		  return r
@@ -718,12 +678,12 @@ End
 		Private Sub TestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
 		  AddToResult "Salt: " + salt
 		  sw.Start
-		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
 		  AddToResult "Hash: " + hash
 		  
 		  // See if we can compare PHP
-		  dim phpHash as string = PHPBcrypt( key, salt )
+		  dim phpHash as string = M_PHP.Bcrypt( key, salt )
 		  AddToResult "PHP: " + phpHash
 		  
 		  if StrComp( hash, phpHash, 0 ) = 0 then
@@ -793,7 +753,7 @@ End
 		    
 		  case 2 // CBC
 		    sw.Start
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    data = blf.EncryptCBC( data )
 		    sw.Stop
 		    AddToResult "Encrypted: " + EncodeHex( data, true )
@@ -807,7 +767,7 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -819,7 +779,7 @@ End
 		    
 		    byteIndex = 1
 		    data = ""
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -837,13 +797,13 @@ End
 		    
 		    dim vector as string = kVector // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    // You can supply either an 8-byte string or hex representing 8 bytes
-		    blf.SetVector( vector )
-		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS5
+		    blf.SetInitialVector( vector )
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetVector or SetVector is called
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetInitialVector or SetInitialVector is called
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
