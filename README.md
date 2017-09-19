@@ -2,23 +2,48 @@
 
 An encryption library for Xojo that implements Blowfish and AES encryption and Bcrypt hash module, translated from C libraries (included as Xcode projects).
 
-## Important Changes From Blowfish\_MTC Project
 
-This project was originally released as Blowfish\_MTC and included the BLowfish\_MTC class and Bcrypt module. These have been rolled into M_Crypto with some important changes that may affect existing projects.
+## Table of Contents
+
+- [Important Changes From Blowfish\_MTC Project](#important-changes)
+- [How To Use It](#how-to-use-it)
+	- [Examples](#examples)
+		- [Blowfish](#blowfish-example)
+		- [AES](#aes-example)
+		- [Encrypter (super class)](#encrypter-example)
+		- [Bcrypt](#bcrypt-example)
+	- [Encryption](#encryption)
+	- [Bcrypt](#bcrypt)
+- [About ECB, CBC, and the Vector](#about-ecb-etc)
+- [About Padding](#about-padding)
+	- [NullsOnly](#nullsonly)
+	- [NullsWithCount](#nullswithcount)
+	- [PKCS](#pkcs)
+- [Compatibility](#compatibility)
+	- [Postgres](#postgres)
+	- [JavaScript Crypto Module](#javascript-crypto-module)
+- [License](#license)
+- [Comments and Contributions](#comments-and-contributions)
+- [Who Did This?!?](#who-did-this)
+- [Release Notes](#release-notes)
+
+## <a name='important-changes'></a>Important Changes From Blowfish\_MTC Project
+
+This project was originally released as Blowfish\_MTC and included the Blowfish\_MTC class and Bcrypt module. These have been rolled into M_Crypto with some important changes that may affect existing projects.
 
 - Padding.PKSC5 has been renamed PKCS and is now the default for Blowfish\_MTC.
-- Padding.NullPadding has been renamed NullsWithCount (no longer the default for Blowfish\_MTC).
+- Padding.NullPadding has been renamed NullsWithCount and is no longer the default for Blowfish\_MTC.
 - `Encrypt` and `Decrypt` used to take an optional parameter for vector. Now you must use `SetInitialVector` or `ResetInitialVector`.
 - Padding.NullsOnly has been added.
-- `Bcrypt\_MTC.Bcrypt` has been deprecated in favor of `Bcrypt\_MTC.Hash`.
+- `Bcrypt_MTC.Bcrypt` has been deprecated in favor of `Bcrypt_MTC.Hash`.
 
-## How To Use It
+## <a name='how-to-use-it'></a>How To Use It
 
 ### Examples
 
-Let's start with some examples. These are meant to give you an idea of the ways you can use these classes and modules, not how you _must_ use them.
+Let's start with some examples. These are meant to give you an idea of the ways you can use these classes and modules, not how you _must_ use them. Code that demonstrates one Encrypter can usually be used with the other.
 
-<u>Blowfish</u>
+#### <a name='blowfish-example'></a>Blowfish
 
 ```
 dim bf as new Blowfish_MTC( "password", Blowfish_MTC.Padding.PKCS )
@@ -43,7 +68,7 @@ data = EncodeHex( bf.Encrypt( "some data" ) )
 
 ```
 
-<u>AES</u>
+#### <a name='aes-example'></a>AES
 
 ```
 dim aes as new AES_MTC( AES_MTC.EncryptionBits.Bits128 )
@@ -61,7 +86,7 @@ data = EncodeHex( aes.EncryptCBC( "some data" ) )
 
 ```
 
-<u>Encrypter</u>
+#### <a name='encrypter-example'></a>Encrypter (super class)
 
 ```
 dim e as M_Crypto.Encrypter
@@ -87,7 +112,7 @@ data = EncodeHex( e.Encrypt( "some data" ) )
 // 90BD2689FC13EDD41063AE6DD18AD1D2
 ```
 
-<u>Bcrypt</u>
+#### <a name='bcrypt-example'></a>Bcrypt
 
 ```
 dim hash as string = Bcrypt_MTC.Hash( "somebody's password", 10 )
@@ -115,8 +140,8 @@ SetKey( string )
 PaddingMethod as M_Crypto.Encrypter.Padding
 SetInitialVector( string )
 ResetInitialVector()
-CurrentVector as String (read-only)
-BlockSize as Integer (read-only)
+CurrentVector as String [read-only]
+BlockSize as Integer [read-only]
 
 UseFunction as M_Crypto.Encrypter.Functions
 
@@ -134,9 +159,9 @@ DecryptECB( data As String, isFinalBlock As Boolean = True )
 
 Create an object for the type of encryption you want and optionally specify the key and padding. Each can be set later if desired with `SetKey` and `PaddingMethod` respectively.
 
-Each type of encryption defaults to a PKCS.
+Each type of encryption defaults to PKCS padding.
 
-With Blowfish, padding defaults to NullsWithCount. Example:
+Example:
 
 ```
 dim bf as Blowfish_MTC
@@ -148,7 +173,7 @@ bf = new Blowfish_MTC // Set the key at least before using
 
 ```
 
-AES its encryption bits in its Constructor. Examples:
+AES requires its encryption bits in its Constructor. Examples:
 
 ```
 dim aes as AES_MTC
@@ -162,7 +187,7 @@ aes = new AES_MTC( _
     AES_MTC.Padding.NullsOnly )
 ```
 
-`AES.Encrypt/Decrypt` defaults to ECB if `UseFunction` is set to Default.
+`AES.Encrypt` and `Decrypt` default to ECB if `UseFunction` is set to Default.
 
 With either encryption, you must set the key before attempting to encrypt or decrypt.
 
@@ -172,15 +197,15 @@ You can use `M_Crypto.GetEncrypter` to get an Encrypter by code. For example, "b
 
 Bcrypt uses Blowfish to create a hash. The more rounds you specify, the longer it takes. You can either create your own salt according to the Bcrypt standard or let the module do it for you. See the example above in Examples.
 
-## About ECB, CBC, and the Vector
+## <a name='about-ecb-etc'></a>About ECB, CBC, and the Vector
 
 ECB encryption treats each block of data individually. This means that repeating blocks will be encrypted in the same way. For example, using Blowfish to encrypt the repeating data "12345678ABCDEFGH12345678" will lead to this result as hex: "DA6003664651D153 805D00DD8BF2133B DA6003664651D153". Notice the first 8 bytes are identical the last 8 bytes.
 
-CBC will chain encryption so the result of the each block will affect the next block. Using CBC and no vector in the above example will result in: "DA6003664651D153 2066457C3AE99820 5C937C55EE7EDEF0". Notice that the first block is identical to that produced by ECB but the subsequent bytes are different.
+CBC will chain encryption so the result of the each block will affect the next block. Using CBC and no vector in the above example will result in: "DA6003664651D153 2066457C3AE99820 5C937C55EE7EDEF0". Notice that the first block is identical to that produced by ECB but the subsequent blocks are different.
 
 When using CBC, you can affect the result of the first block by specifying an initial vector, a number of bytes equal to the block size of the Encrypter (8 bytes for Blowfish, 16 bytes for AES). The vector is ignored when using ECB.
 
-## About Padding
+## <a name='about-padding'></a>About Padding
 
 Encryption algorithms require that data be given in multiples of known block sizes (8 bytes for Blowfish, 16 bytes for AES), but because the real world is rarely that neat, data must be padded to the required bytes.
 
@@ -221,7 +246,7 @@ SELECT encrypt_iv('some data', digest('password', 'SHA256'), 'I need 16 bytes!',
 
 __Note__: The key size will determine whether Postgres uses AES-128, AES-192, or AES-256, i.e., a 128-bit (or less) key will force AES-128 while a 129-bit key will force AES-192.  A key of 256 bits or more will force AES-256.
 
-### Javascript Crypto Module
+### <a name='javascript-crypto-module'></a>JavaScript Crypto Module
 
 The Crypto module follows these rules as of this writing:
 
@@ -239,12 +264,30 @@ This project is distributed AS-IS and no warranty of fitness for any particular 
 
 You may distribute a modified version of this project as long as all modifications are clearly documented and accredited.
 
-## Comments and Contributions
+## <a name='comments-and-contributions'></a>Comments and Contributions
 
 All contributions to this project will be gratefully considered. Fork this repo to your own, then submit your changes via a Pull Request.
 
 All comments are also welcome.
 
-## Who Did This?!?
+## <a name='who-did-this'></a>Who Did This?!?
 
-This project was created by and is maintained by Kem Tekinay (ktekinay@mactechnologies dot com).
+This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
+
+## <a name='release-notes'></a>Release Notes
+
+__2.0__ (Sept. 19, 2017)
+
+- Renamed M\_Crypto and other classes rolled into that module.
+- Introduced AES.
+- Renamed padding "PKCS5" to "PKCS".
+- Renamed `SetVector` to `SetInitialVector` and took it out of the `Constructor`.
+- Introduced the Encrypter superclass and the ability to get an Encrypter via code.
+- Padding.NullPadding has been renamed NullsWithCount.
+- The default padding for Blowfish\_MTC is now PKCS, not NullsWithCount.
+- `Bcrypt_MTC.Bcrypt` has been deprecated in favor of `Bcrypt_MTC.Hash`.
+- Refactored Harness to include an all-purpose encryption/decryption utility and unit tests.
+
+__1.0__ (some time ago as Blowfish\_MTC)
+
+- Initial release of Blowfish and Bcrypt.

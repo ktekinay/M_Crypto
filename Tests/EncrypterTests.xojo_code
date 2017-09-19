@@ -20,8 +20,8 @@ Inherits TestGroup
 		  e.SetKey "password1"
 		  encrypted2 = e.EncryptCBC( "data" )
 		  Assert.AreSame encrypted, encrypted2, "AES inconsistent result"
-		  e = new Blowfish_MTC
 		  
+		  e = new Blowfish_MTC
 		  e.SetKey "password1"
 		  encrypted = e.EncryptCBC( "data" )
 		  decrypted = e.DecryptCBC( encrypted )
