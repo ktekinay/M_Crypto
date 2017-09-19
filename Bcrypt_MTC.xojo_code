@@ -1,19 +1,50 @@
 #tag Module
 Protected Module Bcrypt_MTC
 	#tag Method, Flags = &h1
-		Protected Function Bcrypt(key As String, salt As String) As String
+		Attributes( deprecated = "Hash" ) Protected Function Bcrypt(key As String, salt As String) As String
+		  return Hash( key, salt )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Attributes( deprecated = "Hash" ) Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		  return Hash( key, rounds )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
+		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
+		  
+		  const kMinRounds as UInt8 = 4
+		  const kMaxRounds as UInt8 = 31
+		  
+		  if rounds < kMinRounds then
+		    rounds = kMinRounds
+		  elseif rounds > kMaxRounds then
+		    rounds = kMaxRounds
+		  end if
+		  
+		  return pEncodeSalt( csalt, rounds, preferredPrefix )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Hash(key As String, salt As String) As String
 		  if salt = "" or key = "" then 
 		    return ""
 		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim r as string
 		  
-		  dim state as Blowfish_MTC
+		  dim state as M_Crypto.BcryptInterface
 		  dim rounds as Integer
 		  dim logr, minor as UInt8
 		  dim ciphertext as MemoryBlock = "OrpheanBeholderScryDoubt"
@@ -69,7 +100,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  state = new Blowfish_MTC
+		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 		  state.ExpandState( csalt, key )
 		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
@@ -104,32 +135,15 @@ Protected Module Bcrypt_MTC
 		  pEncodeBase64( buffer, ciphertext )
 		  r = r + buffer.CString( 0 )
 		  
-		  return r
+		  return r.DefineEncoding( Encodings.UTF8 )
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Bcrypt(key As String, rounds As UInt8 = 10) As String
+		Protected Function Hash(key As String, rounds As UInt8 = 10) As String
 		  dim salt as string = GenerateSalt( rounds )
-		  return Bcrypt( key, salt )
+		  return Hash( key, salt )
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
-		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
-		  
-		  const kMinRounds as UInt8 = 4
-		  const kMaxRounds as UInt8 = 31
-		  
-		  if rounds < kMinRounds then
-		    rounds = kMinRounds
-		  elseif rounds > kMaxRounds then
-		    rounds = kMaxRounds
-		  end if
-		  
-		  return pEncodeSalt( csalt, rounds, preferredPrefix )
 		End Function
 	#tag EndMethod
 
@@ -289,7 +303,7 @@ Protected Module Bcrypt_MTC
 		  dim data as string = againstHash.NthField( "$", 4 )
 		  dim salt as string = againstHash.Left( 7 ) + data.Left(22 )
 		  
-		  dim hash as string = Bcrypt( key, salt )
+		  dim hash as string = Hash( key, salt )
 		  return hash = againstHash
 		End Function
 	#tag EndMethod
@@ -340,6 +354,9 @@ Protected Module Bcrypt_MTC
 	#tag EndConstant
 
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kVersion, Type = Double, Dynamic = False, Default = \"2.0", Scope = Protected
 	#tag EndConstant
 
 

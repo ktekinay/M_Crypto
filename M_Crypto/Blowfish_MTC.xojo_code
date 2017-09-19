@@ -1,83 +1,95 @@
 #tag Class
-Protected Class Blowfish_MTC
-	#tag Method, Flags = &h21
-		Private Sub AddBackNullIfNeeded(data As MemoryBlock)
-		  // See if the previous block had a null that could have been part of the padding and
-		  // add it back to this decrypted block
-		  if zLastBlockHadNull then
-		    dim oldSize as integer = data.Size
-		    dim newSize as integer = oldSize + 1
-		    data.Size = newSize
-		    data.StringValue( 1, oldSize ) = data.StringValue( 0, oldSize ) // Shift the data over by one byte
-		    data.Byte( 0 ) = 0
-		    zLastBlockHadNull = false
-		  end if
-		  
+Class Blowfish_MTC
+Inherits M_Crypto.Encrypter
+Implements BcryptInterface
+	#tag Event
+		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		  select case type
+		  case Functions.Default
+		    Decrypt( data, isFinalBlock )
+		    
+		  case Functions.ECB
+		    DecryptECB( data, isFinalBlock )
+		    
+		  case Functions.CBC
+		    DecryptCBC( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnsupportedFunctionException
+		    
+		  end select
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		  select case type
+		  case Functions.Default
+		    Encrypt( data, isFinalBlock )
+		    
+		  case Functions.ECB
+		    EncryptECB( data, isFinalBlock )
+		    
+		  case Functions.CBC
+		    EncryptCBC( data, isFinalBlock )
+		    
+		  case else
+		    raise new M_Crypto.UnsupportedFunctionException
+		    
+		  end select
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub KeyChanged(key As String)
+		  InitKeyValues
+		  Expand0State key
+		End Sub
+	#tag EndEvent
+
+
+	#tag Method, Flags = &h0
+		Sub Constructor(paddingMethod As Padding)
+		  Constructor "", paddingMethod
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(key As String = "")
-		  if zCSEncipher is nil then
-		    zCSEncipher = new CriticalSection
-		    zCSDecipher = new CriticalSection
-		    zCSStream2Word = new CriticalSection
-		  end if
-		  
-		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
-		  PPtr = P
-		  S = new MemoryBlock( 4 * 256 * 4 )
-		  SPtr = S
-		  
-		  dim x as integer
-		  for i as integer = 0 to 3
-		    dim arr() as UInt32
-		    select case i
-		    case 0
-		      arr = S0
-		    case 1
-		      arr = S1
-		    case 2
-		      arr = S2
-		    case 3
-		      arr = S3
-		    end
-		    
-		    for i1 as Integer = 0 to arr.Ubound
-		      SPtr.UInt32( x ) = arr( i1 )
-		      x = x + 4
-		    next i1
-		  next i
-		  
-		  dim vals() as UInt32 = UInt32Array( _
-		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
-		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
-		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
-		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
-		  &h9216d5d9, &h8979fb1b _
-		  )
-		  
-		  for i as integer = 0 to vals.Ubound
-		    PPtr.UInt32( i * 4 ) = vals( i )
-		  next i
-		  
-		  // See if a key was provided
-		  if key <> "" then
-		    Expand0State( key )
-		  end if
+		  Constructor key, Padding.PKCS
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CurrentVector() As String
-		  return zCurrentVector
-		End Function
+		Sub Constructor(key as String, paddingMethod as Padding)
+		  SetBlockSize 8
+		  self.PaddingMethod = paddingMethod
+		  
+		  if FlagEncipher is nil then
+		    FlagEncipher = new Semaphore
+		    FlagDecipher = new Semaphore
+		    FlagStream2Word = new Semaphore
+		  end if
+		  
+		  
+		  // See if a key was provided
+		  if key <> "" then
+		    SetKey key
+		  else
+		    InitKeyValues
+		  end if
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
 		  // The main loop for processing Decipher
+		  
+		  while not FlagDecipher.TrySignal
+		    App.YieldToNextThread
+		  wend
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -85,8 +97,6 @@ Protected Class Blowfish_MTC
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  zCSDecipher.Enter
 		  
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
@@ -151,7 +161,7 @@ Protected Class Blowfish_MTC
 		  X0 = Xr
 		  X1 = Xl
 		  
-		  zCSDecipher.Leave
+		  FlagDecipher.Release
 		End Sub
 	#tag EndMethod
 
@@ -185,16 +195,16 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+	#tag Method, Flags = &h21
+		Private Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -211,37 +221,29 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
+		    LastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  
-		  dim d as MemoryBlock = data
-		  Decrypt( d, isFinalBlock )
-		  return d
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+	#tag Method, Flags = &h21
+		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+		  
+		  dim vector as string = zCurrentVector
+		  
+		  if vector = "" then
+		    vector = InitialVector
 		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  dim vectorPtr as Ptr = vectorMB
@@ -252,7 +254,7 @@ Protected Class Blowfish_MTC
 		  dim dataIndex as integer
 		  
 		  if vector = "" then
-		    vector = zCurrentVector
+		    vector = CurrentVector
 		  end if
 		  
 		  if isFinalBlock then
@@ -302,30 +304,23 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
+		    LastBlockHadNull = true
 		  end if
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function DecryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
-		  dim d as MemoryBlock = data
-		  DecryptCBC( d, isFinalBlock, vector )
-		  return d
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
+	#tag Method, Flags = &h21
+		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  if data.Size = 0 then return
 		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -357,38 +352,7 @@ Protected Class Blowfish_MTC
 		    DepadIfNeeded( data )
 		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
 		    data.Size = data.Size - 1
-		    zLastBlockHadNull = true
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  dim d As MemoryBlock = data
-		  DecryptECB( d, isFinalBlock )
-		  return d
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub DepadIfNeeded(data As MemoryBlock)
-		  // Counterpart to padding. Will remove nulls followed by the number of nulls
-		  // from the end of the MemoryBlock. See PadIfNeeded for a description of how
-		  // the padding works.
-		  
-		  if data is nil or data.Size = 0 then return
-		  
-		  dim paddedSize as integer = data.Size
-		  if ( paddedSize mod 8 ) <> 0 and paddedSize <> 9 then return // If it's not a multiple of 8, it's not properly padded anyway (9 bytes is a special case and has to be checked)
-		  dim lastByte as integer = data.Byte( paddedSize - 1 )
-		  if lastByte > paddedSize or lastByte < 2 or lastByte > 9 then return // Can't be a valid pad
-		  
-		  dim compareMB as new MemoryBlock( lastByte )
-		  compareMB.Byte( lastByte - 1 ) = lastByte
-		  if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
-		    data.Size = paddedSize - lastByte
+		    LastBlockHadNull = true
 		  end if
 		  
 		End Sub
@@ -398,14 +362,16 @@ Protected Class Blowfish_MTC
 		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Encipher
 		  
+		  while not FlagEncipher.TrySignal
+		    App.YieldToNextThread
+		  wend
+		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  zCSEncipher.Enter
 		  
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
@@ -465,12 +431,12 @@ Protected Class Blowfish_MTC
 		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
 		  next i
 		  
-		  Xr = Xr Xor myPPtr.Uint32( 17 * 4 )
+		  Xr = Xr Xor myPPtr.UInt32( 17 * 4 )
 		  
 		  x0 = Xr
 		  x1 = Xl
 		  
-		  zCSEncipher.Leave
+		  FlagEncipher.Release
 		  
 		End Sub
 	#tag EndMethod
@@ -505,15 +471,19 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+	#tag Method, Flags = &h21
+		Private Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  if data.Size = 0 then 
+		    return
+		  end if
 		  
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  if isFinalBlock then
 		    PadIfNeeded( data )
@@ -533,21 +503,14 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
-		  dim d as MemoryBlock = data
-		  Encrypt( d, isfinalBlock )
-		  return d
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True, vector As String = "")
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
+	#tag Method, Flags = &h21
+		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
+		  dim vector as string = zCurrentVector
+		  
+		  if vector = "" then
+		    vector = InitialVector
 		  end if
 		  
 		  #if not DebugBuild
@@ -558,7 +521,7 @@ Protected Class Blowfish_MTC
 		  #endif
 		  
 		  dim vectorMB as new MemoryBlock( 8 )
-		  if vector = "" then vector = zCurrentVector
+		  if vector = "" then vector = CurrentVector
 		  if vector <> "" then
 		    vectorMB.StringValue( 0, 8 ) = vector
 		  end if
@@ -606,18 +569,12 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function EncryptCBC(data As String, isFinalBlock As Boolean = True, vector As String = "") As String
-		  dim d as MemoryBlock = data
-		  EncryptCBC( d, isfinalBlock, vector )
-		  return d
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not zKeyWasSet, kErrorNoKeySet )
-		  if data.Size = 0 then return
+	#tag Method, Flags = &h21
+		Private Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  if data.Size = 0 then 
+		    return
+		  end if
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -657,19 +614,12 @@ Protected Class Blowfish_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  dim d As MemoryBlock = data
-		  EncryptECB( d, isFinalBlock )
-		  return d
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Expand0State(key As MemoryBlock)
-		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
-		  zKeyWasSet = true
+	#tag Method, Flags = &h21
+		Private Sub Expand0State(key As MemoryBlock)
+		  if key.Size = 0 then
+		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
+		  end if
+		  WasKeySet = true
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -682,20 +632,22 @@ Protected Class Blowfish_MTC
 		  dim i, k, arrIndex, arrIndexMajor as integer
 		  dim temp as UInt32
 		  dim d0, d1 as UInt32
+		  dim myPPtr as ptr = PPtr
+		  dim mySPtr as ptr = SPtr
 		  
-		  static lastIndex as integer = BLF_N + 1
-		  for i = 0 to lastIndex
+		  const kLastIndex as integer = BLF_N + 1
+		  for i = 0 to kLastIndex
 		    temp = Stream2Word( key, j )
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
+		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
-		  for i = 0 to lastIndex step 2
+		  for i = 0 to kLastIndex step 2
 		    self.Encipher( d0, d1 )
 		    arrIndex = i * 4
-		    self.PPtr.Uint32( arrIndex ) = d0
-		    self.PPtr.Uint32( arrIndex + 4 ) = d1
+		    myPPtr.UInt32( arrIndex ) = d0
+		    myPPtr.Uint32( arrIndex + 4 ) = d1
 		  next i
 		  
 		  for i = 0 to 3
@@ -704,18 +656,18 @@ Protected Class Blowfish_MTC
 		      self.Encipher( d0, d1 )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.Uint32( arrIndex ) = d0
-		      self.SPtr.UInt32( arrIndex + 4 ) = d1
+		      mySPtr.UInt32( arrIndex ) = d0
+		      mySPtr.UInt32( arrIndex + 4 ) = d1
 		    next k
 		  next i
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
+	#tag Method, Flags = &h21
+		Private Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
-		  zKeyWasSet = true
+		  WasKeySet = true
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -729,15 +681,15 @@ Protected Class Blowfish_MTC
 		  dim temp as UInt32
 		  dim d( 1 ) as UInt32
 		  
-		  dim lastIndex as Integer = BLF_N + 1
-		  for i = 0 to lastIndex
+		  const kLastIndex as Integer = BLF_N + 1
+		  for i = 0 to kLastIndex
 		    temp = Stream2Word( key, j )
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
-		  for i = 0 to lastIndex step 2
+		  for i = 0 to kLastIndex step 2
 		    d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
 		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
 		    
@@ -766,84 +718,43 @@ Protected Class Blowfish_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function InterpretVector(vector As String) As String
-		  if vector = "" then return vector
-		  if vector.LenB = 8 then return vector
-		  dim newVector as string = DecodeHex( vector )
-		  if newVector.LenB = 8 then
-		    return newVector
-		  else
-		    return vector
-		  end if
+		Private Sub InitKeyValues()
+		  P = new MemoryBlock( ( BLF_N + 2 ) * 4 )
+		  PPtr = P
+		  S = new MemoryBlock( 4 * 256 * 4 )
+		  SPtr = S
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub PadIfNeeded(data As MemoryBlock)
-		  // Pads the data to an exact multiple of 8 bytes.
-		  // It does this by adding nulls followed by the number of padding bytes.
-		  // Example: If data is &h31 32 33, it will turn it into
-		  // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
-		  // add 9 to avoid confusion.
-		  //
-		  // If data is already a multiple of 8, it will only add a padding if the trailing bytes
-		  // match the pattern of X nulls followed by &hX. The exception is if the
-		  // last 8 bytes matches the pattern &h00 00 00 00 00 00 00 09.
-		  // To be on the safe side, it will add padding then too.
-		  
-		  if data is nil or data.Size = 0 then return
-		  
-		  dim originalSize as integer = data.Size
-		  dim padToAdd as integer = 8 - ( originalSize mod 8 )
-		  dim lastByte as integer = data.Byte( originalSize - 1 )
-		  
-		  if padToAdd = 1 then
-		    padToAdd = 9 // Will never add a single byte pad, so have to add 9
-		  end if
-		  
-		  if padToAdd = 8 then // Already a multiple, so see if we need to do anything
-		    padToAdd = 0 // Assume we have nothing to add
+		  dim x as integer
+		  for i as integer = 0 to 3
+		    dim arr() as UInt32
+		    select case i
+		    case 0
+		      arr = S0
+		    case 1
+		      arr = S1
+		    case 2
+		      arr = S2
+		    case 3
+		      arr = S3
+		    end
 		    
-		    if lastByte = 9 then // Special case
-		      // See if the rest of the bytes are all zeros
-		      dim compareMB as new MemoryBlock( 8 )
-		      compareMB.Byte( 7 ) = 9
-		      if StrComp( data.StringValue( originalSize - 8, 8 ), compareMB, 0 ) = 0 then
-		        padToAdd = 8 // This means that the last 8 bytes are all nulls followed by a 9, so add an 8-byte padding
-		      end if
-		      
-		    elseif lastByte >= 2 and lastByte < 9 then // It's in the valid trigger range
-		      dim compareMB as new MemoryBlock( lastByte )
-		      compareMB.Byte( lastByte - 1 ) = lastByte
-		      if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		        padToAdd = 8 // Add a real pad
-		      end if
-		    end if
-		  end if
+		    for i1 as Integer = 0 to arr.Ubound
+		      SPtr.UInt32( x ) = arr( i1 )
+		      x = x + 4
+		    next i1
+		  next i
 		  
-		  if padToAdd <> 0 then
-		    dim newSize as integer = originalSize + padToAdd
-		    data.Size = newSize
-		    data.Byte( newSize - 1 ) = padToAdd
-		  end if
+		  dim vals() as UInt32 = UInt32Array( _
+		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
+		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
+		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
+		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
+		  &h9216d5d9, &h8979fb1b _
+		  )
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub RaiseErrorIf(test As Boolean, msg As String)
-		  if test then
-		    dim err as new CryptoException
-		    err.Message = msg
-		    raise err
-		  end if
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub ResetVector()
-		  zCurrentVector = ""
+		  for i as integer = 0 to vals.Ubound
+		    PPtr.UInt32( i * 4 ) = vals( i )
+		  next i
 		End Sub
 	#tag EndMethod
 
@@ -1131,20 +1042,8 @@ Protected Class Blowfish_MTC
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub SetVector(vector As String)
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf( vector.LenB <> 8, kErrorVectorSize )
-		  end if
-		  
-		  zCurrentVector = vector
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		 Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
+	#tag Method, Flags = &h21
+		Private Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -1157,7 +1056,9 @@ Protected Class Blowfish_MTC
 		  dim dataBytes as Integer = data.Size
 		  dim j as Integer = current
 		  
-		  if j = dataBytes then j = 0 // Special case optimization
+		  if j = dataBytes then 
+		    j = 0 // Special case optimization
+		  end if
 		  
 		  if dataBytes >= 4 and j <= ( dataBytes - 4 ) then
 		    
@@ -1170,7 +1071,17 @@ Protected Class Blowfish_MTC
 		    
 		  else
 		    
-		    zCSStream2Word.Enter
+		    #if not DebugBuild
+		      #pragma BackgroundTasks true
+		    #endif
+		    
+		    while not FlagStream2Word.TrySignal
+		      App.YieldToNextThread
+		    wend
+		    
+		    #if not DebugBuild
+		      #pragma BackgroundTasks false
+		    #endif
 		    
 		    dim dataPtr as Ptr = data
 		    
@@ -1187,7 +1098,7 @@ Protected Class Blowfish_MTC
 		    next i
 		    r = newMB.UInt32Value( 0 )
 		    
-		    zCSStream2Word.Leave
+		    FlagStream2Word.Release
 		  end if
 		  
 		  current = j
@@ -1196,8 +1107,8 @@ Protected Class Blowfish_MTC
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		 Shared Function UInt32Array(ParamArray values() As UInt32) As UInt32()
+	#tag Method, Flags = &h21
+		Private Shared Function UInt32Array(ParamArray values() As UInt32) As UInt32()
 		  return values
 		End Function
 	#tag EndMethod
@@ -1247,69 +1158,59 @@ Protected Class Blowfish_MTC
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
+		Private Shared FlagDecipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared FlagEncipher As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared FlagStream2Word As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private P As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		PPtr As Ptr
+	#tag Property, Flags = &h21
+		Private PPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private S As MemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		SPtr As Ptr
-	#tag EndProperty
-
 	#tag Property, Flags = &h21
-		Private Shared zCSDecipher As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zCSEncipher As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared zCSStream2Word As CriticalSection
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zCurrentVector As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zKeyWasSet As Boolean
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private zLastBlockHadNull As Boolean
+		Private SPtr As Ptr
 	#tag EndProperty
 
 
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption.", Scope = Public
+	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Public
+	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty.", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to 8 nulls)\x2C or exactly 8 bytes or hexadecimal characters representing 8 bytes.", Scope = Public
-	#tag EndConstant
-
-	#tag Constant, Name = kLibraryVersion, Type = String, Dynamic = False, Default = \"1.1.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.2", Scope = Public
 	#tag EndConstant
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="BlockSize"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="CurrentVector"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -1331,6 +1232,17 @@ Protected Class Blowfish_MTC
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="PaddingMethod"
+			Group="Behavior"
+			Type="Padding"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - NullsOnly"
+				"1 - NullsWithCount"
+				"2 - PKCS"
+			#tag EndEnumValues
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
@@ -1342,6 +1254,17 @@ Protected Class Blowfish_MTC
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="UseFunction"
+			Group="Behavior"
+			Type="Functions"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Default"
+				"1 - ECB"
+				"2 - CBC"
+			#tag EndEnumValues
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

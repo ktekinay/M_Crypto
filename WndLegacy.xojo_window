@@ -1,5 +1,5 @@
 #tag Window
-Begin Window Window1
+Begin Window WndLegacy
    BackColor       =   &cFFFFFF00
    Backdrop        =   0
    CloseButton     =   True
@@ -20,12 +20,12 @@ Begin Window Window1
    MenuBarVisible  =   True
    MinHeight       =   400
    MinimizeButton  =   True
-   MinWidth        =   600
+   MinWidth        =   694
    Placement       =   0
    Resizeable      =   True
-   Title           =   "Blowfish MTC"
+   Title           =   "Legacy"
    Visible         =   True
-   Width           =   600
+   Width           =   694
    Begin PushButton btnTest
       AutoDeactivate  =   True
       Bold            =   False
@@ -39,7 +39,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   False
-      Left            =   500
+      Left            =   594
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   False
@@ -52,7 +52,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   15
+      Top             =   16
       Underline       =   False
       Visible         =   True
       Width           =   80
@@ -102,7 +102,7 @@ Begin Window Window1
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   560
+      Width           =   654
    End
    Begin TextField fldKey
       AcceptTabs      =   False
@@ -140,11 +140,11 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   13
+      Top             =   14
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   137
+      Width           =   127
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -175,7 +175,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   15
+      Top             =   16
       Transparent     =   False
       Underline       =   False
       Visible         =   True
@@ -193,7 +193,7 @@ Begin Window Window1
       InitialParent   =   ""
       InitialValue    =   ""
       Italic          =   False
-      Left            =   299
+      Left            =   364
       ListIndex       =   0
       LockBottom      =   False
       LockedInPosition=   False
@@ -210,7 +210,7 @@ Begin Window Window1
       Top             =   15
       Underline       =   False
       Visible         =   True
-      Width           =   163
+      Width           =   218
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -223,7 +223,7 @@ Begin Window Window1
       Index           =   1
       InitialParent   =   ""
       Italic          =   False
-      Left            =   247
+      Left            =   312
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
@@ -241,7 +241,7 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   16
+      Top             =   15
       Transparent     =   False
       Underline       =   False
       Visible         =   True
@@ -327,7 +327,7 @@ Begin Window Window1
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   482
+      Width           =   576
    End
    Begin Label lblLabel
       AutoDeactivate  =   True
@@ -377,7 +377,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   False
-      Left            =   500
+      Left            =   594
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   False
@@ -395,10 +395,62 @@ Begin Window Window1
       Visible         =   True
       Width           =   80
    End
+   Begin CheckBox cbMD5
+      AutoDeactivate  =   True
+      Bold            =   False
+      Caption         =   "MD5"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   237
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Scope           =   2
+      State           =   0
+      TabIndex        =   13
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   16
+      Underline       =   False
+      Value           =   False
+      Visible         =   True
+      Width           =   63
+   End
 End
 #tag EndWindow
 
 #tag WindowCode
+	#tag Event
+		Sub Close()
+		  if zTempFolder isa FolderItem then
+		    dim files() as FolderItem
+		    dim cnt as integer = zTempFolder.Count
+		    for i as integer = 1 to cnt
+		      files.Append zTempFolder.Item( i )
+		    next
+		    
+		    for i as integer = files.Ubound downto 0
+		      files( i ).Delete
+		    next
+		    
+		    zTempFolder.Delete
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub AddToResult(msg As String)
 		  fldResult.AppendText msg
@@ -456,7 +508,7 @@ End
 		    dim salt as string = Bcrypt_MTC.GenerateSalt( cost )
 		    
 		    for each pw as string in passwords
-		      dim myHash as string = Bcrypt_MTC.Bcrypt( pw, salt )
+		      dim myHash as string = Bcrypt_MTC.Hash( pw, salt )
 		      if not PHPVerify( pw, myHash ) then
 		        AddToResult "PHP no match: " + pw
 		      elseif not Bcrypt_MTC.Verify( pw, myHash ) then
@@ -477,40 +529,116 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function PHPBcrypt(key As String, salt As String) As String
-		  dim sw as new Stopwatch_MTC
-		  sw.Start
+		Private Sub BlowfishStressTest()
+		  //
+		  // Stress test Blowfish to make sure the result
+		  // matches the output from JavaScript
+		  //
 		  
-		  dim phpHash as string
+		  dim dataAlphabet() as string = split( _
+		  "abcdefghijklmnopqrstuvwxyz " + _
+		  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + _
+		  "!@#$%^&*()_+" + _
+		  "=-/.,?><[]{}" + _
+		  "¡™£¢∞§¶•ªº", _
+		  "" )
+		  dim keyAlphabet() as string = split( _
+		  "abcdefghijklmnopqrstuvwxyz " + _
+		  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + _
+		  "!@#$%^&*()_+" + _
+		  "=-/.,?><[]{}", _
+		  "" )
 		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $salt = '%salt%' ; print crypt( $key, $salt ) ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%salt%", salt )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    phpHash = sh.Result.Trim
-		    
-		  end if
+		  const kMinDataLetters = 1
+		  const kMaxDataLetters = 100
+		  const kMinKeyLetters = 1
+		  const kMaxKeyLetters = 10
 		  
-		  sw.Stop
-		  return phpHash
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function PHPCommand() As String
-		  #if not TargetWin32
-		    dim sh as new Shell
-		    sh.Execute "which php"
-		    return sh.Result.Trim
-		  #endif
-		End Function
+		  dim r as new Random
+		  dim sh as new Shell
+		  sh.Execute "bash -lc 'which node'"
+		  dim node as string = sh.Result.Trim
+		  node = node.NthField( EndOfLine.UNIX, node.CountFields( EndOfLine.UNIX ) )
+		  
+		  sh = new Shell
+		  
+		  for keyCount as integer = kMinKeyLetters to kMaxKeyLetters
+		    //
+		    // Create a random key
+		    //
+		    dim keyArr() as string
+		    dim keyLen as integer
+		    while keyLen < keyCount
+		      dim letter as string = keyAlphabet( r.InRange( 0, keyAlphabet.Ubound ) )
+		      keyArr.Append letter
+		      keyLen = keyLen + 1
+		    wend
+		    dim key as string = join( keyArr, "" )
+		    dim jsKey as string = key.ReplaceAll( "'", "\'" )
+		    
+		    dim bf as new Blowfish_MTC( Crypto.MD5( key ), Blowfish_MTC.Padding.PKCS )
+		    
+		    for dataCount as integer = kMinDataLetters to kMaxDataLetters
+		      
+		      dim dataArr() as string
+		      dim dataLen as integer
+		      while dataLen < dataCount
+		        dim letter as string = dataAlphabet( r.InRange( 0, dataAlphabet.Ubound ) )
+		        dataArr.Append letter
+		        dataLen = dataLen + 1
+		      wend
+		      dim data as string = join( dataArr, "" )
+		      dim jsData as string = data.ReplaceAll( "'", "\'" )
+		      
+		      //
+		      // Create the Encrypt file
+		      //
+		      dim tos as TextOutputStream
+		      dim jsEncrypt as FolderItem = TempFolder.Child( "encrypt.js" )
+		      jsEncrypt.Delete
+		      tos = TextOutputStream.Create( jsEncrypt )
+		      tos.Write kJavaScriptEncryptECB.ReplaceAll( "%key%", jsKey ).ReplaceAll( "%data%", jsData )
+		      tos.Close
+		      
+		      sh.Execute node + " " + jsEncrypt.ShellPath
+		      dim nativeEncrypted as string = EncodeHex( bf.EncryptECB( data ) )
+		      dim jsEncrypted as string = sh.Result.Trim
+		      
+		      if nativeEncrypted <> jsEncrypted then
+		        AddToResult "Encryption doesn't match for key «" + key + "» and data «" + data + "»"
+		      end if
+		      
+		      //
+		      // Create the Decrypt file
+		      //
+		      dim jsDecrypt as FolderItem = TempFolder.Child( "decrypt.js" )
+		      jsDecrypt.Delete
+		      tos = TextOutputStream.Create( jsDecrypt )
+		      tos.Write kJavaScriptDecryptECB.ReplaceAll( "%key%", jsKey ).ReplaceAll( "%data%", nativeEncrypted )
+		      tos.Close
+		      
+		      sh.Execute node + " " + jsDecrypt.ShellPath
+		      dim nativeDecrypted as string = bf.DecryptECB( DecodeHex( jsEncrypted ) )
+		      dim jsDecrypted as string = sh.Result.ReplaceAll( EndOfLine, "" )
+		      
+		      if StrComp( nativeDecrypted, data, 0 ) <> 0 then
+		        AddToResult "Native decryption doesn't match for key «" + key + "» and data «" + data + "», " + _
+		        "returned «" + nativeDecrypted.DefineEncoding( Encodings.UTF8 ) + "»"
+		        'continue for dataCount
+		      end if
+		      
+		      if StrComp( jsDecrypted, data, 0 ) <> 0 then
+		        AddToResult "JS decryption doesn't match for key «" + key + "» and data «" + data + "», " + _
+		        "returned «" + jsDecrypted.DefineEncoding( Encodings.UTF8 ) + "»"
+		        'continue for dataCount
+		      end if
+		      
+		    next dataCount
+		  next keyCount
+		  
+		  AddToResult "Blowfish Stress Test Finished"
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -520,21 +648,14 @@ End
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  
-		  dim php as string = PHPCommand
-		  if php <> "" then
-		    key = key.ReplaceAll( "'", "'\\\''" )
-		    againstHash = againstHash.ReplaceAll( "'", "'\\\''" )
-		    
-		    dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
-		    cmd = cmd.ReplaceAll( "'", "'\''" )
-		    cmd = cmd.ReplaceAll( "%key%", key )
-		    cmd = cmd.ReplaceAll( "%hash%", againstHash )
-		    
-		    dim sh as new Shell
-		    sh.Execute(  php, "-r '" + cmd + "'" )
-		    r = sh.Result.Trim = "true"
-		    
-		  end if
+		  key = key.ReplaceAll( "'", "\'" )
+		  againstHash = againstHash.ReplaceAll( "'", "\'" )
+		  
+		  dim cmd as string = "$key = '%key%' ; $hash = '%hash%' ; if ( password_verify( $key, $hash ) ) { print 'true'; } else { print 'false' ; } ;"
+		  cmd = cmd.ReplaceAll( "%key%", key )
+		  cmd = cmd.ReplaceAll( "%hash%", againstHash )
+		  
+		  r = M_PHP.Execute( cmd ) = "true"
 		  
 		  sw.Stop
 		  return r
@@ -542,15 +663,27 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function TempFolder() As FolderItem
+		  if zTempFolder is nil then
+		    zTempFolder = SpecialFolder.Temporary.Child( "Blowfish_Harness_Temp" )
+		    zTempFolder.CreateAsFolder
+		  end if
+		  
+		  return zTempFolder
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub TestBcrypt(key As String, salt As String, sw As Stopwatch_MTC)
 		  AddToResult "Salt: " + salt
 		  sw.Start
-		  dim hash as string = Bcrypt_MTC.Bcrypt( key, salt )
+		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
 		  AddToResult "Hash: " + hash
 		  
 		  // See if we can compare PHP
-		  dim phpHash as string = PHPBcrypt( key, salt )
+		  dim phpHash as string = M_PHP.Bcrypt( key, salt )
 		  AddToResult "PHP: " + phpHash
 		  
 		  if StrComp( hash, phpHash, 0 ) = 0 then
@@ -563,13 +696,30 @@ End
 	#tag EndMethod
 
 
+	#tag Property, Flags = &h21
+		Private zTempFolder As FolderItem
+	#tag EndProperty
+
+
+	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kJavaScriptEncryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar cipher \x3D crypto.createCipher(\'bf-ecb\'\x2C key);\n\nvar enc \x3D cipher.update(data\x2C \'utf8\'\x2C \'hex\');\nenc +\x3D cipher.final(\'hex\');\n\nconsole.log(enc);\n", Scope = Private
+	#tag EndConstant
+
+
 #tag EndWindowCode
 
 #tag Events btnTest
 	#tag Event
 		Sub Action()
+		  const kVector as string = "0123456789ABCDEF"
+		  
 		  dim data as string = fldData.Text
 		  dim key as string = fldKey.Text
+		  if cbMD5.Value then
+		    key = Crypto.MD5( key )
+		  end if
 		  dim salt as string = "$2y$10$1234567890123456789012" // For bcrypt
 		  
 		  dim blf as new Blowfish_MTC( key )
@@ -603,6 +753,7 @@ End
 		    
 		  case 2 // CBC
 		    sw.Start
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    data = blf.EncryptCBC( data )
 		    sw.Stop
 		    AddToResult "Encrypted: " + EncodeHex( data, true )
@@ -616,6 +767,7 @@ End
 		    // Simulates reading from a file or stream.
 		    dim byteIndex as integer = 1
 		    dim encrypted as string
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      dim block as string = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -627,6 +779,7 @@ End
 		    
 		    byteIndex = 1
 		    data = ""
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= encrypted.LenB
 		      dim block as string = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -642,21 +795,21 @@ End
 		    dim encrypted as string
 		    dim block as string
 		    
-		    dim vector as string = "0123456789ABCDEF" // Don't need to do this, but if you do, be sure to store the vector for decryption
+		    dim vector as string = kVector // Don't need to do this, but if you do, be sure to store the vector for decryption
 		    // You can supply either an 8-byte string or hex representing 8 bytes
-		    blf.SetVector( vector )
+		    blf.SetInitialVector( vector )
+		    blf.PaddingMethod = Blowfish_MTC.Padding.PKCS
 		    while byteIndex <= data.LenB
 		      block = data.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
 		      sw.Start
-		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetVector or SetVector is called
+		      encrypted = encrypted + blf.EncryptCBC( block, byteIndex > data.LenB ) // The last vector will be retained until isFinalBlock is true or ResetInitialVector or SetInitialVector is called
 		      sw.Stop
 		    wend
 		    AddToResult "Encrypted: " + EncodeHex( encrypted, true )
 		    
 		    byteIndex = 1
 		    data = ""
-		    blf.SetVector( vector )
 		    while byteIndex <= encrypted.LenB
 		      block = encrypted.MidB( byteIndex, 8 )
 		      byteIndex = byteIndex + 8
@@ -691,6 +844,9 @@ End
 		  case 10 // Bcrypt stress test
 		    BcryptStressTest
 		    
+		  case 11 // Blowfish stress test
+		    BlowfishStressTest
+		    
 		  else
 		    AddToResult "Unrecognized Index: " + str( mnuTests.ListIndex )
 		    
@@ -718,7 +874,8 @@ End
 		  "Generate Salt", _
 		  "Verify", _
 		  "-", _
-		  "Bcrypt Stress Test" _
+		  "Bcrypt Stress Test", _
+		  "Blowfish Stress Test" _
 		  )
 		  
 		  me.AddRows tests
@@ -781,7 +938,6 @@ End
 			"7 - Global Floating Window"
 			"8 - Sheet Window"
 			"9 - Metal Window"
-			"10 - Drawer Window"
 			"11 - Modeless Dialog"
 		#tag EndEnumValues
 	#tag EndViewProperty

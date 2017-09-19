@@ -4,3 +4,7 @@
 *.xojo_uistate
 
 .Blowfish Harness.xojo_uistate
+*.xcuserstate
+*.xcbkptlist
+*.gz
+M_Crypto.debug.app
