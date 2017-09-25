@@ -25,6 +25,7 @@ Class=UnimplementedEnumException;../Shared Classes/M_Crypto/UnimplementedEnumExc
 Class=XojoUnitSuperClassTests;Tests/XojoUnitSuperClassTests.xojo_code;&h3A8067FF;&h44C729E7;false
 Class=XojoUnitTests;Tests/XojoUnitTests.xojo_code;&h45CA76B3;&h44C729E7;false
 Class=XojoUnitFailTests;Tests/XojoUnitFailTests.xojo_code;&h2FC99FFF;&h44C729E7;false
+Class=EncrypterTestGroup;Tests/EncrypterTestGroup.xojo_code;&h1F5B6FFF;&h44C729E7;false
 Class=AES128NullsTests;Tests/AES128NullsTests.xojo_code;&hA4EE7FF;&h44C729E7;false
 Class=AES128PKCSTests;Tests/AES128PKCSTests.xojo_code;&h32BD4FFF;&h44C729E7;false
 Class=AES256NullsTests;Tests/AES256NullsTests.xojo_code;&h459ACFFF;&h44C729E7;false
