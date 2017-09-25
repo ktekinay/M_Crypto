@@ -24,6 +24,7 @@ Class=OptionUnrecognizedKeyException;OptionParserModule/OptionUnrecognizedKeyExc
 Interface=ParserOption;OptionParserModule/ParserOption.xojo_code;&h5838B7FF;&h25C327FF;false
 Interface=UnitTestOptionParser;OptionParserModule/UnitTestOptionParser.xojo_code;&h52AF67FF;&h25C327FF;false
 Class=InterpretedString;M_ANSI/InterpretedString.xojo_code;&h745A2FFF;&h10F3A7FF;false
+Class=DataReader;DataReader.xojo_code;&h333A37FF;&h0;false
 MajorVersion=1
 MinorVersion=0
 SubVersion=0
