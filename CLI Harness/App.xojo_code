@@ -257,13 +257,16 @@ Inherits ConsoleApplication
 		  
 		  e.SetInitialVector Parser.StringValue( kOptionInitialVector, "" )
 		  
-		  dim chunkSize as integer = 57 * e.BlockSize * 1000
-		  'chunkSize = 4000000
+		  const kBase64BytesPerLine = 57
+		  const kBase64CharsPerLine = 76
+		  const kMinBlockSize = 8
+		  const kChunkMultiplier = 10
+		  const kChunkSize = kBase64BytesPerLine * kBase64CharsPerLine * kMinBlockSize * kChunkMultiplier
 		  
 		  while not reader.EOF
 		    dim result as string
 		    
-		    dim data as string = NextDataChunk( reader, chunkSize )
+		    dim data as string = NextDataChunk( reader, kChunkSize )
 		    #if DebugBuild
 		      dim dataLenB as integer = data.LenB
 		      #pragma unused dataLenB
@@ -306,22 +309,29 @@ Inherits ConsoleApplication
 
 	#tag Method, Flags = &h21
 		Private Function NextDataChunk(reader As DataReader, chunkSize As Integer) As String
-		  dim result as string 
+		  static rawBuffer as string
+		  dim result as string = rawBuffer
+		  rawBuffer = ""
 		  
 		  //
 		  // Translate to the encoded size we need
 		  //
-		  dim adjustedChunkSize as integer = chunkSize
+		  dim trueCharCount as integer = chunkSize
+		  dim adjustedChunkSize as integer = trueCharCount
+		  
 		  select case DataEncoding
 		  case BinaryEncodings.Hex
-		    adjustedChunkSize = adjustedChunkSize * 2
+		    adjustedChunkSize = adjustedChunkSize * 4
+		    trueCharCount = trueCharCount * 2
+		    
 		  case BinaryEncodings.Base64
-		    adjustedChunkSize = adjustedChunkSize * 4 / 3
+		    trueCharCount = trueCharCount * 4 / 3
+		    adjustedChunkSize = trueCharCount + ( trueCharCount \ 76 * 2 )
 		  end select
 		  
 		  dim count as integer = adjustedChunkSize
 		  
-		  while not reader.EOF and count > 0
+		  while not reader.EOF and count > 0 and result.LenB < trueCharCount
 		    result = result + reader.Read( count )
 		    
 		    //
@@ -339,6 +349,8 @@ Inherits ConsoleApplication
 		    count = adjustedChunkSize - result.LenB
 		  wend
 		  
+		  rawBuffer = result.MidB( trueCharCount + 1 )
+		  result = result.LeftB( trueCharCount )
 		  result = Decode( result, DataEncoding )
 		  return result
 		End Function
