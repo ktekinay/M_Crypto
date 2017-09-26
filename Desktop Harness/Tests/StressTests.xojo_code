@@ -168,6 +168,96 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub LongBlockEncryptTest()
+		  self.StopTestOnFail = true
+		  
+		  dim encrypters() as M_Crypto.Encrypter
+		  encrypters.Append new Blowfish_MTC
+		  encrypters.Append new AES_MTC( 128 )
+		  encrypters.Append new AES_MTC( 192 )
+		  encrypters.Append new AES_MTC( 256 )
+		  
+		  for each e as M_Crypto.Encrypter in encrypters
+		    e.UseFunction = M_Crypto.Encrypter.Functions.CBC
+		    e.SetKey "password"
+		  next
+		  
+		  dim paddings() as M_Crypto.Encrypter.Padding
+		  paddings.Append M_Crypto.Encrypter.Padding.NullsWithCount
+		  paddings.Append M_Crypto.Encrypter.Padding.PKCS
+		  paddings.Append M_Crypto.Encrypter.Padding.NullsOnly // Must be last
+		  
+		  dim r as new Random
+		  
+		  const kMaxTextLength as integer = 127
+		  
+		  dim kCharMinCode as integer = 0
+		  dim kCharMaxCode as integer = 128
+		  
+		  dim builder() as string
+		  for i as integer = 1 to kMaxTextLength
+		    builder.Append Chr( r.InRange( kCharMinCode, kCharMaxCode ) )
+		  next
+		  
+		  const kRounds as integer = 80
+		  
+		  for round as integer = 1 to kRounds
+		    for textLength as integer = 64 to kMaxTextLength
+		      //
+		      // Change the text of the builder
+		      //
+		      for spots as integer = 1 to ( kMaxTextLength \ 2 )
+		        dim builderIndex as integer = r.InRange( 0, textLength - 1 )
+		        builder( builderIndex ) = Chr( r.InRange( kCharMinCode, kCharMaxCode ) )
+		      next
+		      
+		      dim longText as string = join( builder, "" )
+		      longText = longText.LeftB( textLength )
+		      
+		      for each p as M_Crypto.Encrypter.Padding in paddings
+		        for each e as M_Crypto.Encrypter in encrypters
+		          e.PaddingMethod = p
+		          
+		          dim stepper as integer = e.BlockSize * 4
+		          
+		          dim original as string = longText
+		          if p = M_Crypto.Encrypter.Padding.NullsOnly and original.RightB( 1 ).AscB = 0 then
+		            //
+		            // There is no way that would work right anyway
+		            //
+		            original = original.LeftB( original.LenB - 1 ) + "A"
+		          end if
+		          
+		          dim originalHex as string = EncodeHex( original )
+		          
+		          
+		          dim encryptedArr() as string 
+		          for chunkIndex as integer = 1 to original.LenB step stepper
+		            dim chunk as string = original.MidB( chunkIndex, stepper )
+		            encryptedArr.Append e.Encrypt( chunk, chunkIndex > ( original.LenB - stepper ) )
+		          next chunkIndex
+		          dim encrypted as string = join( encryptedArr, "" )
+		          
+		          dim decryptedArr() as string
+		          for chunkIndex as integer = 1 to encrypted.LenB step stepper
+		            dim chunk as string = encrypted.MidB( chunkIndex, stepper )
+		            decryptedArr.Append e.Decrypt( chunk, chunkIndex > encrypted.LenB - stepper )
+		          next chunkIndex
+		          dim decrypted as string = join( DecryptedArr, "" )
+		          decrypted = decrypted.DefineEncoding( original.Encoding )
+		          dim decryptedHex as string = EncodeHex( decrypted )
+		          Assert.AreEqual originalHex, decryptedHex, Xojo.Introspection.GetType( e ).Name + _
+		          if( e isa AES_MTC, "-" +AES_MTC( e ).Bits.ToText, "" ) + _
+		          ", padding: " + Integer( p ).ToText + ", length: " + textLength.ToText
+		        next e
+		      next p
+		      
+		    next textLength
+		  next round
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function PHPVerify(key As String, againstHash As String) As Boolean
 		  dim r as boolean
