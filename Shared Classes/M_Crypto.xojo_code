@@ -73,7 +73,7 @@ Protected Module M_Crypto
 	#tag Constant, Name = kRxEncryptCode, Type = String, Dynamic = False, Default = \"(\?x)\n\\A\n(\?|\n  (aes) (\?:-\?(\?:(128|192|256)))\?\n  | (bf) \n  | (blowfish)\n)\n\\b \n(\?:-(cbc|ecb))\?\n\\z", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.1", Scope = Protected
 	#tag EndConstant
 
 

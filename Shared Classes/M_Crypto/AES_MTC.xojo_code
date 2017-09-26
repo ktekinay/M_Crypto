@@ -5,7 +5,7 @@ Inherits M_Crypto.Encrypter
 		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    DecryptECB data, isFinalBlock
+		    DecryptECB data
 		    
 		  case Functions.CBC
 		    DecryptCBC data, isFinalBlock
@@ -21,7 +21,7 @@ Inherits M_Crypto.Encrypter
 		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    EncryptECB( data, isFinalBlock )
+		    EncryptECB data
 		    
 		  case Functions.CBC
 		    EncryptCBC( data, isFinalBlock )
@@ -261,8 +261,6 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
-		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -294,28 +292,17 @@ Inherits M_Crypto.Encrypter
 		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
 		  next
 		  
-		  // See if we have to add back the last null
-		  AddBackNullIfNeeded( data )
-		  
-		  if isFinalBlock then
-		    DepadIfNeeded( data )
-		    zCurrentVector = ""
-		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
-		    data.Size = data.Size - 1
-		    LastBlockHadNull = true
-		  end if
-		  
 		  if not isFinalBlock then
 		    vectorMB = vectorPtr
 		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
 		  end if
+		  
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorDecryptionBlockSize )
-		  
+		Private Sub DecryptECB(data As MemoryBlock)
 		  dim dataPtr as ptr = data
 		  
 		  dim lastIndex As integer = data.Size - 1
@@ -323,27 +310,11 @@ Inherits M_Crypto.Encrypter
 		    InvCipher( dataPtr, startAt )
 		  next
 		  
-		  // See if we have to add back the last null
-		  AddBackNullIfNeeded( data )
-		  
-		  if isFinalBlock then
-		    DepadIfNeeded( data )
-		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
-		    data.Size = data.Size - 1
-		    LastBlockHadNull = true
-		  end if
-		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  if isFinalBlock then
-		    PadIfNeeded( data )
-		  else
-		    RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorIntermediateEncyptionBlockSize )
-		  end if
-		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -369,9 +340,7 @@ Inherits M_Crypto.Encrypter
 		    'vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
 		  next
 		  
-		  if isFinalBlock then
-		    zCurrentVector = ""
-		  else
+		  if not isFinalBlock then
 		    vectorMB = vectorPtr
 		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
 		  end if
@@ -380,13 +349,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  if isFinalBlock then
-		    PadIfNeeded( data )
-		  else
-		    RaiseErrorIf( ( data.Size mod kBlockLen ) <> 0, kErrorIntermediateEncyptionBlockSize )
-		  end if
-		  
+		Private Sub EncryptECB(data As MemoryBlock)
 		  dim dataPtr as ptr = data
 		  
 		  dim lastByte As integer = data.Size - 1
@@ -1040,16 +1003,10 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kBlockLen, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 16 bytes", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 16 bytes for encryption\n  ", Scope = Private
-	#tag EndConstant
-
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
 	#tag EndConstant
 
 
@@ -1105,7 +1062,7 @@ Inherits M_Crypto.Encrypter
 			#tag EnumValues
 				"0 - NullsOnly"
 				"1 - NullsWithCount"
-				"2 - PKCS5"
+				"2 - PKCS"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
