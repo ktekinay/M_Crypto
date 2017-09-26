@@ -10,12 +10,21 @@ Inherits ConsoleApplication
 		    return 0
 		  end if
 		  
-		  dim action as string = Parser.StringValue( kOptionExecute, "" )
+		  select case Parser.StringValue( kOptionExecute, "" ).Left( 1 )
+		  case kActionEncrypt.Left( 1 )
+		    Action = Actions.Encrypt
+		  case kActionDecrypt.Left( 1 )
+		    Action = Actions.Decrypt
+		  case kActionBcrypt.Left( 1 )
+		    Action = Actions.Bcrypt
+		  case kActionVerifyBcrypt.Left( 1 )
+		    Action = Actions.VerifyBcrypt
+		  end select
 		  
 		  //
 		  // Sanity check
 		  //
-		  if action.Left( 1 ) = kActionEncrypt.Left( 1 ) or action.Left( 1 ) = kActionDecrypt.Left( 1 ) then
+		  if Action = Actions.Encrypt or Action = Actions.Decrypt then
 		    if not Parser.OptionValue( kOptionEncrypter ).WasSet then
 		      print "An encrypter must be specified"
 		      print ""
@@ -75,20 +84,31 @@ Inherits ConsoleApplication
 		  KeyEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionKeyEncoding ) )
 		  
 		  //
+		  // Set up the output
+		  //
+		  if parser.OptionValue( kOptionOutputFile ).WasSet then
+		    dim f as FolderItem = parser.FileValue( kOptionOutputFile )
+		    dim bs as BinaryStream = BinaryStream.Create( f, true )
+		    OutputWriter = bs
+		  else
+		    OutputWriter = StdOut
+		  end if
+		  
+		  //
 		  // Do what they asked
 		  //
 		  dim errCode as integer
 		  
 		  try
-		    select case action.Left( 1 )
-		    case kActionEncrypt.Left( 1 ), kActionDecrypt.Left( 1 )
-		      errCode = DoEncryption( reader, action )
+		    select case Action
+		    case Actions.Encrypt, Actions.Decrypt
+		      errCode = DoEncryption( reader )
 		      
-		    case kActionBcrypt.Left( 1 ), kActionVerifyBcrypt.Left( 1 )
-		      errCode = DoBcrypt( reader, action )
+		    case Actions.Bcrypt, Actions.VerifyBcrypt
+		      errCode = DoBcrypt( reader )
 		      
 		    case else
-		      print "Unrecognized action " + action
+		      print "Unrecognized action " + parser.StringValue( kOptionExecute )
 		      errCode = 1
 		      
 		    end select
@@ -102,8 +122,12 @@ Inherits ConsoleApplication
 		    errCode = 1
 		  end try
 		  
-		  if Parser.BooleanValue( kOptionEOL, true ) then
-		    print ""
+		  if Parser.BooleanValue( kOptionEOL, true ) and OutputWriter isa StandardOutputStream then
+		    OutputWriter.Write EndOfLine
+		  end if
+		  
+		  if OutputWriter isa BinaryStream then
+		    BinaryStream( OutputWriter ).Close
 		  end if
 		  
 		  return errCode
@@ -134,7 +158,7 @@ Inherits ConsoleApplication
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function DoBcrypt(reader As DataReader, action As String) As Integer
+		Private Function DoBcrypt(reader As DataReader) As Integer
 		  dim result as string
 		  
 		  dim data as string = reader.ReadAll
@@ -143,15 +167,15 @@ Inherits ConsoleApplication
 		  dim salt as string = Parser.StringValue( kOptionSalt )
 		  dim rounds as integer = Parser.IntegerValue( kOptionBcryptRounds, kDefaultBcryptRounds )
 		  
-		  select case action.Left( 1 )
-		  case kActionBcrypt.Left( 1 )
+		  select case Action
+		  case Actions.Bcrypt
 		    if salt <> "" then
 		      result = Bcrypt_MTC.Hash( data, salt )
 		    else
 		      result = Bcrypt_MTC.Hash( data, rounds )
 		    end if
 		    
-		  case kActionVerifyBcrypt.Left( 1 )
+		  case Actions.VerifyBcrypt
 		    dim against as string = Parser.StringValue( kOptionVerifyAgainstHash )
 		    if Bcrypt_MTC.Verify( data, against ) then
 		      result = "valid"
@@ -161,15 +185,18 @@ Inherits ConsoleApplication
 		    
 		  end select
 		  
-		  result = Encode( result )
-		  StdOut.Write result
+		  Write result
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function DoEncryption(reader As DataReader, action As String) As Integer
+		Private Function DoEncryption(reader As DataReader) As Integer
 		  dim key as string
 		  
+		  //
+		  // More sanity checks
+		  //
 		  if Parser.OptionValue( kOptionKeyFile ).WasSet xor Parser.OptionValue( kOptionKey ).WasSet xor _
 		    Parser.BooleanValue( kOptionKeyStdIn ) then
 		    //
@@ -182,6 +209,13 @@ Inherits ConsoleApplication
 		    //
 		  else
 		    print "Too many key sources specified"
+		    return 1
+		  end if
+		  
+		  if OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
+		    print "Unencoded data cannot be written to StdOut, use --" + _
+		    kOptionOutputFile + " to specify a file or --" + kOptionOutputEncoding + _
+		    " to specify an encoding"
 		    return 1
 		  end if
 		  
@@ -272,7 +306,7 @@ Inherits ConsoleApplication
 		      #pragma unused dataLenB
 		    #endif
 		    
-		    if action.Left( 1 ) = kActionEncrypt.Left( 1 ) then
+		    if Action = Actions.Encrypt then
 		      result = e.Encrypt( data, reader.EOF )
 		    else
 		      try
@@ -283,8 +317,7 @@ Inherits ConsoleApplication
 		      end try
 		    end if
 		    
-		    result = Encode( result )
-		    StdOut.Write result
+		    Write result
 		  wend
 		  
 		  return 0
@@ -375,6 +408,18 @@ Inherits ConsoleApplication
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub Write(data As String)
+		  data = Encode( data )
+		  OutputWriter.Write data
+		  
+		End Sub
+	#tag EndMethod
+
+
+	#tag Property, Flags = &h21
+		Private Action As Actions
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private DataEncoding As BinaryEncodings
@@ -386,6 +431,10 @@ Inherits ConsoleApplication
 
 	#tag Property, Flags = &h21
 		Private OutputEncoding As BinaryEncodings
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private OutputWriter As Writeable
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
@@ -459,8 +508,11 @@ Inherits ConsoleApplication
 			    o = new Option( "", kOptionDataStdIn, "The data has been piped in through StdIn", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
-			    o = new Option( "", kOptionOutputEncoding, "Encode the result of encryption/decryption [default None]", Option.OptionType.String )
+			    o = new Option( "O", kOptionOutputEncoding, "Encode the result of encryption/decryption [default None]", Option.OptionType.String )
 			    o.AddAllowedValue "None", "N", "Hex", "H", "Base64", "B"
+			    parser.AddOption o
+			    
+			    o = new Option( "", kOptionOutputFile, "The output file that will be overwritten", Option.OptionType.File )
 			    parser.AddOption o
 			    
 			    o = new Option( "", kOptionEOL, "Include an EOL in the output [default TRUE]", Option.OptionType.Boolean )
@@ -537,6 +589,9 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kOptionOutputEncoding, Type = String, Dynamic = False, Default = \"output-encoding", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kOptionOutputFile, Type = String, Dynamic = False, Default = \"output-file", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kOptionPadding, Type = String, Dynamic = False, Default = \"padding", Scope = Private
 	#tag EndConstant
 
@@ -555,6 +610,14 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kPaddingPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
 	#tag EndConstant
 
+
+	#tag Enum, Name = Actions, Type = Integer, Flags = &h21
+		Unknown
+		  Encrypt
+		  Decrypt
+		  Bcrypt
+		VerifyBcrypt
+	#tag EndEnum
 
 	#tag Enum, Name = BinaryEncodings, Type = Integer, Flags = &h21
 		Unknown
