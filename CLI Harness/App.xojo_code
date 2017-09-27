@@ -548,8 +548,9 @@ Inherits ConsoleApplication
 			    " is used]", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
-			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt utilty"
+			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt utilty v." + kVersion
 			    parser.AdditionalHelpNotes = kHelpNotes
+			    
 			  end if
 			  
 			  return parser
@@ -638,6 +639,9 @@ Inherits ConsoleApplication
 	#tag EndConstant
 
 	#tag Constant, Name = kPaddingPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Private
 	#tag EndConstant
 
 
