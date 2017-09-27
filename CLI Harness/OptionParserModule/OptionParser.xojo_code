@@ -1026,10 +1026,9 @@ Implements UnitTestOptionParser
 		  End If
 		  
 		  #If TargetConsole Then
-		    dim out as new StandardOutputStream
 		    for row as integer = 0 to helpLines.Ubound
-		      out.WriteLine helpLines(row)
-		      out.Flush
+		      StdErr.WriteLine helpLines(row)
+		      StdErr.Flush
 		    next row
 		  #ElseIf TargetDesktop Then
 		    Dim help As String = Join(helpLines, EndOfLine)
