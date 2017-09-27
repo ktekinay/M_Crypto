@@ -242,6 +242,12 @@ Inherits ConsoleApplication
 		  else
 		    StdOut.Write "Enter key: "
 		    key = StdIn.ReadLineANSIWithoutEcho
+		    StdOut.Write "Again: "
+		    dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
+		    if StrComp( key, keyCompare, 0 ) <> 0 then
+		      print "Keys do not match"
+		      return 1
+		    end if
 		  end if
 		  
 		  if key = "" then
