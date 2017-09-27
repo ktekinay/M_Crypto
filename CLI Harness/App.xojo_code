@@ -261,7 +261,7 @@ Inherits ConsoleApplication
 		    //
 		    // This really shouldn't happen
 		    //
-		    Console.Write "Can't get a key because there is already data on StdIn"
+		    StdErr.WriteLine "Can't get a key because there is already data on StdIn"
 		    return 1
 		    
 		  else
