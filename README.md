@@ -276,6 +276,12 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.1__ (Sept. 27, 2017)
+
+- Refactored to streamline code.
+- Changed NullsWithCount padding to conform to standard. It will now add padding in all cases, even if the block is already the right size. This means the last padding byte can be 0x01, something that wasn't allowed in the previous version. Depadding will still work on something encrypted like that unless you decrypt in blocks and the last block is <= BlockSize.
+- Added the CLI project and reorganized files in general.
+
 __2.0__ (Sept. 19, 2017)
 
 - Renamed M\_Crypto and other classes rolled into that module.

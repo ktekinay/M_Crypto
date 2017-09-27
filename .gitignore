@@ -8,3 +8,5 @@
 *.xcbkptlist
 *.gz
 M_Crypto.debug.app
+CLI Harness/mtccrypto.debug
+CLI Harness/M_Crypto CLI Harness.debug

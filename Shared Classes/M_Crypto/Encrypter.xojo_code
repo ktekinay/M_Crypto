@@ -1,21 +1,5 @@
 #tag Class
 Protected Class Encrypter
-	#tag Method, Flags = &h1
-		Protected Sub AddBackNullIfNeeded(data As MemoryBlock)
-		  // See if the previous block had a null that could have been part of the padding and
-		  // add it back to this decrypted block
-		  if LastBlockHadNull then
-		    dim oldSize as integer = data.Size
-		    dim newSize as integer = oldSize + 1
-		    data.Size = newSize
-		    data.StringValue( 1, oldSize ) = data.StringValue( 0, oldSize ) // Shift the data over by one byte
-		    data.Byte( 0 ) = 0
-		    LastBlockHadNull = false
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Constructor()
 		  //
@@ -24,25 +8,32 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  select case UseFunction
-		  case Functions.Default
-		    RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+	#tag Method, Flags = &h21
+		Private Function Decrypt(f As Functions, data As String, isFinalBlock As Boolean) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
+		  if data = "" then
+		    return data
+		  end if
+		  
+		  select case f
+		  case Functions.Default, Functions.CBC, Functions.ECB
+		    dim d as MemoryBlock = data
 		    
-		    if data = "" then
-		      return data
+		    if isFinalBlock then
+		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
+		    else
+		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		    end if
 		    
-		    dim d as MemoryBlock = data
-		    RaiseEvent Decrypt( Functions.Default, d, isfinalBlock )
+		    RaiseEvent Decrypt( f, d, isFinalBlock )
+		    
+		    if isFinalBlock then
+		      DepadIfNeeded( d )
+		      zCurrentVector = ""
+		    end if
+		    
 		    return d
-		    
-		  case Functions.CBC
-		    return DecryptCBC( data, isFinalBlock )
-		    
-		  case Functions.ECB
-		    return DecryptECB( data, isFinalBlock )
 		    
 		  case else
 		    raise new M_Crypto.UnimplementedEnumException
@@ -52,35 +43,27 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
+		  return Decrypt( UseFunction, data, isFinalBlock )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  return Decrypt( Functions.CBC, data, isFinalBlock )
 		  
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d as MemoryBlock = data
-		  RaiseEvent Decrypt( Functions.CBC, d, isfinalBlock )
-		  return d
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  return Decrypt( Functions.ECB, data, isFinalBlock )
 		  
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d as MemoryBlock = data
-		  RaiseEvent Decrypt( Functions.ECB, d, isfinalBlock )
-		  return d
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub DepadIfNeeded(data As MemoryBlock)
+	#tag Method, Flags = &h21
+		Private Sub DepadIfNeeded(data As MemoryBlock)
 		  // See PadIfNeeded for a description of how padding works.
 		  
 		  if data is nil or data.Size = 0 then
@@ -139,16 +122,20 @@ Protected Class Encrypter
 		    // Counterpart to padding. Will remove nulls followed by the number of nulls
 		    // from the end of the MemoryBlock.
 		    
-		    dim paddedSize as integer = data.Size
-		    if ( paddedSize mod BlockSize ) <> 0 and paddedSize <> ( BlockSize + 1 ) then return // If it's not a multiple of BlockSize, it's not properly padded anyway (9 bytes is a special case and has to be checked)
-		    dim lastByte as integer = data.Byte( paddedSize - 1 )
-		    if lastByte > paddedSize or lastByte < 2 or lastByte > ( BlockSize + 1 ) then return // Can't be a valid pad
+		    //
+		    // the original implementation would never add one just one byte, but rather would
+		    // add BlockSize + 1. I've since discovered that the standard calls for padding to be
+		    // added in all cases so a single byte can be added to the end. However, to keep
+		    // compatible with the previous implementation, this will attempt to string
+		    // BlockSize + 1 if specified and if possible.
+		    //
 		    
-		    dim compareMB as new MemoryBlock( lastByte )
-		    compareMB.Byte( lastByte - 1 ) = lastByte
-		    if StrComp( data.StringValue( paddedSize - lastByte, lastByte ), compareMB, 0 ) = 0 then
-		      data.Size = paddedSize - lastByte
+		    dim lastByte as integer = data.Byte( data.Size - 1 )
+		    if lastByte = 0 or lastByte > ( BlockSize + 1 ) or lastByte > data.Size then
+		      raise new M_Crypto.InvalidPaddingException
 		    end if
+		    
+		    data.Size = data.Size - lastByte
 		    
 		  case Padding.NullsOnly
 		    dim lastIndex as integer = originalSize - 1
@@ -167,25 +154,31 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
-		  select case UseFunction
-		  case Functions.Default
-		    RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+	#tag Method, Flags = &h21
+		Private Function Encrypt(f As Functions, data As String, isFinalBlock As Boolean) As String
+		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  
+		  if data = "" then
+		    return data
+		  end if
+		  
+		  select case f
+		  case Functions.Default, Functions.CBC, Functions.ECB
+		    dim d as MemoryBlock = data
 		    
-		    if data = "" then
-		      return data
+		    if isFinalBlock then
+		      PadIfNeeded( d )
+		    else
+		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		    end if
 		    
-		    dim d as MemoryBlock = data
-		    RaiseEvent Encrypt( Functions.Default, d, isfinalBlock )
+		    RaiseEvent Encrypt( f, d, isfinalBlock )
+		    
+		    if isFinalBlock then
+		      zCurrentVector = ""
+		    end if
+		    
 		    return d
-		    
-		  case Functions.CBC
-		    return EncryptCBC( data, isFinalBlock )
-		    
-		  case Functions.ECB
-		    return EncryptECB( data, isFinalBlock )
 		    
 		  case else
 		    raise new M_Crypto.UnimplementedEnumException
@@ -195,31 +188,21 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
+		  return Encrypt( UseFunction, data, isFinalBlock )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
+		  return Encrypt( Functions.CBC, data, isFinalBlock )
 		  
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d as MemoryBlock = data
-		  RaiseEvent Encrypt( Functions.CBC, d, isfinalBlock )
-		  return d
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  
-		  if data = "" then
-		    return data
-		  end if
-		  
-		  dim d As MemoryBlock = data
-		  RaiseEvent Encrypt( Functions.ECB, d, isFinalBlock )
-		  return d
-		  
+		  return Encrypt( Functions.ECB, data, isFinalBlock )
 		End Function
 	#tag EndMethod
 
@@ -243,8 +226,8 @@ Protected Class Encrypter
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub PadIfNeeded(data As MemoryBlock)
+	#tag Method, Flags = &h21
+		Private Sub PadIfNeeded(data As MemoryBlock)
 		  if data is nil or data.Size = 0 then
 		    return
 		  end if
@@ -273,48 +256,21 @@ Protected Class Encrypter
 		    next
 		    
 		  case Padding.NullsWithCount
-		    // Pads the data to an exact multiple of BlockSize bytes.
-		    // It does this by adding nulls followed by the number of padding bytes.
-		    // Example: If data is &h31 32 33, it will turn it into
-		    // &h31 32 33 00 00 00 00 05. If only one byte needs to be added, it will
-		    // add BlockSize + 1 to avoid confusion.
 		    //
-		    // If data is already a multiple of BlockSize, it will only add a padding if the trailing bytes
-		    // match the pattern of X nulls followed by &hX. The exception is if the
-		    // last BlockSize bytes matches the pattern &h00 X (BlockSize - 1) + BlockSize.
-		    // To be on the safe side, it will add padding then too.
+		    // ANSI X.923 padding
+		    //
+		    // Pads the data to an exact multiple of BlockSize bytes by
+		    // adding nulls plus the number of bytes added. For example, when
+		    // BlockSize = 8 and the final block is 0x32 32 32 32, it will be padded
+		    // to 0x32 32 32 32 00 00 00 04. A pad is always added even if the final
+		    // block is already the right size.
+		    //
 		    
-		    dim lastByte as integer = data.Byte( originalSize - 1 )
-		    
-		    if padToAdd = 1 then
-		      padToAdd = BlockSize + 1 // Will never add a single byte pad
+		    if padToAdd = 0 then
+		      padToAdd = BlockSize
 		    end if
-		    
-		    if padToAdd = BlockSize then // Already a multiple, so see if we need to do anything
-		      padToAdd = 0 // Assume we have nothing to add
-		      
-		      if lastByte = ( BlockSize + 1 ) then // Special case
-		        // See if the rest of the bytes are all zeros
-		        dim compareMB as new MemoryBlock( BlockSize )
-		        compareMB.Byte( BlockSize - 1 ) = BlockSize + 1
-		        if StrComp( data.StringValue( originalSize - BlockSize, BlockSize ), compareMB, 0 ) = 0 then
-		          padToAdd = BlockSize // This means that the last are all nulls followed by BlockSize + 1, so add padding
-		        end if
-		        
-		      elseif lastByte >= 2 and lastByte < ( BlockSize + 1 ) then // It's in the valid trigger range
-		        dim compareMB as new MemoryBlock( lastByte )
-		        compareMB.Byte( lastByte - 1 ) = lastByte
-		        if StrComp( data.StringValue( originalSize - lastByte, lastByte ), compareMB, 0 ) = 0 then // The end of the data looks like a pad
-		          padToAdd = BlockSize // Add a real pad
-		        end if
-		      end if
-		    end if
-		    
-		    if padToAdd <> 0 then
-		      dim newSize as integer = originalSize + padToAdd
-		      data.Size = newSize
-		      data.Byte( newSize - 1 ) = padToAdd
-		    end if
+		    data.Size = data.Size + padToAdd
+		    data.Byte( data.Size - 1 ) = padToAdd
 		    
 		  case Padding.NullsOnly
 		    //
@@ -431,6 +387,12 @@ Protected Class Encrypter
 		Protected zCurrentVector As String
 	#tag EndProperty
 
+
+	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of BlockSize", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of BlockSize for encryption\n  ", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kErrorKeyCannotBeEmpty, Type = String, Dynamic = False, Default = \"The key cannot be empty", Scope = Protected
 	#tag EndConstant

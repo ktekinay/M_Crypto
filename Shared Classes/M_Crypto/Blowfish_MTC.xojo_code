@@ -6,13 +6,13 @@ Implements BcryptInterface
 		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Decrypt( data, isFinalBlock )
+		    Decrypt data
 		    
 		  case Functions.ECB
-		    DecryptECB( data, isFinalBlock )
+		    DecryptECB data 
 		    
 		  case Functions.CBC
-		    DecryptCBC( data, isFinalBlock )
+		    DecryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -25,13 +25,13 @@ Implements BcryptInterface
 		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Encrypt( data, isFinalBlock )
+		    Encrypt data
 		    
 		  case Functions.ECB
-		    EncryptECB( data, isFinalBlock )
+		    EncryptECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC( data, isFinalBlock )
+		    EncryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -196,9 +196,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  
+		Private Sub Decrypt(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -214,24 +212,12 @@ Implements BcryptInterface
 		    byteIndex = byteIndex + 8
 		  next thisBlock
 		  
-		  // See if we have to add back the last null
-		  AddBackNullIfNeeded( data )
 		  
-		  if isFinalBlock then
-		    DepadIfNeeded( data )
-		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
-		    data.Size = data.Size - 1
-		    LastBlockHadNull = true
-		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then return
-		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  
 		  dim vector as string = zCurrentVector
 		  
 		  if vector = "" then
@@ -297,24 +283,11 @@ Implements BcryptInterface
 		    byteIndex = byteIndex - 8
 		  next i
 		  
-		  // See if we have to add back the last null
-		  AddBackNullIfNeeded( data )
-		  
-		  if isFinalBlock then
-		    DepadIfNeeded( data )
-		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
-		    data.Size = data.Size - 1
-		    LastBlockHadNull = true
-		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then return
-		  RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorDecryptionBlockSize )
-		  
+		Private Sub DecryptECB(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -344,16 +317,6 @@ Implements BcryptInterface
 		    
 		    byteIndex = byteIndex + 8
 		  next i
-		  
-		  // See if we have to add back the last null
-		  AddBackNullIfNeeded( data )
-		  
-		  if isFinalBlock then
-		    DepadIfNeeded( data )
-		  elseif dataPtr.Byte( data.Size - 1 ) = 0 then
-		    data.Size = data.Size - 1
-		    LastBlockHadNull = true
-		  end if
 		  
 		End Sub
 	#tag EndMethod
@@ -472,24 +435,13 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encrypt(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then 
-		    return
-		  end if
-		  
+		Private Sub Encrypt(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  if isFinalBlock then
-		    PadIfNeeded( data )
-		  else
-		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
-		  end if
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -505,14 +457,6 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  
-		  dim vector as string = zCurrentVector
-		  
-		  if vector = "" then
-		    vector = InitialVector
-		  end if
-		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -520,18 +464,18 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  dim vector as string = zCurrentVector
+		  
+		  if vector = "" then
+		    vector = InitialVector
+		  end if
+		  
 		  dim vectorMB as new MemoryBlock( 8 )
 		  if vector = "" then vector = CurrentVector
 		  if vector <> "" then
 		    vectorMB.StringValue( 0, 8 ) = vector
 		  end if
 		  dim vectorPtr as Ptr = vectorMB
-		  
-		  if isFinalBlock then
-		    PadIfNeeded( data )
-		  else
-		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
-		  end if
 		  
 		  dim r, l as UInt32
 		  dim dataPtr as Ptr = data
@@ -561,33 +505,20 @@ Implements BcryptInterface
 		    byteIndex = byteIndex + 8
 		  next i
 		  
-		  if isFinalBlock then
-		    zCurrentVector = ""
-		  else
+		  if not isFinalBlock then
 		    zCurrentVector = vectorMB // So the user can block chain if desired
 		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As MemoryBlock, isFinalBlock As Boolean = True)
-		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
-		  if data.Size = 0 then 
-		    return
-		  end if
-		  
+		Private Sub EncryptECB(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  if isFinalBlock then
-		    PadIfNeeded( data )
-		  else
-		    RaiseErrorIf( ( data.Size mod 8 ) <> 0, kErrorIntermediateEncyptionBlockSize )
-		  end if
 		  
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
@@ -1189,13 +1120,7 @@ Implements BcryptInterface
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of 8 bytes for decryption", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kErrorIntermediateEncyptionBlockSize, Type = String, Dynamic = False, Default = \"Intermediate data blocks must be an exact multiple of 8 bytes for encryption.\n  ", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.2", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
 	#tag EndConstant
 
 
