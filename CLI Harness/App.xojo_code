@@ -6,7 +6,7 @@ Inherits ConsoleApplication
 		  try
 		    Parser.Parse args
 		  catch err as OptionParserModule.OptionUnrecognizedKeyException
-		    Console.WriteLine err.Message
+		    StdErr.WriteLine err.Message
 		    return 1
 		  end try
 		  
@@ -31,7 +31,7 @@ Inherits ConsoleApplication
 		  //
 		  if Action = Actions.Encrypt or Action = Actions.Decrypt then
 		    if not Parser.OptionValue( kOptionEncrypter ).WasSet then
-		      Console.WriteLine "An encrypter must be specified"
+		      StdErr.WriteLine "An encrypter must be specified"
 		      Console.WriteLine ""
 		      Parser.ShowHelp
 		      return 1
@@ -39,12 +39,12 @@ Inherits ConsoleApplication
 		  end if
 		  
 		  if Parser.BooleanValue( kOptionKeyStdIn ) and Parser.BooleanValue( kOptionDataStdIn ) then
-		    Console.WriteLine "Both key and data cannot be on StdIn"
+		    StdErr.WriteLine "Both key and data cannot be on StdIn"
 		    return 1
 		  end if
 		  
 		  if Parser.Extra.Ubound > 0 then
-		    Console.WriteLine "Too much data given"
+		    StdErr.WriteLine "Too much data given"
 		    return 1
 		  end if
 		  
@@ -57,7 +57,7 @@ Inherits ConsoleApplication
 		    // That's fine
 		    //
 		  else
-		    Console.WriteLine "Too many data sources, or no data provided"
+		    StdErr.WriteLine "Too many data sources, or no data provided"
 		    return 1
 		  end if
 		  
@@ -79,7 +79,7 @@ Inherits ConsoleApplication
 		    if dataFile.IsReadable then
 		      dataSource = dataFile
 		    else
-		      Console.WriteLine "The data file is not readable"
+		      StdErr.WriteLine "The data file is not readable"
 		      return 1
 		    end if
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
@@ -89,7 +89,7 @@ Inherits ConsoleApplication
 		  dim reader as new DataReader( dataSource )
 		  
 		  if reader.EOF then
-		    Console.WriteLine "No data provided"
+		    StdErr.WriteLine "No data provided"
 		    return 1
 		  end if
 		  
@@ -118,7 +118,7 @@ Inherits ConsoleApplication
 		      errCode = DoBcrypt( reader )
 		      
 		    case else
-		      Console.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
+		      StdErr.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
 		      errCode = 1
 		      
 		    end select
@@ -128,7 +128,7 @@ Inherits ConsoleApplication
 		      raise err
 		    end if
 		    
-		    Console.WriteLine err.Message
+		    StdErr.WriteLine err.Message
 		    errCode = 1
 		  end try
 		  
@@ -152,7 +152,7 @@ Inherits ConsoleApplication
 		      msg = "An error of type " + Introspection.GetType( err ).Name + " has occurred"
 		    end if
 		    
-		    Console.WriteLine msg
+		    StdErr.WriteLine msg
 		    return 1
 		    
 		End Function
@@ -231,12 +231,12 @@ Inherits ConsoleApplication
 		    // Also fine
 		    //
 		  else
-		    Console.WriteLine "Too many key sources specified"
+		    StdErr.WriteLine "Too many key sources specified"
 		    return 1
 		  end if
 		  
 		  if Action = Actions.Encrypt and OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
-		    Console.WriteLine "Unencoded data cannot be written to StdOut, use --" + _
+		    StdErr.WriteLine "Unencoded data cannot be written to StdOut, use --" + _
 		    kOptionOutputFile + " to specify a file or --" + kOptionOutputEncoding + _
 		    " to specify an encoding"
 		    return 1
@@ -254,7 +254,7 @@ Inherits ConsoleApplication
 		    key = StdIn.ReadAll
 		    
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
-		    Console.WriteLine "When data is given on StdIn, a key must be specified"
+		    StdErr.WriteLine "When data is given on StdIn, a key must be specified"
 		    return 1
 		    
 		  elseif not StdIn.EOF then
@@ -271,14 +271,14 @@ Inherits ConsoleApplication
 		      Console.Write "Again: "
 		      dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
 		      if StrComp( key, keyCompare, 0 ) <> 0 then
-		        Console.WriteLine "Keys do not match"
+		        StdErr.WriteLine "Keys do not match"
 		        return 1
 		      end if
 		    end if
 		  end if
 		  
 		  if key = "" then
-		    Console.WriteLine "You must provide a key"
+		    StdErr.WriteLine "You must provide a key"
 		    return 1
 		  end if
 		  
@@ -309,7 +309,7 @@ Inherits ConsoleApplication
 		  try
 		    e = M_Crypto.GetEncrypter( code )
 		  catch err as M_Crypto.InvalidCodeException
-		    Console.WriteLine "Invalid encrypter code " + code
+		    StdErr.WriteLine "Invalid encrypter code " + code
 		    return 1
 		  end try
 		  
@@ -350,7 +350,7 @@ Inherits ConsoleApplication
 		      try
 		        result = e.Decrypt( data, reader.EOF )
 		      catch err as M_Crypto.InvalidPaddingException
-		        Console.WriteLine "Could not decrypt"
+		        StdErr.WriteLine "Could not decrypt"
 		        return 1
 		      end try
 		    end if
