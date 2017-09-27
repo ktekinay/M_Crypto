@@ -251,6 +251,8 @@ Protected Module M_ANSI
 		    
 		  #else
 		    
+		    dim console as new StandardOutputStream // In case the app is piping
+		    
 		    dim useEncoding as TextEncoding = Encodings.UTF8
 		    
 		    dim oldEcho as boolean = WillEcho
@@ -278,11 +280,11 @@ Protected Module M_ANSI
 		          //
 		          // Nothing has changed so beep
 		          //
-		          StdOut.Write Beep
+		          console.Write Beep
 		          
 		        else
 		          dim backSpace as integer = startingPosition - 1
-		          StdOut.Write if( backSpace > 0, CursorBack( backSpace ), "" ) + EraseLine + newString + _
+		          console.Write if( backSpace > 0, CursorBack( backSpace ), "" ) + EraseLine + newString + _
 		          if( not state.EOF, CursorBack( newString.Len - state.CursorPosition + 1 ), "" )
 		        end if
 		        
@@ -299,7 +301,7 @@ Protected Module M_ANSI
 		    
 		    if oldEcho then
 		      WillEcho = true
-		      print ""
+		      console.WriteLine ""
 		    end if
 		    
 		    return state.Interpreted
@@ -307,7 +309,7 @@ Protected Module M_ANSI
 		    Exception err as RuntimeException
 		      if oldEcho then
 		        WillEcho = oldEcho
-		        print ""
+		        console.WriteLine ""
 		      end if
 		      
 		      raise err
@@ -321,6 +323,8 @@ Protected Module M_ANSI
 		Function ReadLineANSIWithoutEcho(Extends std As StandardInputStream) As String
 		  #pragma unused std
 		  
+		  dim console as new StandardOutputStream // In case the app is piping
+		  
 		  dim oldEcho as boolean = WillEcho
 		  
 		  if oldEcho then
@@ -331,7 +335,7 @@ Protected Module M_ANSI
 		  
 		  if oldEcho then
 		    WillEcho = true
-		    print ""
+		    console.WriteLine ""
 		  end if
 		  
 		  return Interpret( s ).Interpreted
@@ -343,7 +347,7 @@ Protected Module M_ANSI
 		      WillEcho = oldEcho
 		    end if
 		    
-		    print ""
+		    console.WriteLine ""
 		    
 		    raise err
 		    
