@@ -6,7 +6,7 @@ Inherits ConsoleApplication
 		  try
 		    Parser.Parse args
 		  catch err as OptionParserModule.OptionUnrecognizedKeyException
-		    PrintToConsole err.Message
+		    Console.WriteLine err.Message
 		    return 1
 		  end try
 		  
@@ -31,20 +31,20 @@ Inherits ConsoleApplication
 		  //
 		  if Action = Actions.Encrypt or Action = Actions.Decrypt then
 		    if not Parser.OptionValue( kOptionEncrypter ).WasSet then
-		      PrintToConsole "An encrypter must be specified"
-		      PrintToConsole ""
+		      Console.WriteLine "An encrypter must be specified"
+		      Console.WriteLine ""
 		      Parser.ShowHelp
 		      return 1
 		    end if
 		  end if
 		  
 		  if Parser.BooleanValue( kOptionKeyStdIn ) and Parser.BooleanValue( kOptionDataStdIn ) then
-		    PrintToConsole "Both key and data cannot be on StdIn"
+		    Console.WriteLine "Both key and data cannot be on StdIn"
 		    return 1
 		  end if
 		  
 		  if Parser.Extra.Ubound > 0 then
-		    PrintToConsole "Too much data given"
+		    Console.WriteLine "Too much data given"
 		    return 1
 		  end if
 		  
@@ -57,7 +57,7 @@ Inherits ConsoleApplication
 		    // That's fine
 		    //
 		  else
-		    PrintToConsole "Too many data sources, or no data provided"
+		    Console.WriteLine "Too many data sources, or no data provided"
 		    return 1
 		  end if
 		  
@@ -84,7 +84,7 @@ Inherits ConsoleApplication
 		  dim reader as new DataReader( dataSource )
 		  
 		  if reader.EOF then
-		    PrintToConsole "No data provided"
+		    Console.WriteLine "No data provided"
 		    return 1
 		  end if
 		  
@@ -113,7 +113,7 @@ Inherits ConsoleApplication
 		      errCode = DoBcrypt( reader )
 		      
 		    case else
-		      PrintToConsole "Unrecognized action " + parser.StringValue( kOptionExecute )
+		      Console.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
 		      errCode = 1
 		      
 		    end select
@@ -123,7 +123,7 @@ Inherits ConsoleApplication
 		      raise err
 		    end if
 		    
-		    PrintToConsole err.Message
+		    Console.WriteLine err.Message
 		    errCode = 1
 		  end try
 		  
@@ -213,7 +213,7 @@ Inherits ConsoleApplication
 		    // Also fine
 		    //
 		  else
-		    PrintToConsole "Too many key sources specified"
+		    Console.WriteLine "Too many key sources specified"
 		    return 1
 		  end if
 		  
@@ -236,25 +236,24 @@ Inherits ConsoleApplication
 		    key = StdIn.ReadAll
 		    
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
-		    PrintToConsole "When data is given on StdIn, a key must be specified"
+		    Console.WriteLine "When data is given on StdIn, a key must be specified"
 		    return 1
 		    
 		  else
-		    dim console as new StandardOutputStream
-		    console.Write "Enter key: "
+		    Console.Write "Enter key: "
 		    key = StdIn.ReadLineANSIWithoutEcho
 		    if key <> "" then
-		      console.Write "Again: "
+		      Console.Write "Again: "
 		      dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
 		      if StrComp( key, keyCompare, 0 ) <> 0 then
-		        PrintToConsole "Keys do not match"
+		        Console.WriteLine "Keys do not match"
 		        return 1
 		      end if
 		    end if
 		  end if
 		  
 		  if key = "" then
-		    PrintToConsole "You must provide a key"
+		    Console.WriteLine "You must provide a key"
 		    return 1
 		  end if
 		  
@@ -285,7 +284,7 @@ Inherits ConsoleApplication
 		  try
 		    e = M_Crypto.GetEncrypter( code )
 		  catch err as M_Crypto.InvalidCodeException
-		    PrintToConsole "Invalid encrypter code " + code
+		    Console.WriteLine "Invalid encrypter code " + code
 		    return 1
 		  end try
 		  
@@ -326,7 +325,7 @@ Inherits ConsoleApplication
 		      try
 		        result = e.Decrypt( data, reader.EOF )
 		      catch err as M_Crypto.InvalidPaddingException
-		        PrintToConsole "Could not decrypt"
+		        Console.WriteLine "Could not decrypt"
 		        return 1
 		      end try
 		    end if
@@ -404,14 +403,6 @@ Inherits ConsoleApplication
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PrintToConsole(msg As String)
-		  static console as new StandardOutputStream
-		  console.WriteLine msg
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function StringToBinaryEncoding(s As String) As BinaryEncodings
 		  select case s.Left( 1 )
 		  case "N", ""
@@ -442,6 +433,17 @@ Inherits ConsoleApplication
 	#tag Property, Flags = &h21
 		Private Action As Actions
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  static out as new StandardOutputStream
+			  return out
+			  
+			End Get
+		#tag EndGetter
+		Private Console As StandardOutputStream
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private DataEncoding As BinaryEncodings
