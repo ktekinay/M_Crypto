@@ -6,7 +6,7 @@ Inherits ConsoleApplication
 		  try
 		    Parser.Parse args
 		  catch err as OptionParserModule.OptionUnrecognizedKeyException
-		    print err.Message
+		    PrintToConsole err.Message
 		    return 1
 		  end try
 		  
@@ -31,20 +31,20 @@ Inherits ConsoleApplication
 		  //
 		  if Action = Actions.Encrypt or Action = Actions.Decrypt then
 		    if not Parser.OptionValue( kOptionEncrypter ).WasSet then
-		      print "An encrypter must be specified"
-		      print ""
+		      PrintToConsole "An encrypter must be specified"
+		      PrintToConsole ""
 		      Parser.ShowHelp
 		      return 1
 		    end if
 		  end if
 		  
 		  if Parser.BooleanValue( kOptionKeyStdIn ) and Parser.BooleanValue( kOptionDataStdIn ) then
-		    print "Both key and data cannot be on StdIn"
+		    PrintToConsole "Both key and data cannot be on StdIn"
 		    return 1
 		  end if
 		  
 		  if Parser.Extra.Ubound > 0 then
-		    print "Too much data given"
+		    PrintToConsole "Too much data given"
 		    return 1
 		  end if
 		  
@@ -57,9 +57,16 @@ Inherits ConsoleApplication
 		    // That's fine
 		    //
 		  else
-		    print "Too many data sources, or no data provided"
+		    PrintToConsole "Too many data sources, or no data provided"
 		    return 1
 		  end if
+		  
+		  //
+		  // Set properties
+		  //
+		  DataEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionDataEncoding ) )
+		  OutputEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionOutputEncoding ) )
+		  KeyEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionKeyEncoding ) )
 		  
 		  //
 		  // Get the data
@@ -77,16 +84,9 @@ Inherits ConsoleApplication
 		  dim reader as new DataReader( dataSource )
 		  
 		  if reader.EOF then
-		    print "No data provided"
+		    PrintToConsole "No data provided"
 		    return 1
 		  end if
-		  
-		  //
-		  // Set properties
-		  //
-		  DataEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionDataEncoding ) )
-		  OutputEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionOutputEncoding ) )
-		  KeyEncoding = StringToBinaryEncoding( Parser.StringValue( kOptionKeyEncoding ) )
 		  
 		  //
 		  // Set up the output
@@ -113,7 +113,7 @@ Inherits ConsoleApplication
 		      errCode = DoBcrypt( reader )
 		      
 		    case else
-		      print "Unrecognized action " + parser.StringValue( kOptionExecute )
+		      PrintToConsole "Unrecognized action " + parser.StringValue( kOptionExecute )
 		      errCode = 1
 		      
 		    end select
@@ -123,7 +123,7 @@ Inherits ConsoleApplication
 		      raise err
 		    end if
 		    
-		    print err.Message
+		    PrintToConsole err.Message
 		    errCode = 1
 		  end try
 		  
@@ -213,12 +213,12 @@ Inherits ConsoleApplication
 		    // Also fine
 		    //
 		  else
-		    print "Too many key sources specified"
+		    PrintToConsole "Too many key sources specified"
 		    return 1
 		  end if
 		  
 		  if OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
-		    print "Unencoded data cannot be written to StdOut, use --" + _
+		    PrintToConsole "Unencoded data cannot be written to StdOut, use --" + _
 		    kOptionOutputFile + " to specify a file or --" + kOptionOutputEncoding + _
 		    " to specify an encoding"
 		    return 1
@@ -236,22 +236,25 @@ Inherits ConsoleApplication
 		    key = StdIn.ReadAll
 		    
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
-		    print "When data is given on StdIn, a key must be specified"
+		    PrintToConsole "When data is given on StdIn, a key must be specified"
 		    return 1
 		    
 		  else
-		    StdOut.Write "Enter key: "
+		    dim console as new StandardOutputStream
+		    console.Write "Enter key: "
 		    key = StdIn.ReadLineANSIWithoutEcho
-		    StdOut.Write "Again: "
-		    dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
-		    if StrComp( key, keyCompare, 0 ) <> 0 then
-		      print "Keys do not match"
-		      return 1
+		    if key <> "" then
+		      console.Write "Again: "
+		      dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
+		      if StrComp( key, keyCompare, 0 ) <> 0 then
+		        PrintToConsole "Keys do not match"
+		        return 1
+		      end if
 		    end if
 		  end if
 		  
 		  if key = "" then
-		    print "You must provide a key"
+		    PrintToConsole "You must provide a key"
 		    return 1
 		  end if
 		  
@@ -282,7 +285,7 @@ Inherits ConsoleApplication
 		  try
 		    e = M_Crypto.GetEncrypter( code )
 		  catch err as M_Crypto.InvalidCodeException
-		    print "Invalid encrypter code " + code
+		    PrintToConsole "Invalid encrypter code " + code
 		    return 1
 		  end try
 		  
@@ -323,7 +326,7 @@ Inherits ConsoleApplication
 		      try
 		        result = e.Decrypt( data, reader.EOF )
 		      catch err as M_Crypto.InvalidPaddingException
-		        print "Could not decrypt"
+		        PrintToConsole "Could not decrypt"
 		        return 1
 		      end try
 		    end if
@@ -398,6 +401,14 @@ Inherits ConsoleApplication
 		  result = Decode( result, DataEncoding )
 		  return result
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub PrintToConsole(msg As String)
+		  static console as new StandardOutputStream
+		  console.WriteLine msg
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
