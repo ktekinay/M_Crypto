@@ -3,12 +3,7 @@ Protected Class App
 Inherits ConsoleApplication
 	#tag Event
 		Function Run(args() as String) As Integer
-		  try
-		    Parser.Parse args
-		  catch err as OptionParserModule.OptionParserException
-		    StdErr.WriteLine err.Message
-		    return 1
-		  end try
+		  Parser.Parse args
 		  
 		  if Parser.HelpRequested then
 		    Parser.ShowHelp
@@ -32,7 +27,7 @@ Inherits ConsoleApplication
 		  if Action = Actions.Encrypt or Action = Actions.Decrypt then
 		    if not Parser.OptionValue( kOptionEncrypter ).WasSet then
 		      StdErr.WriteLine "An encrypter must be specified"
-		      Console.WriteLine ""
+		      StdErr.WriteLine ""
 		      Parser.ShowHelp
 		      return 1
 		    end if
@@ -109,40 +104,32 @@ Inherits ConsoleApplication
 		  //
 		  dim errCode as integer
 		  
-		  try
-		    select case Action
-		    case Actions.Encrypt, Actions.Decrypt
-		      errCode = DoEncryption( reader )
-		      
-		    case Actions.Bcrypt, Actions.VerifyBcrypt
-		      errCode = DoBcrypt( reader )
-		      
-		    case else
-		      StdErr.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
-		      errCode = 1
-		      
-		    end select
+		  select case Action
+		  case Actions.Encrypt, Actions.Decrypt
+		    errCode = DoEncryption( reader )
 		    
-		  catch err as RuntimeException
-		    if err isa EndException or err isa ThreadEndException then
-		      raise err
-		    end if
+		  case Actions.Bcrypt, Actions.VerifyBcrypt
+		    errCode = DoBcrypt( reader )
 		    
-		    StdErr.WriteLine err.Message
+		  case else
+		    StdErr.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
 		    errCode = 1
-		  end try
+		    
+		  end select
 		  
-		  if Parser.BooleanValue( kOptionEOL, true ) and OutputWriter isa StandardOutputStream then
+		  dim defaultEOL as boolean = OutputWriter isa StandardOutputStream
+		  if Parser.BooleanValue( kOptionEOL, defaultEOL ) then
 		    OutputWriter.Write EndOfLine
 		  end if
 		  
 		  if OutputWriter isa BinaryStream then
 		    BinaryStream( OutputWriter ).Close
+		    OutputWriter = nil
 		  end if
 		  
 		  return errCode
 		  
-		  exception err as RuntimeException
+		  Exception err as RuntimeException
 		    if err isa EndException or err isa ThreadEndException then
 		      raise err
 		    end if
@@ -257,24 +244,28 @@ Inherits ConsoleApplication
 		    StdErr.WriteLine "When data is given on StdIn, a key must be specified"
 		    return 1
 		    
-		  elseif not StdIn.EOF then
-		    //
-		    // This really shouldn't happen
-		    //
-		    StdErr.WriteLine "Can't get a key because there is already data on StdIn"
-		    return 1
-		    
 		  else
-		    Console.Write "Enter key: "
-		    key = StdIn.ReadLineANSIWithoutEcho
-		    if key <> "" then
-		      Console.Write "Again: "
-		      dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
-		      if StrComp( key, keyCompare, 0 ) <> 0 then
-		        StdErr.WriteLine "Keys do not match"
-		        return 1
+		    dim onStdIn as string = StdIn.ReadAll
+		    if not StdIn.EOF and onStdIn <> "" then
+		      //
+		      // This really shouldn't happen
+		      //
+		      StdErr.WriteLine "Can't get a key because there is already data on StdIn: " + onStdIn
+		      return 1
+		      
+		    else
+		      StdErr.Write "Enter key: "
+		      key = StdIn.ReadLineANSIWithoutEcho
+		      if key <> "" then
+		        StdErr.Write "Again: "
+		        dim keyCompare as string = StdIn.ReadLineANSIWithoutEcho
+		        if StrComp( key, keyCompare, 0 ) <> 0 then
+		          StdErr.WriteLine "Keys do not match"
+		          return 1
+		        end if
 		      end if
 		    end if
+		    
 		  end if
 		  
 		  if key = "" then
@@ -458,17 +449,6 @@ Inherits ConsoleApplication
 	#tag Property, Flags = &h21
 		Private Action As Actions
 	#tag EndProperty
-
-	#tag ComputedProperty, Flags = &h21
-		#tag Getter
-			Get
-			  static out as new StandardOutputStream
-			  return out
-			  
-			End Get
-		#tag EndGetter
-		Private Console As StandardOutputStream
-	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private DataEncoding As BinaryEncodings
