@@ -235,8 +235,8 @@ Inherits ConsoleApplication
 		    return 1
 		  end if
 		  
-		  if OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
-		    PrintToConsole "Unencoded data cannot be written to StdOut, use --" + _
+		  if Action = Actions.Encrypt and OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
+		    Console.WriteLine "Unencoded data cannot be written to StdOut, use --" + _
 		    kOptionOutputFile + " to specify a file or --" + kOptionOutputEncoding + _
 		    " to specify an encoding"
 		    return 1
@@ -255,6 +255,13 @@ Inherits ConsoleApplication
 		    
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
 		    Console.WriteLine "When data is given on StdIn, a key must be specified"
+		    return 1
+		    
+		  elseif not StdIn.EOF then
+		    //
+		    // This really shouldn't happen
+		    //
+		    Console.Write "Can't get a key because there is already data on StdIn"
 		    return 1
 		    
 		  else
