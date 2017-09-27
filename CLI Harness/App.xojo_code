@@ -544,7 +544,8 @@ Inherits ConsoleApplication
 			    o = new Option( "", kOptionOutputFile, "The output file that will be overwritten", Option.OptionType.File )
 			    parser.AddOption o
 			    
-			    o = new Option( "", kOptionEOL, "Include an EOL in the output [default TRUE]", Option.OptionType.Boolean )
+			    o = new Option( "", kOptionEOL, "Include an EOL in the output [default TRUE unless --" + kOptionOutputFile + _
+			    " is used]", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
 			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt utilty"
