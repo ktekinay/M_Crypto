@@ -76,7 +76,12 @@ Inherits ConsoleApplication
 		  if extra <> "" then
 		    dataSource = extra
 		  elseif dataFile isa FolderItem then
-		    dataSource = dataFile
+		    if dataFile.IsReadable then
+		      dataSource = dataFile
+		    else
+		      Console.WriteLine "The data file is not readable"
+		      return 1
+		    end if
 		  elseif Parser.BooleanValue( kOptionDataStdIn ) then
 		    dataSource = StdIn
 		  end if
