@@ -51,9 +51,10 @@ MDICaption=
 DefaultEncoding=&h0
 AppIcon=M_Crypto CLI Harness.xojo_resources;&h0
 OSXBundleID=com.mactechnologies.mcryptocliharness
-DebuggerCommandLine=-x b data --salt='$2y$10$tTNpn4CEUKZ1ia5Q98v92u'
+DebuggerCommandLine=--execute encrypt --encrypter aes-128-cbc --padding=pkcs  --output-encoding=base64 'hi there' --output-file ~/Desktop/Enc.txt
 UseGDIPlus=False
 UseBuildsFolder=True
 CopyRedistNextToWindowsEXE=False
 IsWebProject=False
-OptimizationLevel=0
+MacBuildArchitecture=1
+OptimizationLevel=4
