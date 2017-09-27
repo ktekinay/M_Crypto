@@ -3,7 +3,12 @@ Protected Class App
 Inherits ConsoleApplication
 	#tag Event
 		Function Run(args() as String) As Integer
-		  Parser.Parse args
+		  try
+		    Parser.Parse args
+		  catch err as OptionParserModule.OptionUnrecognizedKeyException
+		    print err.Message
+		    return 1
+		  end try
 		  
 		  if Parser.HelpRequested then
 		    Parser.ShowHelp
