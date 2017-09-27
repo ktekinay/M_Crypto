@@ -142,6 +142,19 @@ Inherits ConsoleApplication
 		  
 		  return errCode
 		  
+		  exception err as RuntimeException
+		    if err isa EndException or err isa ThreadEndException then
+		      raise err
+		    end if
+		    
+		    dim msg as string = err.Message
+		    if msg = "" then
+		      msg = "An error of type " + Introspection.GetType( err ).Name + " has occurred"
+		    end if
+		    
+		    Console.WriteLine msg
+		    return 1
+		    
 		End Function
 	#tag EndEvent
 
