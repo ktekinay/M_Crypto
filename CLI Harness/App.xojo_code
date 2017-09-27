@@ -5,7 +5,7 @@ Inherits ConsoleApplication
 		Function Run(args() as String) As Integer
 		  try
 		    Parser.Parse args
-		  catch err as OptionParserModule.OptionUnrecognizedKeyException
+		  catch err as OptionParserModule.OptionParserException
 		    StdErr.WriteLine err.Message
 		    return 1
 		  end try
