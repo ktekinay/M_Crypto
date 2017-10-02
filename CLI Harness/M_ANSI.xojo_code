@@ -247,7 +247,7 @@ Protected Module M_ANSI
 		    #pragma unused std
 		    
 		    dim s as string = Input
-		    return Interpret( s )
+		    return Interpret( s ).Interpreted
 		    
 		  #else
 		    
