@@ -22,6 +22,7 @@ An encryption library for Xojo that implements Blowfish and AES encryption and B
 - [Compatibility](#compatibility)
 	- [Postgres](#postgres)
 	- [JavaScript Crypto Module](#javascript-crypto-module)
+- [Other](#other)
 - [License](#license)
 - [Comments and Contributions](#comments-and-contributions)
 - [Who Did This?!?](#who-did-this)
@@ -256,6 +257,10 @@ Blowfish ECB: Will take any key but it will apply an MD5 hash to it internally.
 
 Blowfish CBC: Will take any key.
 
+## Other
+
+`M_Crypto.GeenrateUUID` will create a UUI using the OS tools, if possible, or native Xojo code if note. In any case, the output conforms to standards and is cryptographically safe.
+
 ## License
 
 This is an open-source project.
@@ -275,6 +280,11 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.2__ (__)
+
+- Added `M_Crypto.GenerateUUID`.
+- Fixed Windows bug in M_ANSI.
 
 __2.1__ (Sept. 27, 2017)
 
