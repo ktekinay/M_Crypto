@@ -76,16 +76,23 @@ Protected Module Scrypt_MTC
 		    results.Append x
 		  next
 		  
-		  dim mbIndex as integer
+		  //
+		  // Shuffle the array around so elements 0, 1, 2, 3, 4 become 0, 2, 4, 1, 3
+		  //
+		  dim final() as string
+		  redim final( results.Ubound )
+		  dim finalIndex as integer = -1
+		  
 		  for i as integer = 0 to results.Ubound step 2
-		    mb.StringValue( mbIndex, kBlockSize ) = results( i )
-		    mbIndex = mbIndex + kBlockSize
+		    finalIndex = finalIndex + 1
+		    final( finalIndex ) = results( i )
+		  next
+		  for i as integer = 1 to results.Ubound step 2
+		    finalIndex = finalIndex + 1
+		    final( finalIndex ) = results( i )
 		  next
 		  
-		  for i as integer = 1 to results.Ubound step 2
-		    mb.StringValue( mbIndex, kBlockSize ) = results( i )
-		    mbIndex = mbIndex + kBlockSize
-		  next
+		  mb.StringValue( 0, mb.Size ) = join( final, "" )
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -191,10 +198,10 @@ Protected Module Scrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub ROMix(mb As MemoryBlock, n As Integer)
-		  dim isLittleEndian as boolean = true
+		  const kIsLittleEndian as boolean = true
 		  
 		  dim mbSize as integer = mb.Size
-		  mb.LittleEndian = isLittleEndian
+		  mb.LittleEndian = kIsLittleEndian
 		  dim mbPtr as ptr = mb
 		  
 		  dim results() as string
@@ -207,7 +214,7 @@ Protected Module Scrypt_MTC
 		  next
 		  
 		  dim v as new MemoryBlock( mbSize * n )
-		  v.LittleEndian = isLittleEndian
+		  v.LittleEndian = kIsLittleEndian
 		  v.StringValue( 0, v.Size ) = join( results, "" )
 		  redim results( -1 )
 		  
