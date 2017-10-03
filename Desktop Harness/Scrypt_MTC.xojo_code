@@ -212,50 +212,50 @@ Protected Module Scrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Salsa(p As Ptr)
-		  dim x( 15 ) as UInt32
+		  dim arr( 15 ) as UInt32
 		  
 		  for i as integer = 0 to 15
-		    x( i ) = p.UInt32( i * 4 )
+		    arr( i ) = p.UInt32( i * 4 )
 		  next
 		  
 		  for i as integer = 1 to 4
-		    x( 4 ) = x( 4 ) xor ( ( ( x( 0 ) + x( 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 0 ) + x( 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 8 ) = x( 8 ) xor ( ( ( x( 4 ) + x( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 4 ) + x( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 12 ) = x( 12 ) xor ( ( ( x( 8 ) + x( 4 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 8 ) + x( 4 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 0 ) = x( 0 ) xor ( ( ( x( 12 ) + x( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 12 ) + x( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 9 ) = x( 9 ) xor ( ( ( x( 5 ) + x( 1 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 5 ) + x( 1 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 13 ) = x( 13 ) xor ( ( ( x( 9 ) + x( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 9 ) + x( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 1 ) = x( 1 ) xor ( ( ( x( 13 ) + x( 9 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 13 ) + x( 9 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 5 ) = x( 5 ) xor ( ( ( x( 1 ) + x( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 1 ) + x( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 14 ) = x( 14 ) xor ( ( ( x( 10 ) + x( 6 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 10 ) + x( 6 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 2 ) = x( 2 ) xor ( ( ( x( 14 ) + x( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 14 ) + x( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 6 ) = x( 6 ) xor ( ( ( x( 2 ) + x( 14 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 2 ) + x( 14 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 10 ) = x( 10 ) xor ( ( ( x( 6 ) + x( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 6 ) + x( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 3 ) = x( 3 ) xor ( ( ( x( 15 ) + x( 11 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 15 ) + x( 11 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 7 ) = x( 7 ) xor ( ( ( x( 3 ) + x( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 3 ) + x( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 11 ) = x( 11 ) xor ( ( ( x( 7 ) + x( 3 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 7 ) + x( 3 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 15 ) = x( 15 ) xor ( ( ( x( 11 ) + x( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 11 ) + x( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 1 ) = x( 1 ) xor ( ( ( x( 0 ) + x( 3 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 0 ) + x( 3 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 2 ) = x( 2 ) xor ( ( ( x( 1 ) + x( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 1 ) + x( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 3 ) = x( 3 ) xor ( ( ( x( 2 ) + x( 1 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 2 ) + x( 1 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 0 ) = x( 0 ) xor ( ( ( x( 3 ) + x( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 3 ) + x( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 6 ) = x( 6 ) xor ( ( ( x( 5 ) + x( 4 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 5 ) + x( 4 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 7 ) = x( 7 ) xor ( ( ( x( 6 ) + x( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 6 ) + x( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 4 ) = x( 4 ) xor ( ( ( x( 7 ) + x( 6 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 7 ) + x( 6 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 5 ) = x( 5 ) xor ( ( ( x( 4 ) + x( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 4 ) + x( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 11 ) = x( 11 ) xor ( ( ( x( 10 ) + x( 9 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 10 ) + x( 9 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 8 ) = x( 8 ) xor ( ( ( x( 11 ) + x( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 11 ) + x( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 9 ) = x( 9 ) xor ( ( ( x( 8 ) + x( 11 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 8 ) + x( 11 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 10 ) = x( 10 ) xor ( ( ( x( 9 ) + x( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 9 ) + x( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		    x( 12 ) = x( 12 ) xor ( ( ( x( 15 ) + x( 14 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( x( 15 ) + x( 14 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		    x( 13 ) = x( 13 ) xor ( ( ( x( 12 ) + x( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( x( 12 ) + x( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		    x( 14 ) = x( 14 ) xor ( ( ( x( 13 ) + x( 12 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( x( 13 ) + x( 12 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		    x( 15 ) = x( 15 ) xor ( ( ( x( 14 ) + x( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( x( 14 ) + x( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 4 ) = arr( 4 ) xor ( ( ( arr( 0 ) + arr( 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 0 ) + arr( 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 8 ) = arr( 8 ) xor ( ( ( arr( 4 ) + arr( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 4 ) + arr( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 12 ) = arr( 12 ) xor ( ( ( arr( 8 ) + arr( 4 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 8 ) + arr( 4 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 0 ) = arr( 0 ) xor ( ( ( arr( 12 ) + arr( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 12 ) + arr( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 9 ) = arr( 9 ) xor ( ( ( arr( 5 ) + arr( 1 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 5 ) + arr( 1 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 13 ) = arr( 13 ) xor ( ( ( arr( 9 ) + arr( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 9 ) + arr( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 1 ) = arr( 1 ) xor ( ( ( arr( 13 ) + arr( 9 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 13 ) + arr( 9 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 5 ) = arr( 5 ) xor ( ( ( arr( 1 ) + arr( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 1 ) + arr( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 14 ) = arr( 14 ) xor ( ( ( arr( 10 ) + arr( 6 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 10 ) + arr( 6 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 2 ) = arr( 2 ) xor ( ( ( arr( 14 ) + arr( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 14 ) + arr( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 6 ) = arr( 6 ) xor ( ( ( arr( 2 ) + arr( 14 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 2 ) + arr( 14 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 10 ) = arr( 10 ) xor ( ( ( arr( 6 ) + arr( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 6 ) + arr( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 3 ) = arr( 3 ) xor ( ( ( arr( 15 ) + arr( 11 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 15 ) + arr( 11 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 7 ) = arr( 7 ) xor ( ( ( arr( 3 ) + arr( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 3 ) + arr( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 11 ) = arr( 11 ) xor ( ( ( arr( 7 ) + arr( 3 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 7 ) + arr( 3 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 15 ) = arr( 15 ) xor ( ( ( arr( 11 ) + arr( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 11 ) + arr( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 1 ) = arr( 1 ) xor ( ( ( arr( 0 ) + arr( 3 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 0 ) + arr( 3 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 2 ) = arr( 2 ) xor ( ( ( arr( 1 ) + arr( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 1 ) + arr( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 3 ) = arr( 3 ) xor ( ( ( arr( 2 ) + arr( 1 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 2 ) + arr( 1 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 0 ) = arr( 0 ) xor ( ( ( arr( 3 ) + arr( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 3 ) + arr( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 6 ) = arr( 6 ) xor ( ( ( arr( 5 ) + arr( 4 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 5 ) + arr( 4 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 7 ) = arr( 7 ) xor ( ( ( arr( 6 ) + arr( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 6 ) + arr( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 4 ) = arr( 4 ) xor ( ( ( arr( 7 ) + arr( 6 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 7 ) + arr( 6 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 5 ) = arr( 5 ) xor ( ( ( arr( 4 ) + arr( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 4 ) + arr( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 11 ) = arr( 11 ) xor ( ( ( arr( 10 ) + arr( 9 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 10 ) + arr( 9 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 8 ) = arr( 8 ) xor ( ( ( arr( 11 ) + arr( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 11 ) + arr( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 9 ) = arr( 9 ) xor ( ( ( arr( 8 ) + arr( 11 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 8 ) + arr( 11 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 10 ) = arr( 10 ) xor ( ( ( arr( 9 ) + arr( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 9 ) + arr( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		    arr( 12 ) = arr( 12 ) xor ( ( ( arr( 15 ) + arr( 14 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 15 ) + arr( 14 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		    arr( 13 ) = arr( 13 ) xor ( ( ( arr( 12 ) + arr( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 12 ) + arr( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		    arr( 14 ) = arr( 14 ) xor ( ( ( arr( 13 ) + arr( 12 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 13 ) + arr( 12 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		    arr( 15 ) = arr( 15 ) xor ( ( ( arr( 14 ) + arr( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 14 ) + arr( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
 		  next
 		  
 		  dim byteIndex as integer
 		  for i as integer = 0 to 15
-		    p.UInt32( byteIndex ) = x( i ) + p.UInt32( byteIndex )
+		    p.UInt32( byteIndex ) = arr( i ) + p.UInt32( byteIndex )
 		    byteIndex = byteIndex + 4
 		  next
 		  
