@@ -11,7 +11,9 @@ Protected Class ScryptUnitTester
 
 	#tag Method, Flags = &h0
 		Function ROMix(mb As MemoryBlock, n As Integer) As MemoryBlock
-		  return Scrypt_MTC.ROMix( mb, n )
+		  dim newMB as MemoryBlock = mb.StringValue( 0, mb.Size )
+		  Scrypt_MTC.ROMix( newMB, n )
+		  return newMB
 		End Function
 	#tag EndMethod
 

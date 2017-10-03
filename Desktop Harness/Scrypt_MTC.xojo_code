@@ -87,7 +87,7 @@ Protected Module Scrypt_MTC
 		  dim lastPIndex as integer = p - 1
 		  for i as integer = 0 to lastPIndex
 		    dim b as MemoryBlock = mainB.StringValue( i * mfLen, mfLen )
-		    b = ROMix( b, n )
+		    ROMix( b, n )
 		    mainB.StringValue( i * b.Size, b.Size ) = b
 		  next
 		  
@@ -136,7 +136,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function ROMix(mb As MemoryBlock, n As Integer) As MemoryBlock
+		Private Sub ROMix(mb As MemoryBlock, n As Integer)
 		  dim isLittleEndian as boolean = true
 		  
 		  dim mbSize as integer = mb.Size
@@ -155,11 +155,14 @@ Protected Module Scrypt_MTC
 		  dim v as new MemoryBlock( mbSize * n )
 		  v.LittleEndian = isLittleEndian
 		  v.StringValue( 0, v.Size ) = join( results, "" )
+		  redim results( -1 )
+		  
 		  dim vPtr as ptr = v
 		  
+		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    dim lastWord as Int64 = mb.UInt32Value( mbSize - 64 )
+		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
@@ -167,8 +170,6 @@ Protected Module Scrypt_MTC
 		    next
 		    BlockMix( mb )
 		  next
-		  
-		  return mb
 		  
 		  'The scryptROMix algorithm is the same as the ROMix algorithm
 		  'described in [SCRYPT] but with scryptBlockMix used as the hash
@@ -206,7 +207,7 @@ Protected Module Scrypt_MTC
 		  '4. B' = X
 		  
 		  
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
