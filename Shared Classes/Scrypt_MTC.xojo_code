@@ -343,6 +343,10 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Protected
+	#tag EndConstant
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
