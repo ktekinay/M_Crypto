@@ -2,15 +2,9 @@
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
 		Private Function BlockMix(mbIn As MemoryBlock) As MemoryBlock
-		  if ( mbIn.Size mod 128 ) <> 0 then
-		    dim err as new BadInputException
-		    err.Message = "Data must be a multiple of 128"
-		    raise err
-		  end if
-		  
-		  dim y as new MemoryBlock( mbIn.Size )
 		  const kBlockSize as integer = 64
 		  
+		  dim y as new MemoryBlock( mbIn.Size )
 		  dim x as MemoryBlock = mbIn.StringValue( mbIn.Size - kBlockSize, kBlockSize )
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
@@ -146,10 +140,7 @@ Protected Module Scrypt_MTC
 		Private Function ROMix(mbIn As MemoryBlock, n As Integer) As MemoryBlock
 		  dim isLittleEndian as boolean = true
 		  
-		  dim x as new MemoryBlock( mbIn.Size )
-		  x.StringValue( 0, mbIn.Size ) = mbIn
-		  
-		  x.LittleEndian = isLittleEndian
+		  dim x as MemoryBlock = mbIn
 		  dim xSize as integer = x.Size
 		  
 		  dim v as new MemoryBlock( xSize * n )
@@ -158,11 +149,11 @@ Protected Module Scrypt_MTC
 		  for i as integer = 0 to lastNIndex
 		    v.StringValue( i * xSize, xSize ) = x
 		    x = BlockMix( x )
-		    x.LittleEndian = isLittleEndian
 		  next
 		  
 		  dim lastXByteIndex as integer = xSize - 1
 		  for i as integer = 0 to lastNIndex
+		    x.LittleEndian = isLittleEndian
 		    dim lastWord as Int64 = x.UInt32Value( xSize - 64 )
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * xSize
