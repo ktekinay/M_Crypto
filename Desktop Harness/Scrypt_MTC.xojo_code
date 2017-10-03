@@ -18,7 +18,7 @@ Protected Module Scrypt_MTC
 		    for rawByteIndex as integer = 0 to lastRawBlockIndex step 8
 		      xPtr.UInt64( rawByteIndex ) = xPtr.UInt64( rawByteIndex ) xor mbPtr.UInt64( blockByteIndex + rawByteIndex )
 		    next
-		    Salsa( x )
+		    Salsa( xPtr )
 		    results.Append x
 		  next
 		  
