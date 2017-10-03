@@ -109,7 +109,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Hash(key As MemoryBlock, salt As String, cost As Integer, outputLength As Integer = 64, blocks As Integer = 1, parallelization As Integer = 1) As String
+		Protected Function Hash(key As MemoryBlock, salt As String, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
 		  if key.Size = 0 then
 		    return ""
 		  end if

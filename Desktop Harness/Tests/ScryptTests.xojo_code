@@ -26,6 +26,10 @@ Inherits TestGroup
 		  expected = DecodeHex( kScryptOutHex2 )
 		  Assert.AreEqual expected, actual
 		  
+		  'actual = Scrypt_MTC.Hash( "pleaseletmein", "SodiumChloride" )
+		  'expected = DecodeHex( kScryptOutHex2 )
+		  'Assert.AreEqual expected, actual
+		  
 		End Sub
 	#tag EndMethod
 
