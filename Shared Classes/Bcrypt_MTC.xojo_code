@@ -226,10 +226,12 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub pEncodeBase64(buffer As MemoryBlock, data As MemoryBlock)
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim lastByteIndex as integer = data.Size - 1
 		  dim bp, p as integer
