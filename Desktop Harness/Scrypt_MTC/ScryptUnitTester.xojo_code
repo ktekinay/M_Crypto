@@ -14,7 +14,10 @@ Protected Class ScryptUnitTester
 
 	#tag Method, Flags = &h0
 		Function Salsa(mb As MemoryBlock) As MemoryBlock
-		  return Scrypt_MTC.Salsa( mb )
+		  dim newMB as new MemoryBlock( mb.Size )
+		  newMB.StringValue( 0, mb.Size ) = mb
+		  Scrypt_MTC.Salsa( newMB )
+		  return newMB
 		End Function
 	#tag EndMethod
 

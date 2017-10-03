@@ -14,7 +14,7 @@ Protected Module Scrypt_MTC
 		    for rawByteIndex as integer = 0 to lastRawBlockIndex step 8
 		      x.UInt64Value( rawByteIndex ) = x.UInt64Value( rawByteIndex ) xor mbIn.UInt64Value( blockByteIndex + rawByteIndex )
 		    next
-		    x = Salsa( x )
+		    Salsa( x )
 		    y.StringValue( blockByteIndex, kBlockSize ) = x
 		  next
 		  
@@ -206,13 +206,13 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function Salsa(mbIn As MemoryBlock) As MemoryBlock
+		Private Sub Salsa(mb As MemoryBlock)
 		  dim x( 15 ) as UInt32
 		  
-		  dim pIn as Ptr = mbIn
+		  dim p as Ptr = mb
 		  
 		  for i as integer = 0 to 15
-		    x( i ) = pIn.UInt32( i * 4 )
+		    x( i ) = p.UInt32( i * 4 )
 		  next
 		  
 		  for i as integer = 1 to 4
@@ -250,17 +250,13 @@ Protected Module Scrypt_MTC
 		    x( 15 ) = x( 15 ) xor ( Bitwise.ShiftLeft( x( 14 ) + x( 13 ), 18, 32 ) or Bitwise.ShiftRight( x( 14 ) + x( 13 ), 32 - 18, 32 ) )
 		  next
 		  
-		  dim mbOut as new MemoryBlock( mbIn.Size )
-		  dim pOut as Ptr = mbOut
-		  
+		  dim byteIndex as integer
 		  for i as integer = 0 to 15
-		    dim byteIndex as integer = i * 4
-		    pOut.UInt32( byteIndex ) = x( i ) + pIn.UInt32( byteIndex )
+		    p.UInt32( byteIndex ) = x( i ) + p.UInt32( byteIndex )
+		    byteIndex = byteIndex + 4
 		  next
 		  
-		  return mbOut
-		  
-		End Function
+		End Sub
 	#tag EndMethod
 
 
