@@ -206,10 +206,8 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Salsa(mb As MemoryBlock)
+		Private Sub Salsa(p As Ptr)
 		  dim x( 15 ) as UInt32
-		  
-		  dim p as Ptr = mb
 		  
 		  for i as integer = 0 to 15
 		    x( i ) = p.UInt32( i * 4 )
