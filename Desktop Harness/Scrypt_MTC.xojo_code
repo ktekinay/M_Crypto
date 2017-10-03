@@ -1,38 +1,37 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Function BlockMix(mbIn As MemoryBlock) As MemoryBlock
+		Private Sub BlockMix(mb As MemoryBlock)
 		  const kBlockSize as integer = 64
 		  
-		  dim y as new MemoryBlock( mbIn.Size )
-		  dim x as MemoryBlock = mbIn.StringValue( mbIn.Size - kBlockSize, kBlockSize )
+		  dim x as MemoryBlock = mb.StringValue( mb.Size - kBlockSize, kBlockSize )
+		  dim xPtr as ptr = x
 		  
-		  dim lastByteIndex as integer = mbIn.Size - 1
+		  dim mbPtr as Ptr = mb
+		  
+		  dim results() as string
+		  
+		  dim lastByteIndex as integer = mb.Size - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
 		  
 		  for blockByteIndex as integer = 0 to lastByteIndex step kBlockSize
 		    for rawByteIndex as integer = 0 to lastRawBlockIndex step 8
-		      x.UInt64Value( rawByteIndex ) = x.UInt64Value( rawByteIndex ) xor mbIn.UInt64Value( blockByteIndex + rawByteIndex )
+		      xPtr.UInt64( rawByteIndex ) = xPtr.UInt64( rawByteIndex ) xor mbPtr.UInt64( blockByteIndex + rawByteIndex )
 		    next
 		    Salsa( x )
-		    y.StringValue( blockByteIndex, kBlockSize ) = x
+		    results.Append x
 		  next
 		  
-		  dim lastYBlockIndex as integer = y.Size - 1
-		  dim stepper as integer = kBlockSize * 2
-		  dim mbOut as new MemoryBlock( mbIn.Size )
-		  dim mbOutByteIndex as integer
-		  for blockByteIndex as integer = 0 to lastYBlockIndex step stepper
-		    mbOut.StringValue( mbOutByteIndex, kBlockSize ) = y.StringValue( blockByteIndex, kBlockSize )
-		    mbOutByteIndex = mbOutByteIndex + kBlockSize
+		  dim mbIndex as integer
+		  for i as integer = 0 to results.Ubound step 2
+		    mb.StringValue( mbIndex, kBlockSize ) = results( i )
+		    mbIndex = mbIndex + kBlockSize
 		  next
 		  
-		  for blockByteIndex as integer = kBlockSize to lastYBlockIndex step stepper
-		    mbOut.StringValue( mbOutByteIndex, kBlockSize ) = y.StringValue( blockByteIndex, kBlockSize )
-		    mbOutByteIndex = mbOutByteIndex + kBlockSize
+		  for i as integer = 1 to results.Ubound step 2
+		    mb.StringValue( mbIndex, kBlockSize ) = results( i )
+		    mbIndex = mbIndex + kBlockSize
 		  next
-		  
-		  return mbOut
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -45,7 +44,7 @@ Protected Module Scrypt_MTC
 		  '3. B' = (Y[0], Y[2], ..., Y[2 * r - 2],
 		  'Y[1], Y[3], ..., Y[2 * r - 1])
 		  
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -142,26 +141,30 @@ Protected Module Scrypt_MTC
 		  
 		  dim x as MemoryBlock = mbIn
 		  dim xSize as integer = x.Size
+		  x.LittleEndian = isLittleEndian
+		  
+		  dim results() as string
+		  dim lastNIndex as integer = n - 1
+		  redim results( lastNIndex )
+		  
+		  for i as integer = 0 to lastNIndex
+		    results( i ) = x
+		    BlockMix( x )
+		  next
 		  
 		  dim v as new MemoryBlock( xSize * n )
-		  v.LittleEndian = true
-		  dim lastNIndex as integer = n - 1
-		  for i as integer = 0 to lastNIndex
-		    v.StringValue( i * xSize, xSize ) = x
-		    x = BlockMix( x )
-		  next
+		  v.LittleEndian = isLittleEndian
+		  v.StringValue( 0, v.Size ) = join( results, "" )
 		  
 		  dim lastXByteIndex as integer = xSize - 1
 		  for i as integer = 0 to lastNIndex
-		    x.LittleEndian = isLittleEndian
 		    dim lastWord as Int64 = x.UInt32Value( xSize - 64 )
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * xSize
 		    for byteIndex as integer = 0 to lastXByteIndex step 8
 		      x.UInt64Value( byteIndex ) = x.UInt64Value( byteIndex ) xor v.UInt64Value( byteIndex + start )
 		    next
-		    x = BlockMix( x )
-		    x.LittleEndian = isLittleEndian
+		    BlockMix( x )
 		  next
 		  
 		  return x
