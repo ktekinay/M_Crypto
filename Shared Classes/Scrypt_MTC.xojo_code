@@ -2,6 +2,13 @@
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
 		Private Sub BlockMix(mb As MemoryBlock)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  const kBlockSize as integer = 64
 		  
 		  dim x as MemoryBlock = mb.StringValue( mb.Size - kBlockSize, kBlockSize )
@@ -198,6 +205,13 @@ Protected Module Scrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub ROMix(mb As MemoryBlock, n As Integer)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  const kIsLittleEndian as boolean = true
 		  
 		  dim mbSize as integer = mb.Size
