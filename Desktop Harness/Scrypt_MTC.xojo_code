@@ -91,15 +91,14 @@ Protected Module Scrypt_MTC
 		  
 		  dim mainB as MemoryBlock = Crypto.PBKDF2( salt, key, 1, p * mfLen, Crypto.Algorithm.SHA256 )
 		  
-		  dim combinedB as new MemoryBlock( mainB.Size )
 		  dim lastPIndex as integer = p - 1
 		  for i as integer = 0 to lastPIndex
 		    dim b as MemoryBlock = mainB.StringValue( i * mfLen, mfLen )
 		    b = ROMix( b, n )
-		    combinedB.StringValue( i * b.Size, b.Size ) = b
+		    mainB.StringValue( i * b.Size, b.Size ) = b
 		  next
 		  
-		  dim out as string = Crypto.PBKDF2( combinedB, key, 1, outputLength, Crypto.Algorithm.SHA256 )
+		  dim out as string = Crypto.PBKDF2( mainB, key, 1, outputLength, Crypto.Algorithm.SHA256 )
 		  return out
 		  
 		  'The PBKDF2-HMAC-SHA-256 function used below denotes the PBKDF2
@@ -145,12 +144,6 @@ Protected Module Scrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Function ROMix(mbIn As MemoryBlock, n As Integer) As MemoryBlock
-		  if ( mbIn.Size mod 128 ) <> 0 then
-		    dim err as new BadInputException
-		    err.Message = "Data must be a multiple of 128"
-		    raise err
-		  end if
-		  
 		  dim isLittleEndian as boolean = true
 		  
 		  dim x as new MemoryBlock( mbIn.Size )
@@ -159,10 +152,11 @@ Protected Module Scrypt_MTC
 		  x.LittleEndian = isLittleEndian
 		  dim xSize as integer = x.Size
 		  
-		  dim v() as MemoryBlock
+		  dim v as new MemoryBlock( xSize * n )
+		  v.LittleEndian = true
 		  dim lastNIndex as integer = n - 1
 		  for i as integer = 0 to lastNIndex
-		    v.Append x
+		    v.StringValue( i * xSize, xSize ) = x
 		    x = BlockMix( x )
 		    x.LittleEndian = isLittleEndian
 		  next
@@ -171,9 +165,9 @@ Protected Module Scrypt_MTC
 		  for i as integer = 0 to lastNIndex
 		    dim lastWord as Int64 = x.UInt32Value( xSize - 64 )
 		    dim j as integer = lastWord mod CType( n, Int64 )
-		    dim thisV as MemoryBlock = v( j )
+		    dim start as integer = j * xSize
 		    for byteIndex as integer = 0 to lastXByteIndex step 8
-		      x.UInt64Value( byteIndex ) = x.UInt64Value( byteIndex ) xor thisV.UInt64Value( byteIndex )
+		      x.UInt64Value( byteIndex ) = x.UInt64Value( byteIndex ) xor v.UInt64Value( byteIndex + start )
 		    next
 		    x = BlockMix( x )
 		    x.LittleEndian = isLittleEndian
