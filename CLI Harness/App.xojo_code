@@ -21,6 +21,8 @@ Inherits ConsoleApplication
 		    Action = Actions.VerifyBcrypt
 		  case kActionScrypt.Left( 1 )
 		    Action = Actions.Scrypt
+		  case kActionGetBytes.Left( 1 )
+		    Action = Actions.GetBytes
 		  end select
 		  
 		  //
@@ -49,13 +51,15 @@ Inherits ConsoleApplication
 		  
 		  dim dataFile as FolderItem = Parser.FileValue( kOptionDataFile, nil )
 		  
-		  if extra <> "" xor dataFile isa FolderItem xor Parser.BooleanValue( kOptionDataStdIn ) then
-		    //
-		    // That's fine
-		    //
-		  else
-		    StdErr.WriteLine "Too many data sources, or no data provided"
-		    return 1
+		  if Action <> Actions.GetBytes then
+		    if extra <> "" xor dataFile isa FolderItem xor Parser.BooleanValue( kOptionDataStdIn ) then
+		      //
+		      // That's fine
+		      //
+		    else
+		      StdErr.WriteLine "Too many data sources, or no data provided"
+		      return 1
+		    end if
 		  end if
 		  
 		  //
@@ -115,6 +119,9 @@ Inherits ConsoleApplication
 		    
 		  case Actions.Scrypt
 		    errCode = DoScrypt( reader )
+		    
+		  case Actions.GetBytes
+		    errCode = DoGetBytes
 		    
 		  case else
 		    StdErr.WriteLine "Unrecognized action " + parser.StringValue( kOptionExecute )
@@ -359,6 +366,26 @@ Inherits ConsoleApplication
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function DoGetBytes() As Integer
+		  //
+		  // Sanity check
+		  //
+		  if OutputWriter isa StandardOutputStream and OutputEncoding = BinaryEncodings.None then
+		    StdErr.WriteLine "Unencoded data cannot be written to StdOut, use --" + _
+		    kOptionOutputFile + " to specify a file or --" + kOptionOutputEncoding + _
+		    " to specify an encoding"
+		    return 1
+		  end if
+		  
+		  dim outLength as integer = Parser.IntegerValue( kOptionOutputLength, kDefaultOutputLength )
+		  Write Crypto.GenerateRandomBytes( outLength )
+		  
+		  return 0
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function DoScrypt(reader As DataReader) As Integer
 		  //
 		  // Sanity check
@@ -375,7 +402,7 @@ Inherits ConsoleApplication
 		  dim cost as integer = Parser.IntegerValue( kOptionScryptCost, kDefaultScryptCost )
 		  dim blocks as integer = Parser.IntegerValue( kOptionScryptBlocks, kDefaultScryptBlocks )
 		  dim p as integer = Parser.IntegerValue( kOptionScryptParallel, kDefaultScryptParallel )
-		  dim outLength as integer = Parser.IntegerValue( kOptionScryptOutputLength, kDefaultScryptOutputLength )
+		  dim outLength as integer = Parser.IntegerValue( kOptionOutputLength, kDefaultOutputLength )
 		  
 		  dim data as string = reader.ReadAll
 		  data = Decode( data, DataEncoding )
@@ -399,6 +426,7 @@ Inherits ConsoleApplication
 		  result = Scrypt_MTC.Hash( data, salt, cost, outLength, blocks, p )
 		  
 		  Write result
+		  
 		End Function
 	#tag EndMethod
 
@@ -529,7 +557,8 @@ Inherits ConsoleApplication
 			    o.AddAllowedValue _
 			    kActionEncrypt, kActionEncrypt.Left( 1 ), kActionDecrypt, kActionDecrypt.Left( 1 ), _
 			    kActionBcrypt, kActionBcrypt.Left( 1 ), kActionVerifyBcrypt, kActionVerifyBcrypt.Left( 1 ), _
-			    kActionScrypt, kActionScrypt.Left( 1 )
+			    kActionScrypt, kActionScrypt.Left( 1 ), _
+			    kActionGetBytes, kActionGetBytes.Left( 1 )
 			    parser.AddOption o
 			    
 			    o = new Option( "", kOptionSalt, _
@@ -556,11 +585,11 @@ Inherits ConsoleApplication
 			    parser.AddOption o
 			    
 			    o = new Option( "", kOptionScryptParallel, _
-			    "Scrypt parallelization (`p` in other implementation) [default " + str( kDefaultScryptParallel ) + "]", Option.OptionType.Integer )
+			    "Scrypt parallelization (`p` in other implementations) [default " + str( kDefaultScryptParallel ) + "]", Option.OptionType.Integer )
 			    parser.AddOption o
 			    
-			    o = new Option( "", kOptionScryptOutputLength, _
-			    "Scrypt output length in bytes [default " + str( kDefaultScryptOutputLength ) + "]", Option.OptionType.Integer )
+			    o = new Option( "", kOptionOutputLength, _
+			    "Output length in bytes for Scrypt or GetBytes [default " + str( kDefaultOutputLength ) + "]", Option.OptionType.Integer )
 			    parser.AddOption o
 			    
 			    o = new Option( "e", kOptionEncrypter, "Encrypter to use for encrypt/decrypt", Option.OptionType.String )
@@ -637,6 +666,9 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kActionEncrypt, Type = String, Dynamic = False, Default = \"Encrypt", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kActionGetBytes, Type = String, Dynamic = False, Default = \"Get-bytes", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kActionScrypt, Type = String, Dynamic = False, Default = \"Scrypt", Scope = Private
 	#tag EndConstant
 
@@ -646,19 +678,19 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kDefaultBcryptRounds, Type = Double, Dynamic = False, Default = \"10", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kDefaultOutputLength, Type = Double, Dynamic = False, Default = \"64", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kDefaultScryptBlocks, Type = Double, Dynamic = False, Default = \"8", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDefaultScryptCost, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kDefaultScryptOutputLength, Type = Double, Dynamic = False, Default = \"64", Scope = Private
-	#tag EndConstant
-
 	#tag Constant, Name = kDefaultScryptParallel, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kHelpNotes, Type = String, Dynamic = False, Default = \"If data is not given and no file specified\x2C it will be pulled from StdIn.\n\nWhen encrypting/decrypting\x2C if a key is not given it will be requested unless the --data-stdin switch is present.\n\nThe scrypt cost parameter differs from other implementations of scrypt where a value that is a power of 2 is expected in the `n` parameter. Cost will be used as `2^cost`. Example\x2C when cost \x3D 10\x2C n \x3D 2^10 \x3D 1024.", Scope = Private
+	#tag Constant, Name = kHelpNotes, Type = String, Dynamic = False, Default = \"When encrypting/decrypting\x2C if a key is not given it will be requested unless the --data-stdin switch is present.\n\nThe scrypt cost parameter differs from other implementations of scrypt where a value that is a power of 2 is expected in the `n` parameter. Cost will be used as `2^cost`. Example\x2C when cost \x3D 10\x2C n \x3D 2^10 \x3D 1024.\n\nThe `Get-bytes` action will return cryptographically safe random bytes.", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionBcryptRounds, Type = String, Dynamic = False, Default = \"rounds", Scope = Private
@@ -706,6 +738,9 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kOptionOutputFile, Type = String, Dynamic = False, Default = \"output-file", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kOptionOutputLength, Type = String, Dynamic = False, Default = \"output-length", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kOptionPadding, Type = String, Dynamic = False, Default = \"padding", Scope = Private
 	#tag EndConstant
 
@@ -716,9 +751,6 @@ Inherits ConsoleApplication
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionScryptCost, Type = String, Dynamic = False, Default = \"cost", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kOptionScryptOutputLength, Type = String, Dynamic = False, Default = \"output-length", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionScryptParallel, Type = String, Dynamic = False, Default = \"parallel", Scope = Private
@@ -746,7 +778,8 @@ Inherits ConsoleApplication
 		  Decrypt
 		  Bcrypt
 		  VerifyBcrypt
-		Scrypt
+		  Scrypt
+		GetBytes
 	#tag EndEnum
 
 	#tag Enum, Name = BinaryEncodings, Type = Integer, Flags = &h21
