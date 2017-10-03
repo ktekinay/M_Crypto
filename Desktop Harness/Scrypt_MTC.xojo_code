@@ -136,38 +136,39 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function ROMix(mbIn As MemoryBlock, n As Integer) As MemoryBlock
+		Private Function ROMix(mb As MemoryBlock, n As Integer) As MemoryBlock
 		  dim isLittleEndian as boolean = true
 		  
-		  dim x as MemoryBlock = mbIn
-		  dim xSize as integer = x.Size
-		  x.LittleEndian = isLittleEndian
+		  dim mbSize as integer = mb.Size
+		  mb.LittleEndian = isLittleEndian
+		  dim mbPtr as ptr = mb
 		  
 		  dim results() as string
 		  dim lastNIndex as integer = n - 1
 		  redim results( lastNIndex )
 		  
 		  for i as integer = 0 to lastNIndex
-		    results( i ) = x
-		    BlockMix( x )
+		    results( i ) = mb
+		    BlockMix( mb )
 		  next
 		  
-		  dim v as new MemoryBlock( xSize * n )
+		  dim v as new MemoryBlock( mbSize * n )
 		  v.LittleEndian = isLittleEndian
 		  v.StringValue( 0, v.Size ) = join( results, "" )
+		  dim vPtr as ptr = v
 		  
-		  dim lastXByteIndex as integer = xSize - 1
+		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    dim lastWord as Int64 = x.UInt32Value( xSize - 64 )
+		    dim lastWord as Int64 = mb.UInt32Value( mbSize - 64 )
 		    dim j as integer = lastWord mod CType( n, Int64 )
-		    dim start as integer = j * xSize
-		    for byteIndex as integer = 0 to lastXByteIndex step 8
-		      x.UInt64Value( byteIndex ) = x.UInt64Value( byteIndex ) xor v.UInt64Value( byteIndex + start )
+		    dim start as integer = j * mbSize
+		    for byteIndex as integer = 0 to lastMBByteIndex step 8
+		      mbPtr.UInt64( byteIndex ) = mbPtr.UInt64( byteIndex ) xor vPtr.UInt64( byteIndex + start )
 		    next
-		    BlockMix( x )
+		    BlockMix( mb )
 		  next
 		  
-		  return x
+		  return mb
 		  
 		  'The scryptROMix algorithm is the same as the ROMix algorithm
 		  'described in [SCRYPT] but with scryptBlockMix used as the hash
