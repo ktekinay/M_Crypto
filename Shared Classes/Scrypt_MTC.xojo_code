@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(mb As MemoryBlock)
+		Private Sub BlockMix(ByRef mb As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -94,7 +94,7 @@ Protected Module Scrypt_MTC
 		    end if
 		  next
 		  
-		  mb.StringValue( 0, mb.Size ) = result
+		  mb = result
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -199,7 +199,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(mb As MemoryBlock, n As Integer)
+		Private Sub ROMix(ByRef mb As MemoryBlock, n As Integer)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -232,6 +232,7 @@ Protected Module Scrypt_MTC
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
+		    mbPtr = mb
 		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
