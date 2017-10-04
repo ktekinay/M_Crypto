@@ -2,18 +2,21 @@
 Protected Class ScryptUnitTester
 	#tag Method, Flags = &h0
 		Function BlockMix(mb As MemoryBlock) As MemoryBlock
-		  dim newMB as MemoryBlock
-		  newMB = mb.StringValue( 0, mb.Size )
+		  dim newMB as new Xojo.Core.MutableMemoryBlock( mb, mb.Size )
 		  Scrypt_MTC.BlockMix( newMB )
-		  return newMB
+		  
+		  dim temp as MemoryBlock = newMB.Data
+		  return temp.StringValue( 0, newMB.Size )
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function ROMix(mb As MemoryBlock, n As Integer) As MemoryBlock
-		  dim newMB as MemoryBlock = mb.StringValue( 0, mb.Size )
+		  dim newMB as new Xojo.Core.MutableMemoryBlock( mb, mb.Size )
 		  Scrypt_MTC.ROMix( newMB, n )
-		  return newMB
+		  dim temp as MemoryBlock = newMB.Data
+		  
+		  return temp.StringValue( 0, newMB.Size )
 		End Function
 	#tag EndMethod
 

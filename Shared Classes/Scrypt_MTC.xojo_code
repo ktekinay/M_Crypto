@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(mb As MemoryBlock)
+		Private Sub BlockMix(mb As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -11,12 +11,12 @@ Protected Module Scrypt_MTC
 		  
 		  const kBlockSize as integer = 64
 		  
-		  dim x as MemoryBlock = mb.StringValue( mb.Size - kBlockSize, kBlockSize )
-		  dim xPtr as ptr = x
+		  dim x as new Xojo.Core.MutableMemoryBlock( mb.Right( kBlockSize ) )
+		  dim xPtr as ptr = x.Data
 		  
-		  dim mbPtr as Ptr = mb
+		  dim mbPtr as Ptr = mb.Data
 		  
-		  dim results() as string
+		  dim results() as Xojo.Core.MemoryBlock
 		  
 		  dim lastByteIndex as integer = mb.Size - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
@@ -80,13 +80,13 @@ Protected Module Scrypt_MTC
 		    // End Salsa
 		    //
 		    
-		    results.Append x
+		    results.Append x.Clone
 		  next
 		  
 		  //
 		  // Shuffle the array around so elements 0, 1, 2, 3, 4 become 0, 2, 4, 1, 3
 		  //
-		  dim final() as string
+		  dim final() as Xojo.Core.MemoryBlock
 		  redim final( results.Ubound )
 		  dim finalIndex as integer = -1
 		  
@@ -99,7 +99,9 @@ Protected Module Scrypt_MTC
 		    final( finalIndex ) = results( i )
 		  next
 		  
-		  mb.StringValue( 0, mb.Size ) = join( final, "" )
+		  for i as integer = 0 to final.Ubound
+		    mb.Mid( i * kBlockSize, kBlockSize ) = final( i )
+		  next
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -116,12 +118,23 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Hash(key As MemoryBlock, salt As String, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
-		  if key.Size = 0 then
-		    return ""
+		Protected Function Hash(key As String, salt As MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
+		  dim temp as new Xojo.Core.MemoryBlock( salt )
+		  dim mbSalt as Xojo.Core.MemoryBlock = temp.Left( salt.Size )
+		  
+		  dim result as Xojo.Core.MemoryBlock = Hash( key.ToText, mbSalt, cost, outputLength, blocks, parallelization )
+		  dim mb as MemoryBlock = result.Data
+		  return mb.StringValue( 0, result.Size )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Hash(key As Text, salt As Xojo.Core.MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
+		  if key = "" then
+		    return nil
 		  end if
 		  
-		  if salt = "" then
+		  if salt.Size = 0 then
 		    dim err as new BadInputException
 		    err.Message = "Salt must be specified"
 		    raise err
@@ -150,17 +163,20 @@ Protected Module Scrypt_MTC
 		    raise err
 		  end if
 		  
-		  dim mainB as MemoryBlock = Crypto.PBKDF2( salt, key, 1, p * mfLen, Crypto.Algorithm.SHA256 )
+		  dim mbKey as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( key )
+		  dim mainB as new Xojo.Core.MutableMemoryBlock( _
+		  Xojo.Crypto.PBKDF2( salt, mbKey, 1, p * mfLen, Xojo.Crypto.HashAlgorithms.SHA256 ) )
 		  
 		  dim lastPIndex as integer = p - 1
+		  dim b as new Xojo.Core.MutableMemoryBlock( mfLen )
 		  for i as integer = 0 to lastPIndex
-		    dim b as MemoryBlock = mainB.StringValue( i * mfLen, mfLen )
+		    b.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
 		    ROMix( b, n )
-		    mainB.StringValue( i * b.Size, b.Size ) = b
+		    mainB.Mid( i * b.Size, b.Size ) = b
 		  next
 		  
-		  dim out as string = Crypto.PBKDF2( mainB, key, 1, outputLength, Crypto.Algorithm.SHA256 )
-		  return out
+		  dim outMB as Xojo.Core.MemoryBlock = Xojo.Crypto.PBKDF2( mainB, mbKey, 1, outputLength, Xojo.Crypto.HashAlgorithms.SHA256 )
+		  return outMB
 		  
 		  'The PBKDF2-HMAC-SHA-256 function used below denotes the PBKDF2
 		  'algorithm [RFC2898] used with HMAC-SHA-256 [RFC6234] as the
@@ -204,7 +220,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(mb As MemoryBlock, n As Integer)
+		Private Sub ROMix(mb As Xojo.Core.MutableMemoryBlock, n As Integer)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -216,23 +232,18 @@ Protected Module Scrypt_MTC
 		  
 		  dim mbSize as integer = mb.Size
 		  mb.LittleEndian = kIsLittleEndian
-		  dim mbPtr as ptr = mb
+		  dim mbPtr as ptr = mb.Data
 		  
-		  dim results() as string
+		  dim v as new Xojo.Core.MutableMemoryBlock( mbSize * n )
+		  v.LittleEndian = kIsLittleEndian
+		  
 		  dim lastNIndex as integer = n - 1
-		  redim results( lastNIndex )
-		  
 		  for i as integer = 0 to lastNIndex
-		    results( i ) = mb
+		    v.Mid( i * mbSize, mbSize ) = mb
 		    BlockMix( mb )
 		  next
 		  
-		  dim v as new MemoryBlock( mbSize * n )
-		  v.LittleEndian = kIsLittleEndian
-		  v.StringValue( 0, v.Size ) = join( results, "" )
-		  redim results( -1 )
-		  
-		  dim vPtr as ptr = v
+		  dim vPtr as ptr = v.Data
 		  
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
