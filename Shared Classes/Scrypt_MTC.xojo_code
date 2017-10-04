@@ -11,14 +11,20 @@ Protected Module Scrypt_MTC
 		  
 		  const kBlockSize as integer = 64
 		  
+		  dim mbSize as integer = mb.Size
+		  dim mbMidpoint as integer = mbSize \ 2
+		  
 		  dim x as new Xojo.Core.MutableMemoryBlock( mb.Right( kBlockSize ) )
 		  dim xPtr as ptr = x.Data
 		  
 		  dim mbPtr as Ptr = mb.Data
 		  
-		  dim results() as Xojo.Core.MemoryBlock
+		  dim result as new Xojo.Core.MutableMemoryBlock( mb.Size )
+		  dim resultEvenIndex as integer = 0
+		  dim resultOddIndex as integer = mbMidpoint
+		  dim resultIsEven as boolean = true
 		  
-		  dim lastByteIndex as integer = mb.Size - 1
+		  dim lastByteIndex as integer = mbSize - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
 		  dim arr( 15 ) as UInt32
 		  
@@ -80,28 +86,18 @@ Protected Module Scrypt_MTC
 		    // End Salsa
 		    //
 		    
-		    results.Append x.Clone
+		    if resultIsEven then
+		      result.Mid( resultEvenIndex, kBlockSize ) = x
+		      resultEvenIndex = resultEvenIndex + kBlockSize
+		      resultIsEven = false
+		    else
+		      result.Mid( resultOddIndex, kBlockSize ) = x
+		      resultOddIndex = resultOddIndex + kBlockSize
+		      resultIsEven = true
+		    end if
 		  next
 		  
-		  //
-		  // Shuffle the array around so elements 0, 1, 2, 3, 4 become 0, 2, 4, 1, 3
-		  //
-		  dim final() as Xojo.Core.MemoryBlock
-		  redim final( results.Ubound )
-		  dim finalIndex as integer = -1
-		  
-		  for i as integer = 0 to results.Ubound step 2
-		    finalIndex = finalIndex + 1
-		    final( finalIndex ) = results( i )
-		  next
-		  for i as integer = 1 to results.Ubound step 2
-		    finalIndex = finalIndex + 1
-		    final( finalIndex ) = results( i )
-		  next
-		  
-		  for i as integer = 0 to final.Ubound
-		    mb.Mid( i * kBlockSize, kBlockSize ) = final( i )
-		  next
+		  mb.Left( mb.Size ) = result
 		  
 		  '1. X = B[2 * r - 1]
 		  '
