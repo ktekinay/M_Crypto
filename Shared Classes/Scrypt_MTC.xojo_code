@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(mb As Xojo.Core.MutableMemoryBlock)
+		Private Sub BlockMix(ByRef mb As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -97,7 +97,7 @@ Protected Module Scrypt_MTC
 		    end if
 		  next
 		  
-		  mb.Left( mb.Size ) = result
+		  mb = result
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -216,7 +216,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(mb As Xojo.Core.MutableMemoryBlock, n As Integer)
+		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As Integer)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -244,7 +244,8 @@ Protected Module Scrypt_MTC
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
+		    mbPtr = mb.Data
+		    dim lastWord as Int64 = mbPtr.UInt32( lastWordIndex )
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
