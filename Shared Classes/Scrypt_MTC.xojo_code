@@ -82,6 +82,12 @@ Protected Module Scrypt_MTC
 		    // End Salsa
 		    //
 		    
+		    //
+		    // The result must be written in this order
+		    //
+		    // 1, 2, 3, 4, 5, 6, ... will become 
+		    // 1, 3, 5, ..., 2, 4, 6, ...
+		    //
 		    if resultIsEven then
 		      result.Mid( resultEvenIndex, kBlockSize ) = x
 		      resultEvenIndex = resultEvenIndex + kBlockSize
@@ -93,6 +99,11 @@ Protected Module Scrypt_MTC
 		    end if
 		  next
 		  
+		  //
+		  // Swap the blockBuffer (result) with the original mb
+		  // which will become the new buffer. We can do this
+		  // since they are the same size.
+		  //
 		  dim orig as Xojo.Core.MutableMemoryBlock = mb
 		  mb = result
 		  mbPtr = result.Data
@@ -249,14 +260,13 @@ Protected Module Scrypt_MTC
 		  dim mbPtr as ptr = mb.Data
 		  
 		  dim v as Xojo.Core.MutableMemoryBlock = vBuffer
+		  dim vPtr as ptr = v.Data
 		  
 		  dim lastNIndex as integer = n - 1
 		  for i as integer = 0 to lastNIndex
 		    v.Mid( i * mbSize, mbSize ) = mb
 		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
-		  
-		  dim vPtr as ptr = v.Data
 		  
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
