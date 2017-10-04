@@ -16,7 +16,10 @@ Protected Module Scrypt_MTC
 		  
 		  dim mbPtr as Ptr = mb
 		  
-		  dim results() as string
+		  dim result as new MemoryBlock( mb.Size )
+		  dim resultEvenIndex as integer = 0
+		  dim resultOddIndex as integer = mb.Size \ 2
+		  dim resultIsEven as boolean = true
 		  
 		  dim lastByteIndex as integer = mb.Size - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
@@ -80,26 +83,18 @@ Protected Module Scrypt_MTC
 		    // End Salsa
 		    //
 		    
-		    results.Append x
+		    if resultIsEven then
+		      result.StringValue( resultEvenIndex, kBlockSize ) = x
+		      resultEvenIndex = resultEvenIndex + kBlockSize
+		      resultIsEven = false
+		    else
+		      result.StringValue( resultOddIndex, kBlockSize ) = x
+		      resultOddIndex = resultOddIndex + kBlockSize
+		      resultIsEven = true
+		    end if
 		  next
 		  
-		  //
-		  // Shuffle the array around so elements 0, 1, 2, 3, 4 become 0, 2, 4, 1, 3
-		  //
-		  dim final() as string
-		  redim final( results.Ubound )
-		  dim finalIndex as integer = -1
-		  
-		  for i as integer = 0 to results.Ubound step 2
-		    finalIndex = finalIndex + 1
-		    final( finalIndex ) = results( i )
-		  next
-		  for i as integer = 1 to results.Ubound step 2
-		    finalIndex = finalIndex + 1
-		    final( finalIndex ) = results( i )
-		  next
-		  
-		  mb.StringValue( 0, mb.Size ) = join( final, "" )
+		  mb.StringValue( 0, mb.Size ) = result
 		  
 		  '1. X = B[2 * r - 1]
 		  '
