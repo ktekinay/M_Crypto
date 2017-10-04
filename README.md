@@ -12,8 +12,10 @@ An encryption library for Xojo that implements Blowfish and AES encryption and B
 		- [AES](#aes-example)
 		- [Encrypter (super class)](#encrypter-example)
 		- [Bcrypt](#bcrypt-example)
+		- [Scrypt](#scrypt-example)
 	- [Encryption](#encryption)
 	- [Bcrypt](#bcrypt)
+	- [Scrypt](#scrypt)
 - [About ECB, CBC, and the Vector](#about-ecb-etc)
 - [About Padding](#about-padding)
 	- [NullsOnly](#nullsonly)
@@ -22,6 +24,7 @@ An encryption library for Xojo that implements Blowfish and AES encryption and B
 - [Compatibility](#compatibility)
 	- [Postgres](#postgres)
 	- [JavaScript Crypto Module](#javascript-crypto-module)
+- [Other](#other)
 - [License](#license)
 - [Comments and Contributions](#comments-and-contributions)
 - [Who Did This?!?](#who-did-this)
@@ -131,6 +134,19 @@ hash = Bcrypt_MTC.Hash( "somebody's password", salt )
     
 ```
 
+#### <a name='scrypt-example'></a>Scrypt
+
+```
+dim hash as string = EncodeHex( _
+    Scrypt_MTC.Hash( "somebody's password", "a salt", 4, 16 ) )
+// FF8D8638295EAAE9E6069EBA9075A777
+
+hash = EncodeHex( _
+	Scrypt_MTC.Hash( "password", "salt", 10, 64, 8, 4 ) )
+// EE8EFBD416D4492BC95BB5E01CBE0C0B19AD9569F239D55C995ABAAC2F2D3272
+// AF7525522F12B36C18B4B712D138B71149CC174762B1108014EE443D1DBBB74D
+```
+
 ### Encryption
 
 The encryption objects are based on the superclass `M_Crypto.Encrypter` and offer the following common methods and properties:
@@ -197,6 +213,10 @@ You can use `M_Crypto.GetEncrypter` to get an Encrypter by code. For example, "b
 
 Bcrypt uses Blowfish to create a hash. The more rounds you specify, the longer it takes. You can either create your own salt according to the Bcrypt standard or let the module do it for you. See the example above in Examples.
 
+### Scrypt
+
+Scrypt is a password hashing algorithm that is generally considered "costlier" than Bcrypt and may be preferred. It takes as parameters `cost` (other implementations use `n` where `n` = 2^cost), `outputLength` in bytes, `blocks` (`r` in other implementation), and `parallelization` (`p` in other implementations). Increase the `cost`, `parallelization`, and `blocks` parameters until just before performance is no longer acceptable. The higher the values, the harder to crack the hash via brute-force.
+
 ## <a name='about-ecb-etc'></a>About ECB, CBC, and the Vector
 
 ECB encryption treats each block of data individually. This means that repeating blocks will be encrypted in the same way. For example, using Blowfish to encrypt the repeating data "12345678ABCDEFGH12345678" will lead to this result as hex: "DA6003664651D153 805D00DD8BF2133B DA6003664651D153". Notice the first 8 bytes are identical the last 8 bytes.
@@ -256,6 +276,10 @@ Blowfish ECB: Will take any key but it will apply an MD5 hash to it internally.
 
 Blowfish CBC: Will take any key.
 
+## Other
+
+`M_Crypto.GeenrateUUID` will create a UUI using the OS tools, if possible, or native Xojo code if note. In any case, the output conforms to standards and is cryptographically safe.
+
 ## License
 
 This is an open-source project.
@@ -275,6 +299,13 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.2__ (Oct. 4, 2017)
+
+- Added `M_Crypto.GenerateUUID`.
+- Fixed Windows bug in M_ANSI.
+- Added `Scrypt\_MTC`.
+- Added Scrypt and Get-bytes to CLI project.
 
 __2.1__ (Sept. 27, 2017)
 

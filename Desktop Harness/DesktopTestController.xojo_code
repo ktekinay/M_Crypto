@@ -20,6 +20,10 @@ Inherits TestController
 		  
 		  group = new EncrypterTests( self, "Encrypter" )
 		  
+		  group = new M_CryptoTests( self, "M_Crypto" )
+		  
+		  group = new ScryptTests( self, "Scrypt" )
+		  
 		  group = new StressTests( self, "Stress Tests" )
 		  group.IncludeGroup = false
 		End Sub
