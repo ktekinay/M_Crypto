@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(ByRef mb As MemoryBlock)
+		Private Sub BlockMix(ByRef mb As Xojo.Core.MutableMemoryBlock, ByRef mbPtr As Ptr, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -9,19 +9,18 @@ Protected Module Scrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  const kBlockSize as integer = 64
+		  dim mbSize as integer = mb.Size
+		  dim mbMidpoint as integer = mbSize \ 2
+		  dim x as Xojo.Core.MutableMemoryBlock = chunkBuffer
+		  x.Left( kBlockSize ) = mb.Right( kBlockSize )
+		  dim xPtr as ptr = x.Data
 		  
-		  dim x as MemoryBlock = mb.StringValue( mb.Size - kBlockSize, kBlockSize )
-		  dim xPtr as ptr = x
-		  
-		  dim mbPtr as Ptr = mb
-		  
-		  dim result as new MemoryBlock( mb.Size )
+		  dim result as Xojo.Core.MutableMemoryBlock = blockBuffer
 		  dim resultEvenIndex as integer = 0
-		  dim resultOddIndex as integer = mb.Size \ 2
+		  dim resultOddIndex as integer = mbMidpoint
 		  dim resultIsEven as boolean = true
 		  
-		  dim lastByteIndex as integer = mb.Size - 1
+		  dim lastByteIndex as integer = mbSize - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
 		  dim arr( 15 ) as UInt32
 		  
@@ -84,17 +83,20 @@ Protected Module Scrypt_MTC
 		    //
 		    
 		    if resultIsEven then
-		      result.StringValue( resultEvenIndex, kBlockSize ) = x
+		      result.Mid( resultEvenIndex, kBlockSize ) = x
 		      resultEvenIndex = resultEvenIndex + kBlockSize
 		      resultIsEven = false
 		    else
-		      result.StringValue( resultOddIndex, kBlockSize ) = x
+		      result.Mid( resultOddIndex, kBlockSize ) = x
 		      resultOddIndex = resultOddIndex + kBlockSize
 		      resultIsEven = true
 		    end if
 		  next
 		  
+		  dim orig as Xojo.Core.MutableMemoryBlock = mb
 		  mb = result
+		  mbPtr = result.Data
+		  blockBuffer = orig
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -110,13 +112,38 @@ Protected Module Scrypt_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function Hash(key As MemoryBlock, salt As String, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
-		  if key.Size = 0 then
-		    return ""
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Protected Function Hash(key As String, salt As MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
+		  if key.Encoding is nil then
+		    if Encodings.UTF8.IsValidData( key ) then
+		      key = key.DefineEncoding( Encodings.UTF8 )
+		    else
+		      key = key.DefineEncoding( Encodings.SystemDefault )
+		    end if
 		  end if
 		  
-		  if salt = "" then
+		  dim mbSalt as new Xojo.Core.MemoryBlock( salt, salt.Size )
+		  
+		  dim result as Xojo.Core.MemoryBlock = Hash( key.ToText, mbSalt, cost, outputLength, blocks, parallelization )
+		  
+		  dim mb as MemoryBlock = result.Data
+		  return mb.StringValue( 0, result.Size )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Protected Function Hash(key As Text, salt As Text, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
+		  return Hash( key, Xojo.Core.TextEncoding.UTF8.ConvertTextToData( salt ), cost, outputLength, blocks, parallelization )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Hash(key As Text, salt As Xojo.Core.MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
+		  if key = "" then
+		    return nil
+		  end if
+		  
+		  if salt.Size = 0 then
 		    dim err as new BadInputException
 		    err.Message = "Salt must be specified"
 		    raise err
@@ -145,17 +172,25 @@ Protected Module Scrypt_MTC
 		    raise err
 		  end if
 		  
-		  dim mainB as MemoryBlock = Crypto.PBKDF2( salt, key, 1, p * mfLen, Crypto.Algorithm.SHA256 )
+		  dim mbKey as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( key )
+		  dim mainB as new Xojo.Core.MutableMemoryBlock( _
+		  Xojo.Crypto.PBKDF2( salt, mbKey, 1, p * mfLen, Xojo.Crypto.HashAlgorithms.SHA256 ) )
 		  
 		  dim lastPIndex as integer = p - 1
+		  dim block as new Xojo.Core.MutableMemoryBlock( mfLen )
+		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mfLen )
+		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize )
+		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mfLen * n )
+		  vBuffer.LittleEndian = true
+		  
 		  for i as integer = 0 to lastPIndex
-		    dim b as MemoryBlock = mainB.StringValue( i * mfLen, mfLen )
-		    ROMix( b, n )
-		    mainB.StringValue( i * b.Size, b.Size ) = b
+		    block.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
+		    ROMix( block, n, blockBuffer, chunkBuffer, vBuffer )
+		    mainB.Mid( i * block.Size, block.Size ) = block
 		  next
 		  
-		  dim out as string = Crypto.PBKDF2( mainB, key, 1, outputLength, Crypto.Algorithm.SHA256 )
-		  return out
+		  dim outMB as Xojo.Core.MemoryBlock = Xojo.Crypto.PBKDF2( mainB, mbKey, 1, outputLength, Xojo.Crypto.HashAlgorithms.SHA256 )
+		  return outMB
 		  
 		  'The PBKDF2-HMAC-SHA-256 function used below denotes the PBKDF2
 		  'algorithm [RFC2898] used with HMAC-SHA-256 [RFC6234] as the
@@ -199,7 +234,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(ByRef mb As MemoryBlock, n As Integer)
+		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As Integer, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock, vBuffer As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -207,39 +242,30 @@ Protected Module Scrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  const kIsLittleEndian as boolean = true
-		  
 		  dim mbSize as integer = mb.Size
-		  mb.LittleEndian = kIsLittleEndian
-		  dim mbPtr as ptr = mb
+		  dim mbPtr as ptr = mb.Data
 		  
-		  dim results() as string
+		  dim v as Xojo.Core.MutableMemoryBlock = vBuffer
+		  
 		  dim lastNIndex as integer = n - 1
-		  redim results( lastNIndex )
-		  
 		  for i as integer = 0 to lastNIndex
-		    results( i ) = mb
-		    BlockMix( mb )
+		    v.Mid( i * mbSize, mbSize ) = mb
+		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
-		  dim v as new MemoryBlock( mbSize * n )
-		  v.LittleEndian = kIsLittleEndian
-		  v.StringValue( 0, v.Size ) = join( results, "" )
-		  redim results( -1 )
-		  
-		  dim vPtr as ptr = v
+		  dim vPtr as ptr = v.Data
 		  
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    mbPtr = mb
+		    mb.LittleEndian = v.LittleEndian
 		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
 		      mbPtr.UInt64( byteIndex ) = mbPtr.UInt64( byteIndex ) xor vPtr.UInt64( byteIndex + start )
 		    next
-		    BlockMix( mb )
+		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
 		  'The scryptROMix algorithm is the same as the ROMix algorithm
@@ -338,6 +364,9 @@ Protected Module Scrypt_MTC
 		End Sub
 	#tag EndMethod
 
+
+	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Protected
 	#tag EndConstant
