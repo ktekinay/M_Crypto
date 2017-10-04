@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(ByRef mb As Xojo.Core.MutableMemoryBlock)
+		Private Sub BlockMix(ByRef mb As Xojo.Core.MutableMemoryBlock, ByRef mbPtr As Ptr, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -9,17 +9,13 @@ Protected Module Scrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  const kBlockSize as integer = 64
-		  
 		  dim mbSize as integer = mb.Size
 		  dim mbMidpoint as integer = mbSize \ 2
-		  
-		  dim x as new Xojo.Core.MutableMemoryBlock( mb.Right( kBlockSize ) )
+		  dim x as Xojo.Core.MutableMemoryBlock = chunkBuffer
+		  x.Left( kBlockSize ) = mb.Right( kBlockSize )
 		  dim xPtr as ptr = x.Data
 		  
-		  dim mbPtr as Ptr = mb.Data
-		  
-		  dim result as new Xojo.Core.MutableMemoryBlock( mb.Size )
+		  dim result as Xojo.Core.MutableMemoryBlock = blockBuffer
 		  dim resultEvenIndex as integer = 0
 		  dim resultOddIndex as integer = mbMidpoint
 		  dim resultIsEven as boolean = true
@@ -97,7 +93,10 @@ Protected Module Scrypt_MTC
 		    end if
 		  next
 		  
+		  dim orig as Xojo.Core.MutableMemoryBlock = mb
 		  mb = result
+		  mbPtr = result.Data
+		  blockBuffer = orig
 		  
 		  '1. X = B[2 * r - 1]
 		  '
@@ -113,14 +112,28 @@ Protected Module Scrypt_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Protected Function Hash(key As String, salt As MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
-		  dim temp as new Xojo.Core.MemoryBlock( salt )
-		  dim mbSalt as Xojo.Core.MemoryBlock = temp.Left( salt.Size )
+		  if key.Encoding is nil then
+		    if Encodings.UTF8.IsValidData( key ) then
+		      key = key.DefineEncoding( Encodings.UTF8 )
+		    else
+		      key = key.DefineEncoding( Encodings.SystemDefault )
+		    end if
+		  end if
+		  
+		  dim mbSalt as new Xojo.Core.MemoryBlock( salt, salt.Size )
 		  
 		  dim result as Xojo.Core.MemoryBlock = Hash( key.ToText, mbSalt, cost, outputLength, blocks, parallelization )
+		  
 		  dim mb as MemoryBlock = result.Data
 		  return mb.StringValue( 0, result.Size )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Protected Function Hash(key As Text, salt As Text, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
+		  return Hash( key, Xojo.Core.TextEncoding.UTF8.ConvertTextToData( salt ), cost, outputLength, blocks, parallelization )
 		End Function
 	#tag EndMethod
 
@@ -164,11 +177,16 @@ Protected Module Scrypt_MTC
 		  Xojo.Crypto.PBKDF2( salt, mbKey, 1, p * mfLen, Xojo.Crypto.HashAlgorithms.SHA256 ) )
 		  
 		  dim lastPIndex as integer = p - 1
-		  dim b as new Xojo.Core.MutableMemoryBlock( mfLen )
+		  dim block as new Xojo.Core.MutableMemoryBlock( mfLen )
+		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mfLen )
+		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize )
+		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mfLen * n )
+		  vBuffer.LittleEndian = true
+		  
 		  for i as integer = 0 to lastPIndex
-		    b.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
-		    ROMix( b, n )
-		    mainB.Mid( i * b.Size, b.Size ) = b
+		    block.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
+		    ROMix( block, n, blockBuffer, chunkBuffer, vBuffer )
+		    mainB.Mid( i * block.Size, block.Size ) = block
 		  next
 		  
 		  dim outMB as Xojo.Core.MemoryBlock = Xojo.Crypto.PBKDF2( mainB, mbKey, 1, outputLength, Xojo.Crypto.HashAlgorithms.SHA256 )
@@ -216,7 +234,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As Integer)
+		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As Integer, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock, vBuffer As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -224,19 +242,15 @@ Protected Module Scrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  const kIsLittleEndian as boolean = true
-		  
 		  dim mbSize as integer = mb.Size
-		  mb.LittleEndian = kIsLittleEndian
 		  dim mbPtr as ptr = mb.Data
 		  
-		  dim v as new Xojo.Core.MutableMemoryBlock( mbSize * n )
-		  v.LittleEndian = kIsLittleEndian
+		  dim v as Xojo.Core.MutableMemoryBlock = vBuffer
 		  
 		  dim lastNIndex as integer = n - 1
 		  for i as integer = 0 to lastNIndex
 		    v.Mid( i * mbSize, mbSize ) = mb
-		    BlockMix( mb )
+		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
 		  dim vPtr as ptr = v.Data
@@ -244,14 +258,14 @@ Protected Module Scrypt_MTC
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    mbPtr = mb.Data
-		    dim lastWord as Int64 = mbPtr.UInt32( lastWordIndex )
+		    mb.LittleEndian = v.LittleEndian
+		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex )
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
 		      mbPtr.UInt64( byteIndex ) = mbPtr.UInt64( byteIndex ) xor vPtr.UInt64( byteIndex + start )
 		    next
-		    BlockMix( mb )
+		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
 		  'The scryptROMix algorithm is the same as the ROMix algorithm
@@ -350,6 +364,9 @@ Protected Module Scrypt_MTC
 		End Sub
 	#tag EndMethod
 
+
+	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Protected
 	#tag EndConstant
