@@ -182,6 +182,9 @@ Protected Module Scrypt_MTC
 		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize )
 		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mfLen * n )
 		  vBuffer.LittleEndian = true
+		  chunkBuffer.LittleEndian = vBuffer.LittleEndian
+		  blockBuffer.LittleEndian = vBuffer.LittleEndian
+		  block.LittleEndian = vBuffer.LittleEndian
 		  
 		  for i as integer = 0 to lastPIndex
 		    block.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
@@ -258,7 +261,6 @@ Protected Module Scrypt_MTC
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    mb.LittleEndian = v.LittleEndian
 		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
 		    dim j as integer = lastWord mod CType( n, Int64 )
 		    dim start as integer = j * mbSize
