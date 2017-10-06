@@ -9,11 +9,16 @@ Protected Module Scrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  //
+		  // chunkBuffer.Size must be kBlockSize * 2
+		  //
+		  
 		  dim mbSize as integer = mb.Size
 		  dim mbMidpoint as integer = mbSize \ 2
 		  dim x as Xojo.Core.MutableMemoryBlock = chunkBuffer
 		  x.Left( kBlockSize ) = mb.Right( kBlockSize )
 		  dim xPtr as ptr = x.Data
+		  dim arrPtr as ptr = ptr( integer( xPtr ) + kBlockSize )
 		  
 		  dim result as Xojo.Core.MutableMemoryBlock = blockBuffer
 		  dim resultEvenIndex as integer = 0
@@ -22,7 +27,6 @@ Protected Module Scrypt_MTC
 		  
 		  dim lastByteIndex as integer = mbSize - 1
 		  dim lastRawBlockIndex as integer = kBlockSize - 1
-		  dim arr( 15 ) as UInt32
 		  
 		  for blockByteIndex as integer = 0 to lastByteIndex step kBlockSize
 		    for rawByteIndex as integer = 0 to lastRawBlockIndex step 8
@@ -33,52 +37,46 @@ Protected Module Scrypt_MTC
 		    // Salsa is unrolled here as an optimization
 		    //
 		    
-		    dim byteIndex as integer
-		    
-		    byteIndex = 0
-		    for i as integer = 0 to 15
-		      arr( i ) = xPtr.UInt32( byteIndex )
-		      byteIndex = byteIndex + 4
-		    next
+		    x.Right( kBlockSize ) = x.Left( kBlockSize )
 		    
 		    for i as integer = 1 to 4
-		      arr( 4 ) = arr( 4 ) xor ( ( ( arr( 0 ) + arr( 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 0 ) + arr( 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 8 ) = arr( 8 ) xor ( ( ( arr( 4 ) + arr( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 4 ) + arr( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 12 ) = arr( 12 ) xor ( ( ( arr( 8 ) + arr( 4 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 8 ) + arr( 4 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 0 ) = arr( 0 ) xor ( ( ( arr( 12 ) + arr( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 12 ) + arr( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 9 ) = arr( 9 ) xor ( ( ( arr( 5 ) + arr( 1 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 5 ) + arr( 1 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 13 ) = arr( 13 ) xor ( ( ( arr( 9 ) + arr( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 9 ) + arr( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 1 ) = arr( 1 ) xor ( ( ( arr( 13 ) + arr( 9 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 13 ) + arr( 9 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 5 ) = arr( 5 ) xor ( ( ( arr( 1 ) + arr( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 1 ) + arr( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 14 ) = arr( 14 ) xor ( ( ( arr( 10 ) + arr( 6 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 10 ) + arr( 6 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 2 ) = arr( 2 ) xor ( ( ( arr( 14 ) + arr( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 14 ) + arr( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 6 ) = arr( 6 ) xor ( ( ( arr( 2 ) + arr( 14 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 2 ) + arr( 14 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 10 ) = arr( 10 ) xor ( ( ( arr( 6 ) + arr( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 6 ) + arr( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 3 ) = arr( 3 ) xor ( ( ( arr( 15 ) + arr( 11 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 15 ) + arr( 11 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 7 ) = arr( 7 ) xor ( ( ( arr( 3 ) + arr( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 3 ) + arr( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 11 ) = arr( 11 ) xor ( ( ( arr( 7 ) + arr( 3 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 7 ) + arr( 3 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 15 ) = arr( 15 ) xor ( ( ( arr( 11 ) + arr( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 11 ) + arr( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 1 ) = arr( 1 ) xor ( ( ( arr( 0 ) + arr( 3 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 0 ) + arr( 3 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 2 ) = arr( 2 ) xor ( ( ( arr( 1 ) + arr( 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 1 ) + arr( 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 3 ) = arr( 3 ) xor ( ( ( arr( 2 ) + arr( 1 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 2 ) + arr( 1 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 0 ) = arr( 0 ) xor ( ( ( arr( 3 ) + arr( 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 3 ) + arr( 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 6 ) = arr( 6 ) xor ( ( ( arr( 5 ) + arr( 4 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 5 ) + arr( 4 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 7 ) = arr( 7 ) xor ( ( ( arr( 6 ) + arr( 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 6 ) + arr( 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 4 ) = arr( 4 ) xor ( ( ( arr( 7 ) + arr( 6 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 7 ) + arr( 6 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 5 ) = arr( 5 ) xor ( ( ( arr( 4 ) + arr( 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 4 ) + arr( 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 11 ) = arr( 11 ) xor ( ( ( arr( 10 ) + arr( 9 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 10 ) + arr( 9 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 8 ) = arr( 8 ) xor ( ( ( arr( 11 ) + arr( 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 11 ) + arr( 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 9 ) = arr( 9 ) xor ( ( ( arr( 8 ) + arr( 11 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 8 ) + arr( 11 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 10 ) = arr( 10 ) xor ( ( ( arr( 9 ) + arr( 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 9 ) + arr( 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
-		      arr( 12 ) = arr( 12 ) xor ( ( ( arr( 15 ) + arr( 14 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arr( 15 ) + arr( 14 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
-		      arr( 13 ) = arr( 13 ) xor ( ( ( arr( 12 ) + arr( 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arr( 12 ) + arr( 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
-		      arr( 14 ) = arr( 14 ) xor ( ( ( arr( 13 ) + arr( 12 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arr( 13 ) + arr( 12 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
-		      arr( 15 ) = arr( 15 ) xor ( ( ( arr( 14 ) + arr( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 14 ) + arr( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 4 ) = arrPtr.UInt32( 4 * 4 ) xor ( ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 8 ) = arrPtr.UInt32( 4 * 8 ) xor ( ( ( arrPtr.UInt32( 4 * 4 ) + arrPtr.UInt32( 4 * 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 4 ) + arrPtr.UInt32( 4 * 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 12 ) = arrPtr.UInt32( 4 * 12 ) xor ( ( ( arrPtr.UInt32( 4 * 8 ) + arrPtr.UInt32( 4 * 4 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 8 ) + arrPtr.UInt32( 4 * 4 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 0 ) = arrPtr.UInt32( 4 * 0 ) xor ( ( ( arrPtr.UInt32( 4 * 12 ) + arrPtr.UInt32( 4 * 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 12 ) + arrPtr.UInt32( 4 * 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 9 ) = arrPtr.UInt32( 4 * 9 ) xor ( ( ( arrPtr.UInt32( 4 * 5 ) + arrPtr.UInt32( 4 * 1 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 5 ) + arrPtr.UInt32( 4 * 1 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 13 ) = arrPtr.UInt32( 4 * 13 ) xor ( ( ( arrPtr.UInt32( 4 * 9 ) + arrPtr.UInt32( 4 * 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 9 ) + arrPtr.UInt32( 4 * 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 1 ) = arrPtr.UInt32( 4 * 1 ) xor ( ( ( arrPtr.UInt32( 4 * 13 ) + arrPtr.UInt32( 4 * 9 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 13 ) + arrPtr.UInt32( 4 * 9 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 5 ) = arrPtr.UInt32( 4 * 5 ) xor ( ( ( arrPtr.UInt32( 4 * 1 ) + arrPtr.UInt32( 4 * 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 1 ) + arrPtr.UInt32( 4 * 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 14 ) = arrPtr.UInt32( 4 * 14 ) xor ( ( ( arrPtr.UInt32( 4 * 10 ) + arrPtr.UInt32( 4 * 6 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 10 ) + arrPtr.UInt32( 4 * 6 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 2 ) = arrPtr.UInt32( 4 * 2 ) xor ( ( ( arrPtr.UInt32( 4 * 14 ) + arrPtr.UInt32( 4 * 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 14 ) + arrPtr.UInt32( 4 * 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 6 ) = arrPtr.UInt32( 4 * 6 ) xor ( ( ( arrPtr.UInt32( 4 * 2 ) + arrPtr.UInt32( 4 * 14 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 2 ) + arrPtr.UInt32( 4 * 14 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 10 ) = arrPtr.UInt32( 4 * 10 ) xor ( ( ( arrPtr.UInt32( 4 * 6 ) + arrPtr.UInt32( 4 * 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 6 ) + arrPtr.UInt32( 4 * 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 3 ) = arrPtr.UInt32( 4 * 3 ) xor ( ( ( arrPtr.UInt32( 4 * 15 ) + arrPtr.UInt32( 4 * 11 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 15 ) + arrPtr.UInt32( 4 * 11 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 7 ) = arrPtr.UInt32( 4 * 7 ) xor ( ( ( arrPtr.UInt32( 4 * 3 ) + arrPtr.UInt32( 4 * 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 3 ) + arrPtr.UInt32( 4 * 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 11 ) = arrPtr.UInt32( 4 * 11 ) xor ( ( ( arrPtr.UInt32( 4 * 7 ) + arrPtr.UInt32( 4 * 3 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 7 ) + arrPtr.UInt32( 4 * 3 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 15 ) = arrPtr.UInt32( 4 * 15 ) xor ( ( ( arrPtr.UInt32( 4 * 11 ) + arrPtr.UInt32( 4 * 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 11 ) + arrPtr.UInt32( 4 * 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 1 ) = arrPtr.UInt32( 4 * 1 ) xor ( ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 3 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 3 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 2 ) = arrPtr.UInt32( 4 * 2 ) xor ( ( ( arrPtr.UInt32( 4 * 1 ) + arrPtr.UInt32( 4 * 0 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 1 ) + arrPtr.UInt32( 4 * 0 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 3 ) = arrPtr.UInt32( 4 * 3 ) xor ( ( ( arrPtr.UInt32( 4 * 2 ) + arrPtr.UInt32( 4 * 1 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 2 ) + arrPtr.UInt32( 4 * 1 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 0 ) = arrPtr.UInt32( 4 * 0 ) xor ( ( ( arrPtr.UInt32( 4 * 3 ) + arrPtr.UInt32( 4 * 2 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 3 ) + arrPtr.UInt32( 4 * 2 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 6 ) = arrPtr.UInt32( 4 * 6 ) xor ( ( ( arrPtr.UInt32( 4 * 5 ) + arrPtr.UInt32( 4 * 4 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 5 ) + arrPtr.UInt32( 4 * 4 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 7 ) = arrPtr.UInt32( 4 * 7 ) xor ( ( ( arrPtr.UInt32( 4 * 6 ) + arrPtr.UInt32( 4 * 5 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 6 ) + arrPtr.UInt32( 4 * 5 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 4 ) = arrPtr.UInt32( 4 * 4 ) xor ( ( ( arrPtr.UInt32( 4 * 7 ) + arrPtr.UInt32( 4 * 6 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 7 ) + arrPtr.UInt32( 4 * 6 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 5 ) = arrPtr.UInt32( 4 * 5 ) xor ( ( ( arrPtr.UInt32( 4 * 4 ) + arrPtr.UInt32( 4 * 7 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 4 ) + arrPtr.UInt32( 4 * 7 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 11 ) = arrPtr.UInt32( 4 * 11 ) xor ( ( ( arrPtr.UInt32( 4 * 10 ) + arrPtr.UInt32( 4 * 9 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 10 ) + arrPtr.UInt32( 4 * 9 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 8 ) = arrPtr.UInt32( 4 * 8 ) xor ( ( ( arrPtr.UInt32( 4 * 11 ) + arrPtr.UInt32( 4 * 10 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 11 ) + arrPtr.UInt32( 4 * 10 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 9 ) = arrPtr.UInt32( 4 * 9 ) xor ( ( ( arrPtr.UInt32( 4 * 8 ) + arrPtr.UInt32( 4 * 11 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 8 ) + arrPtr.UInt32( 4 * 11 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 10 ) = arrPtr.UInt32( 4 * 10 ) xor ( ( ( arrPtr.UInt32( 4 * 9 ) + arrPtr.UInt32( 4 * 8 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 9 ) + arrPtr.UInt32( 4 * 8 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 12 ) = arrPtr.UInt32( 4 * 12 ) xor ( ( ( arrPtr.UInt32( 4 * 15 ) + arrPtr.UInt32( 4 * 14 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 15 ) + arrPtr.UInt32( 4 * 14 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 13 ) = arrPtr.UInt32( 4 * 13 ) xor ( ( ( arrPtr.UInt32( 4 * 12 ) + arrPtr.UInt32( 4 * 15 ) ) * CType( 2 ^ 9, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 12 ) + arrPtr.UInt32( 4 * 15 ) ) \ CType( 2 ^ ( 32 - 9 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 14 ) = arrPtr.UInt32( 4 * 14 ) xor ( ( ( arrPtr.UInt32( 4 * 13 ) + arrPtr.UInt32( 4 * 12 ) ) * CType( 2 ^ 13, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 13 ) + arrPtr.UInt32( 4 * 12 ) ) \ CType( 2 ^ ( 32 - 13 ), UInt32 ) ) )
+		      arrPtr.UInt32( 4 * 15 ) = arrPtr.UInt32( 4 * 15 ) xor ( ( ( arrPtr.UInt32( 4 * 14 ) + arrPtr.UInt32( 4 * 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 14 ) + arrPtr.UInt32( 4 * 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
 		    next
 		    
-		    byteIndex = 0
+		    dim byteIndex as integer = 0
 		    for i as integer = 0 to 15
-		      xPtr.UInt32( byteIndex ) = arr( i ) + xPtr.UInt32( byteIndex )
+		      xPtr.UInt32( byteIndex ) = arrPtr.UInt32( byteIndex ) + xPtr.UInt32( byteIndex )
 		      byteIndex = byteIndex + 4
 		    next
 		    
@@ -93,11 +91,11 @@ Protected Module Scrypt_MTC
 		    // 1, 3, 5, ..., 2, 4, 6, ...
 		    //
 		    if resultIsEven then
-		      result.Mid( resultEvenIndex, kBlockSize ) = x
+		      result.Mid( resultEvenIndex, kBlockSize ) = x.Left( kBlockSize )
 		      resultEvenIndex = resultEvenIndex + kBlockSize
 		      resultIsEven = false
 		    else
-		      result.Mid( resultOddIndex, kBlockSize ) = x
+		      result.Mid( resultOddIndex, kBlockSize ) = x.Left( kBlockSize )
 		      resultOddIndex = resultOddIndex + kBlockSize
 		      resultIsEven = true
 		    end if
@@ -194,7 +192,7 @@ Protected Module Scrypt_MTC
 		  dim lastPIndex as integer = p - 1
 		  dim block as new Xojo.Core.MutableMemoryBlock( mfLen )
 		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mfLen )
-		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize )
+		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize * 2 )
 		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mfLen * n )
 		  vBuffer.LittleEndian = true
 		  chunkBuffer.LittleEndian = vBuffer.LittleEndian
@@ -382,10 +380,22 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 
+	#tag Note, Name = Scrypt Specs
+		
+		Specs can be found in RFC 7914:
+		
+		https://www.rfc-editor.org/rfc/rfc7914.txt
+		
+		Wikipedia article:
+		
+		https://en.wikipedia.org/wiki/Scrypt
+	#tag EndNote
+
+
 	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.1", Scope = Protected
 	#tag EndConstant
 
 

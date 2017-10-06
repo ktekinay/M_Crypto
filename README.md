@@ -300,6 +300,10 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.2.1__ (Oct. 7, 2017)
+
+- Dramatically sped up Scrypt.
+
 __2.2__ (Oct. 4, 2017)
 
 - Added `M_Crypto.GenerateUUID`.
