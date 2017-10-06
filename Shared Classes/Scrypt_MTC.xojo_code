@@ -33,8 +33,12 @@ Protected Module Scrypt_MTC
 		    // Salsa is unrolled here as an optimization
 		    //
 		    
+		    dim byteIndex as integer
+		    
+		    byteIndex = 0
 		    for i as integer = 0 to 15
-		      arr( i ) = xPtr.UInt32( i * 4 )
+		      arr( i ) = xPtr.UInt32( byteIndex )
+		      byteIndex = byteIndex + 4
 		    next
 		    
 		    for i as integer = 1 to 4
@@ -72,7 +76,7 @@ Protected Module Scrypt_MTC
 		      arr( 15 ) = arr( 15 ) xor ( ( ( arr( 14 ) + arr( 13 ) ) * CType( 2 ^ 18, UInt32 ) ) or ( ( arr( 14 ) + arr( 13 ) ) \ CType( 2 ^ ( 32 - 18 ), UInt32 ) ) )
 		    next
 		    
-		    dim byteIndex as integer
+		    byteIndex = 0
 		    for i as integer = 0 to 15
 		      xPtr.UInt32( byteIndex ) = arr( i ) + xPtr.UInt32( byteIndex )
 		      byteIndex = byteIndex + 4
@@ -160,7 +164,7 @@ Protected Module Scrypt_MTC
 		    raise err
 		  end if
 		  
-		  dim n as integer = 2 ^ cost
+		  dim n as UInt32 = 2 ^ cost
 		  if n <= 1 or cost >= ( 128 * blocks / 8 ) then
 		    dim err as new BadInputException
 		    err.Message = "Cost must be greater than 1 and less than (data.Size/8)"
@@ -198,9 +202,10 @@ Protected Module Scrypt_MTC
 		  block.LittleEndian = vBuffer.LittleEndian
 		  
 		  for i as integer = 0 to lastPIndex
-		    block.Left( mfLen ) = mainB.Mid( i * mfLen, mfLen )
+		    dim mainIndex as integer = i * mfLen
+		    block.Left( mfLen ) = mainB.Mid( mainIndex, mfLen )
 		    ROMix( block, n, blockBuffer, chunkBuffer, vBuffer )
-		    mainB.Mid( i * block.Size, block.Size ) = block
+		    mainB.Mid( mainIndex, mfLen ) = block
 		  next
 		  
 		  dim outMB as Xojo.Core.MemoryBlock = Xojo.Crypto.PBKDF2( mainB, mbKey, 1, outputLength, Xojo.Crypto.HashAlgorithms.SHA256 )
@@ -248,7 +253,7 @@ Protected Module Scrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As Integer, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock, vBuffer As Xojo.Core.MutableMemoryBlock)
+		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As UInt32, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock, vBuffer As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -271,8 +276,8 @@ Protected Module Scrypt_MTC
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
 		  for i as integer = 0 to lastNIndex
-		    dim lastWord as Int64 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
-		    dim j as integer = lastWord mod CType( n, Int64 )
+		    dim lastWord as UInt32 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
+		    dim j as integer = lastWord mod n
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
 		      mbPtr.UInt64( byteIndex ) = mbPtr.UInt64( byteIndex ) xor vPtr.UInt64( byteIndex + start )
