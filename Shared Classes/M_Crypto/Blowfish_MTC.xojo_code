@@ -84,7 +84,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decipher(ByRef X0 As UInt32, ByRef X1 As Uint32)
+		Private Sub Decipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
 		  // The main loop for processing Decipher
 		  
 		  while not FlagDecipher.TrySignal
@@ -105,15 +105,15 @@ Implements BcryptInterface
 		  static pt as Ptr = mb
 		  static isLittleEndian as boolean = mb.LittleEndian
 		  
-		  dim Xl as UInt32 = X0
-		  dim Xr as UInt32 = X1
+		  dim xl as UInt32 = x0
+		  dim xr as UInt32 = x1
 		  
-		  Xl = Xl Xor myPPtr.UInt32( 17 * 4 )
+		  xl = xl Xor myPPtr.UInt32( 17 * 4 )
 		  
 		  dim a, b, c, d as integer
 		  dim j as UInt32
 		  for i as integer = 16 downto 2 step 2
-		    j = Xl
+		    j = xl
 		    pt.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
@@ -132,9 +132,9 @@ Implements BcryptInterface
 		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
 		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
-		    Xr = Xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
+		    xr = xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
 		    
-		    j = Xr
+		    j = xr
 		    pt.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
@@ -153,45 +153,15 @@ Implements BcryptInterface
 		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
 		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
-		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i - 1 ) * 4 ) )
+		    xl = xl Xor ( j Xor myPPtr.UInt32( ( i - 1 ) * 4 ) )
 		  next i
 		  
-		  Xr = Xr Xor myPPtr.UInt32( 0 )
+		  xr = xr Xor myPPtr.UInt32( 0 )
 		  
-		  X0 = Xr
-		  X1 = Xl
+		  x0 = xr
+		  x1 = xl
 		  
 		  FlagDecipher.Release
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Decipher(mb As Ptr, byteIndex As Integer)
-		  dim Xl, Xr as UInt32
-		  
-		  Xl = mb.UInt32( byteIndex )
-		  Xr = mb.UInt32( byteIndex + 4 )
-		  
-		  Decipher( Xl, Xr )
-		  
-		  mb.UInt32( byteIndex ) = Xl
-		  mb.UInt32( byteIndex + 4 ) = Xr
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Decipher(x() As UInt32)
-		  dim Xl, Xr as UInt32
-		  
-		  Xl = x( 0 )
-		  Xr = x( 1 )
-		  
-		  Decipher( Xl, Xr )
-		  
-		  X( 0 ) = Xl
-		  X( 1 ) = Xr
-		  
 		End Sub
 	#tag EndMethod
 
@@ -207,8 +177,16 @@ Implements BcryptInterface
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
+		  dim x0 as UInt32
+		  dim x1 as UInt32
+		  
 		  for thisBlock as Integer = 1 to blocks
-		    Decipher( dataPtr, byteIndex )
+		    x0 = dataPtr.UInt32( byteIndex )
+		    x1 = dataPtr.UInt32( byteIndex + 4 )
+		    Decipher( x0, x1 )
+		    dataPtr.UInt32( byteIndex ) = x0
+		    dataPtr.UInt32( byteIndex + 4 ) = x1
+		    
 		    byteIndex = byteIndex + 8
 		  next thisBlock
 		  
@@ -343,15 +321,15 @@ Implements BcryptInterface
 		  static pt as Ptr = mb
 		  static isLittleEndian as boolean = mb.LittleEndian
 		  
-		  dim Xl as UInt32 = x0
-		  dim Xr as Uint32 = x1
+		  dim xl as UInt32 = x0
+		  dim xr as Uint32 = x1
 		  
-		  Xl = Xl Xor myPPtr.UInt32( 0 )
+		  xl = xl Xor myPPtr.UInt32( 0 )
 		  
 		  dim a, b, c, d as integer
 		  dim j as UInt32
 		  for i as integer = 1 to 16 step 2
-		    j = Xl
+		    j = xl
 		    pt.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
@@ -370,9 +348,9 @@ Implements BcryptInterface
 		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
 		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
-		    Xr = Xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
+		    xr = xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
 		    
-		    j = Xr
+		    j = xr
 		    pt.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
@@ -391,45 +369,15 @@ Implements BcryptInterface
 		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
 		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
-		    Xl = Xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
+		    xl = xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
 		  next i
 		  
-		  Xr = Xr Xor myPPtr.UInt32( 17 * 4 )
+		  xr = xr Xor myPPtr.UInt32( 17 * 4 )
 		  
-		  x0 = Xr
-		  x1 = Xl
+		  x0 = xr
+		  x1 = xl
 		  
 		  FlagEncipher.Release
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Encipher(mb As Ptr, byteIndex As Integer)
-		  dim Xl, Xr as UInt32
-		  
-		  Xl = mb.UInt32( byteIndex )
-		  Xr = mb.UInt32( byteIndex + 4 )
-		  
-		  Encipher( Xl, Xr )
-		  
-		  mb.UInt32( byteIndex ) = Xl
-		  mb.UInt32( byteIndex + 4 ) = Xr
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Encipher(x() As UInt32)
-		  dim Xl, Xr as UInt32
-		  
-		  Xl = x( 0 )
-		  Xr = x( 1 )
-		  
-		  Encipher( Xl, Xr )
-		  
-		  x( 0 ) = Xl
-		  x( 1 ) = Xr
 		  
 		End Sub
 	#tag EndMethod
@@ -446,9 +394,16 @@ Implements BcryptInterface
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
+		  dim x0 as UInt32
+		  dim x1 as UInt32
 		  
 		  for thisBlock as integer = 1 to blocks
-		    Encipher( dataPtr, byteIndex )
+		    x0 = dataPtr.UInt32( byteIndex )
+		    x1 = dataPtr.UInt32( byteIndex + 4 )
+		    Encipher( x0, x1 )
+		    dataPtr.UInt32( byteIndex ) = x0
+		    dataPtr.UInt32( byteIndex + 4 ) = x1
+		    
 		    byteIndex = byteIndex + 8
 		  next thisBlock
 		  
@@ -610,7 +565,8 @@ Implements BcryptInterface
 		  dim j as Integer
 		  dim i, k, arrIndexMajor, arrIndex as Integer
 		  dim temp as UInt32
-		  dim d( 1 ) as UInt32
+		  dim x0 as UInt32
+		  dim x1 as UInt32
 		  
 		  const kLastIndex as Integer = BLF_N + 1
 		  for i = 0 to kLastIndex
@@ -621,27 +577,27 @@ Implements BcryptInterface
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
-		    d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
-		    d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
+		    x0 = x0 Xor Stream2Word( data, j )
+		    x1 = x1 Xor Stream2Word( data, j )
 		    
-		    Encipher( d )
+		    Encipher( x0, x1 )
 		    
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = d( 0 )
-		    self.PPtr.UInt32( arrIndex + 4 ) = d( 1 )
+		    self.PPtr.UInt32( arrIndex ) = x0
+		    self.PPtr.UInt32( arrIndex + 4 ) = x1
 		  next i
 		  
 		  for i = 0 to 3
 		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
-		      d( 0 ) = d( 0 ) Xor Stream2Word( data, j )
-		      d( 1 ) = d( 1 ) Xor Stream2Word( data, j )
+		      x0 = x0 Xor Stream2Word( data, j )
+		      x1 = x1 Xor Stream2Word( data, j )
 		      
-		      Encipher( d )
+		      Encipher( x0, x1 )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.UInt32( arrIndex ) = d( 0 )
-		      self.SPtr.Uint32( arrIndex + 4 ) = d( 1 )
+		      self.SPtr.UInt32( arrIndex ) = x0
+		      self.SPtr.Uint32( arrIndex + 4 ) = x1
 		    next k
 		  next i
 		  
@@ -1120,7 +1076,7 @@ Implements BcryptInterface
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4", Scope = Public
 	#tag EndConstant
 
 
