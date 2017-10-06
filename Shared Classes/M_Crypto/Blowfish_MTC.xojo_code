@@ -23,31 +23,39 @@ Implements BcryptInterface
 
 	#tag Event
 		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
+		  
 		  select case type
 		  case Functions.Default
-		    Encrypt data
+		    Encrypt newData
 		    
 		  case Functions.ECB
-		    EncryptECB data
+		    EncryptECB newData
 		    
 		  case Functions.CBC
-		    EncryptCBC data, isFinalBlock
+		    EncryptCBC newData, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
 		    
 		  end select
+		  
+		  dim temp as MemoryBlock = newData.Data
+		  data.StringValue( 0, data.Size ) = temp.StringValue( 0 , data.Size )
+		  
 		End Sub
 	#tag EndEvent
 
 	#tag Event
 		Sub KeyChanged(key As String)
 		  InitKeyValues
-		  dim buffer as new MemoryBlock( 4 )
-		  dim streamBuffer as new MemoryBlock( 4 )
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  streamBuffer.LittleEndian = false
 		  
-		  Expand0State key, buffer, buffer, streamBuffer, streamBuffer
+		  dim temp as MemoryBlock = key
+		  dim keyMB as new Xojo.Core.MutableMemoryBlock( temp, temp.Size )
+		  Expand0State keyMB, buffer, buffer.Data, streamBuffer, streamBuffer.Data
 		End Sub
 	#tag EndEvent
 
@@ -298,7 +306,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32, buffer As MemoryBlock, bufferPtr As Ptr)
+		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr)
 		  // The main loop for processing Encipher
 		  
 		  #if not DebugBuild
@@ -311,7 +319,7 @@ Implements BcryptInterface
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
 		  
-		  dim mb as MemoryBlock = buffer
+		  dim mb as Xojo.Core.MutableMemoryBlock = buffer
 		  dim pt as Ptr = bufferPtr
 		  static isLittleEndian as boolean = mb.LittleEndian // This will never change
 		  
@@ -375,7 +383,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encrypt(data As MemoryBlock)
+		Private Sub Encrypt(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -383,13 +391,13 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as Ptr = data
+		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim x0 as UInt32
 		  dim x1 as UInt32
-		  dim buffer as new MemoryBlock( 4 )
-		  dim bufferPtr as ptr = buffer
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer.Data
 		  
 		  for thisBlock as integer = 1 to blocks
 		    x0 = dataPtr.UInt32( byteIndex )
@@ -405,7 +413,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -419,19 +427,23 @@ Implements BcryptInterface
 		    vector = InitialVector
 		  end if
 		  
-		  dim vectorMB as new MemoryBlock( 8 )
+		  dim vectorMB as Xojo.Core.MemoryBlock
+		  dim tempMB as MemoryBlock
 		  if vector = "" then vector = CurrentVector
-		  if vector <> "" then
-		    vectorMB.StringValue( 0, 8 ) = vector
+		  if vector = "" then
+		    vectorMB = new Xojo.Core.MemoryBlock( 8 )
+		  else
+		    tempMB = vector
+		    vectorMB = new Xojo.Core.MemoryBlock( tempMB, tempMB.Size )
 		  end if
-		  dim vectorPtr as Ptr = vectorMB
+		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim r, l as UInt32
-		  dim dataPtr as Ptr = data
+		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex, dataIndex as integer
-		  dim buffer as new MemoryBlock( 4 )
-		  dim bufferPtr as ptr = buffer
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer.Data
 		  
 		  for i as integer = 1 to blocks
 		    for j as integer = 0 to 7
@@ -452,18 +464,20 @@ Implements BcryptInterface
 		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
-		    vectorMB.StringValue( 0, 8 ) = data.StringValue( byteIndex, 8 )
+		    vectorMB = new Xojo.Core.MemoryBlock( data.Mid( byteIndex, 8 ) )
+		    vectorPtr = vectorMB.Data
 		    byteIndex = byteIndex + 8
 		  next i
 		  
 		  if not isFinalBlock then
-		    zCurrentVector = vectorMB // So the user can block chain if desired
+		    tempMB = vectorPtr
+		    zCurrentVector = tempMB.StringValue( 0, vectorMB.Size ) // So the user can block chain if desired
 		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As MemoryBlock)
+		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -471,12 +485,12 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as Ptr = data
+		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim l, r as UInt32
-		  dim buffer as new MemoryBlock( 4 )
-		  dim bufferPtr as ptr = buffer
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer.Data
 		  
 		  for i as integer = 1 to blocks
 		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
@@ -499,7 +513,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr, streamBuffer As MemoryBlock, streamBufferPtr As Ptr)
+		Private Sub Expand0State(key As Xojo.Core.MutableMemoryBlock, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr, streamBuffer As Xojo.Core.MutableMemoryBlock, streamBufferPtr As Ptr)
 		  if key.Size = 0 then
 		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		  end if
@@ -549,7 +563,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ExpandState(data As MemoryBlock, key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr)
+		Private Sub ExpandState(data As Xojo.Core.MutableMemoryBlock, key As Xojo.Core.MutableMemoryBlock, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr)
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
 		  WasKeySet = true
 		  
@@ -565,9 +579,9 @@ Implements BcryptInterface
 		  dim temp as UInt32
 		  dim x0 as UInt32
 		  dim x1 as UInt32
-		  dim streamBuffer as new MemoryBlock( 4 )
+		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  streamBuffer.LittleEndian = false
-		  dim streamBufferPtr as ptr = streamBuffer
+		  dim streamBufferPtr as ptr = streamBuffer.Data
 		  
 		  const kLastIndex as Integer = BLF_N + 1
 		  for i = 0 to kLastIndex
@@ -931,7 +945,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer, buffer As MemoryBlock, bufferPtr As Ptr) As UInt32
+		Private Shared Function Stream2Word(data As Xojo.Core.MemoryBlock, ByRef current As Integer, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr) As UInt32
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -941,6 +955,7 @@ Implements BcryptInterface
 		  
 		  dim r as UInt32
 		  
+		  dim dataPtr as Ptr = data.Data
 		  dim dataBytes as Integer = data.Size
 		  dim j as Integer = current
 		  
@@ -948,18 +963,31 @@ Implements BcryptInterface
 		    j = 0 // Special case optimization
 		  end if
 		  
+		  data.LittleEndian = false
+		  
 		  if dataBytes >= 4 and j <= ( dataBytes - 4 ) then
 		    
-		    dim savedLE as boolean = data.LittleEndian
-		    data.LittleEndian = false
 		    'r = dataPtr.UInt32( j ) // Can't use this because of endian issues
 		    r = data.UInt32Value( j )
-		    data.LittleEndian = savedLE
 		    j = j + 4
+		    
+		  elseif dataBytes >= 2 and j = ( dataBytes - 2 ) then
+		    
+		    dim big as UInt32 = data.UInt16Value( j )
+		    dim small as UInt32 = data.UInt16Value( 0 )
+		    r = big * CType( 256 ^ 2, UInt32 ) + small
+		    j = 2
+		    
+		  elseif dataBytes = 1 then
+		    //
+		    // j must be 0
+		    //
+		    dim b as UInt32 = dataPtr.Byte( 0 )
+		    r = b * CType( 256 ^ 3, UInt32 ) + b * CType( 256 ^ 2, UInt32 ) + b * CType( 256, UInt32 ) + b
+		    j = 0
 		    
 		  else
 		    
-		    dim dataPtr as Ptr = data
 		    
 		    for i as Integer = 0 to 3
 		      if j >= databytes then
