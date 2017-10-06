@@ -3,7 +3,7 @@ Protected Class ScryptUnitTester
 	#tag Method, Flags = &h0
 		Function BlockMix(mb As MemoryBlock) As MemoryBlock
 		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mb.Size )
-		  dim buffer as new Xojo.Core.MutableMemoryBlock( 64 )
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 128 )
 		  
 		  dim newMB as new Xojo.Core.MutableMemoryBlock( mb, mb.Size )
 		  dim p as ptr = newMB.Data
@@ -17,7 +17,7 @@ Protected Class ScryptUnitTester
 	#tag Method, Flags = &h0
 		Function ROMix(mb As MemoryBlock, n As Integer) As MemoryBlock
 		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mb.Size )
-		  dim buffer as new Xojo.Core.MutableMemoryBlock( 64 )
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 128 )
 		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mb.Size * n )
 		  
 		  dim newMB as new Xojo.Core.MutableMemoryBlock( mb, mb.Size )

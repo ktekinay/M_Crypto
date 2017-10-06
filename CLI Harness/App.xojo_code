@@ -690,7 +690,7 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kDefaultScryptParallel, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kHelpNotes, Type = String, Dynamic = False, Default = \"When encrypting/decrypting\x2C if a key is not given it will be requested unless the --data-stdin switch is present.\n\nThe scrypt cost parameter differs from other implementations of scrypt where a value that is a power of 2 is expected in the `n` parameter. Cost will be used as `2^cost`. Example\x2C when cost \x3D 10\x2C n \x3D 2^10 \x3D 1024.\n\nThe `Get-bytes` action will return cryptographically safe random bytes.", Scope = Private
+	#tag Constant, Name = kHelpNotes, Type = String, Dynamic = False, Default = \"When encrypting/decrypting\x2C if a key is not given it will be requested unless the --data-stdin switch is present.\n\nThe scrypt cost parameter differs from other implementations of scrypt where a value that is a power of 2 is expected in the `n` parameter. Cost will be used as `2^cost`. Example\x2C when cost \x3D 10\x2C n \x3D 2^10 \x3D 1024.\n\nThe `Get-bytes` action will return cryptographically secure random bytes.", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionBcryptRounds, Type = String, Dynamic = False, Default = \"rounds", Scope = Private

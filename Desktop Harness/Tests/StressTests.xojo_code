@@ -275,11 +275,26 @@ Inherits TestGroup
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub ScryptStressTest()
+		  dim actual as MemoryBlock 
+		  dim expected as MemoryBlock 
+		  
+		  actual = Scrypt_MTC.Hash( "pleaseletmein", "SodiumChloride", 20, 64, 8, 1 )
+		  expected = DecodeHex( kScryptOutHex3 )
+		  Assert.AreEqual expected, actual
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kJavaScriptEncryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar cipher \x3D crypto.createCipher(\'bf-ecb\'\x2C key);\n\nvar enc \x3D cipher.update(data\x2C \'utf8\'\x2C \'hex\');\nenc +\x3D cipher.final(\'hex\');\n\nconsole.log(enc);\n", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kScryptOutHex3, Type = String, Dynamic = False, Default = \"21 01 cb 9b 6a 51 1a ae ad db be 09 cf 70 f8 81\nec 56 8d 57 4a 2f fd 4d ab e5 ee 98 20 ad aa 47\n8e 56 fd 8f 4b a5 d0 9f fa 1c 6d 92 7c 40 f4 c3\n37 30 40 49 e8 a9 52 fb cb f4 5c 6f a7 7a 41 a4", Scope = Private
 	#tag EndConstant
 
 
