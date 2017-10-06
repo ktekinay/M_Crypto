@@ -44,7 +44,10 @@ Implements BcryptInterface
 		Sub KeyChanged(key As String)
 		  InitKeyValues
 		  dim buffer as new MemoryBlock( 4 )
-		  Expand0State key, buffer, buffer
+		  dim streamBuffer as new MemoryBlock( 4 )
+		  streamBuffer.LittleEndian = false
+		  
+		  Expand0State key, buffer, buffer, streamBuffer, streamBuffer
 		End Sub
 	#tag EndEvent
 
@@ -496,7 +499,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr)
+		Private Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr, streamBuffer As MemoryBlock, streamBufferPtr As Ptr)
 		  if key.Size = 0 then
 		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		  end if
@@ -515,9 +518,6 @@ Implements BcryptInterface
 		  dim d0, d1 as UInt32
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
-		  dim streamBuffer as new MemoryBlock( 4 )
-		  streamBuffer.LittleEndian = false
-		  dim streamBufferPtr as ptr = streamBuffer
 		  
 		  const kLastIndex as integer = BLF_N + 1
 		  for i = 0 to kLastIndex

@@ -7,7 +7,7 @@ Protected Interface BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr)
+		Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr, streamBuffer As MemoryBlock, streamBufferPtr As Ptr)
 		  
 		End Sub
 	#tag EndMethod
