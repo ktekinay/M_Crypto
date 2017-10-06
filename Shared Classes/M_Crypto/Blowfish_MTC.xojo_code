@@ -346,9 +346,9 @@ Implements BcryptInterface
 		      d = pt.Byte( 3 )
 		    end if
 		    
-		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
-		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
-		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    j = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		    Xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		    + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
 		    xr = xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
 		    
@@ -367,9 +367,9 @@ Implements BcryptInterface
 		      d = pt.Byte( 3 )
 		    end if
 		    
-		    j = mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 )
-		    j = j Xor mySPtr.UInt32( ( 512 + c ) * 4 )
-		    j = j + mySPtr.UInt32( ( 768 + d ) * 4 )
+		    j = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		    Xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		    + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
 		    xl = xl Xor ( j Xor myPPtr.UInt32( ( i + 1 ) * 4 ) )
 		  next i
@@ -427,14 +427,12 @@ Implements BcryptInterface
 		    vector = InitialVector
 		  end if
 		  
-		  dim vectorMB as Xojo.Core.MemoryBlock
-		  dim tempMB as MemoryBlock
+		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
 		  if vector = "" then vector = CurrentVector
-		  if vector = "" then
-		    vectorMB = new Xojo.Core.MemoryBlock( 8 )
-		  else
-		    tempMB = vector
-		    vectorMB = new Xojo.Core.MemoryBlock( tempMB, tempMB.Size )
+		  if vector <> "" then
+		    dim tempMB as MemoryBlock = vector
+		    dim temp2MB as new Xojo.Core.MemoryBlock( tempMB, tempMB.Size )
+		    vectorMB.Left( 8 ) = temp2MB.Left( 8 )
 		  end if
 		  dim vectorPtr as ptr = vectorMB.Data
 		  
@@ -464,13 +462,12 @@ Implements BcryptInterface
 		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
-		    vectorMB = new Xojo.Core.MemoryBlock( data.Mid( byteIndex, 8 ) )
-		    vectorPtr = vectorMB.Data
+		    vectorMB.Left( 8 ) = data.Mid( byteIndex, 8 )
 		    byteIndex = byteIndex + 8
 		  next i
 		  
 		  if not isFinalBlock then
-		    tempMB = vectorPtr
+		    dim tempMB as MemoryBlock = vectorPtr
 		    zCurrentVector = tempMB.StringValue( 0, vectorMB.Size ) // So the user can block chain if desired
 		  end if
 		End Sub
@@ -978,6 +975,15 @@ Implements BcryptInterface
 		    r = big * CType( 256 ^ 2, UInt32 ) + small
 		    j = 2
 		    
+		  elseif dataBytes > 2 then
+		    
+		    dim fromTheEnd as integer = dataBytes - j
+		    dim fromTheStart as integer = 4 - fromTheEnd
+		    buffer.Left( fromTheEnd ) = data.Right( fromTheEnd )
+		    buffer.Right( fromTheStart ) = data.Left( fromTheStart )
+		    j = fromTheStart
+		    r = buffer.UInt32Value( 0 )
+		    
 		  elseif dataBytes = 1 then
 		    //
 		    // j must be 0
@@ -988,7 +994,6 @@ Implements BcryptInterface
 		    
 		  else
 		    
-		    
 		    for i as Integer = 0 to 3
 		      if j >= databytes then
 		        j = 0
@@ -998,6 +1003,7 @@ Implements BcryptInterface
 		      j = j + 1
 		    next i
 		    r = buffer.UInt32Value( 0 )
+		    
 		  end if
 		  
 		  current = j

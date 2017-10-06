@@ -50,7 +50,7 @@ Protected Module Bcrypt_MTC
 		  dim rounds as Integer
 		  dim logr, minor as UInt8
 		  dim ciphertext as new Xojo.Core.MutableMemoryBlock( Xojo.Core.TextEncoding.UTF8.ConvertTextToData( "OrpheanBeholderScryDoubt" ) )
-		  static precomputedCiphertext as Xojo.Core.MemoryBlock =Xojo.Core.TextEncoding.UTF8.ConvertTextToData( "hprOBnaeloheSredDyrctbuo" ) // Same every time
+		  static precomputedCiphertext as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( "hprOBnaeloheSredDyrctbuo" ) // Same every time
 		  dim csalt as new Xojo.Core.MutableMemoryBlock( BCRYPT_MAXSALT )
 		  dim cdata as new Xojo.Core.MutableMemoryBlock( BCRYPT_BLOCKS * 4 )
 		  dim n as Integer
@@ -68,7 +68,9 @@ Protected Module Bcrypt_MTC
 		  dim saltMB as Xojo.Core.MutableMemoryBlock
 		  if true then
 		    dim temp as MemoryBlock = saltText
-		    saltMB = new Xojo.Core.MutableMemoryBlock( temp, temp.Size )
+		    dim temp2 as new Xojo.Core.MemoryBlock( temp, temp.Size )
+		    saltMB = new Xojo.Core.MutableMemoryBlock( temp2.Size )
+		    saltMB.Left( saltMB.Size ) = temp2.Left( temp2.Size )
 		  end if
 		  if saltVersionString = "" or saltVersion > Val( BCRYPT_VERSION ) then
 		    return ""
