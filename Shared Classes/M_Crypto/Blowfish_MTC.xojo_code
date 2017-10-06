@@ -43,7 +43,8 @@ Implements BcryptInterface
 	#tag Event
 		Sub KeyChanged(key As String)
 		  InitKeyValues
-		  Expand0State key
+		  dim buffer as new MemoryBlock( 4 )
+		  Expand0State key, buffer, buffer
 		End Sub
 	#tag EndEvent
 
@@ -66,13 +67,6 @@ Implements BcryptInterface
 		  SetBlockSize 8
 		  self.PaddingMethod = paddingMethod
 		  
-		  if FlagEncipher is nil then
-		    FlagEncipher = new Semaphore
-		    FlagDecipher = new Semaphore
-		    FlagStream2Word = new Semaphore
-		  end if
-		  
-		  
 		  // See if a key was provided
 		  if key <> "" then
 		    SetKey key
@@ -84,12 +78,8 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
+		Private Sub Decipher(ByRef x0 As UInt32, ByRef x1 As UInt32, buffer As MemoryBlock, bufferPtr As Ptr)
 		  // The main loop for processing Decipher
-		  
-		  while not FlagDecipher.TrySignal
-		    App.YieldToNextThread
-		  wend
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -101,9 +91,9 @@ Implements BcryptInterface
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
 		  
-		  static mb as new MemoryBlock( 4 )
-		  static pt as Ptr = mb
-		  static isLittleEndian as boolean = mb.LittleEndian
+		  dim mb as MemoryBlock = buffer
+		  dim pt as Ptr = bufferPtr
+		  static isLittleEndian as boolean = mb.LittleEndian // This will never change
 		  
 		  dim xl as UInt32 = x0
 		  dim xr as UInt32 = x1
@@ -161,7 +151,6 @@ Implements BcryptInterface
 		  x0 = xr
 		  x1 = xl
 		  
-		  FlagDecipher.Release
 		End Sub
 	#tag EndMethod
 
@@ -179,11 +168,13 @@ Implements BcryptInterface
 		  dim byteIndex as integer
 		  dim x0 as UInt32
 		  dim x1 as UInt32
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  for thisBlock as Integer = 1 to blocks
 		    x0 = dataPtr.UInt32( byteIndex )
 		    x1 = dataPtr.UInt32( byteIndex + 4 )
-		    Decipher( x0, x1 )
+		    Decipher( x0, x1, buffer, bufferPtr )
 		    dataPtr.UInt32( byteIndex ) = x0
 		    dataPtr.UInt32( byteIndex + 4 ) = x1
 		    
@@ -216,6 +207,8 @@ Implements BcryptInterface
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
 		  dim dataIndex as integer
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  if vector = "" then
 		    vector = CurrentVector
@@ -243,7 +236,7 @@ Implements BcryptInterface
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
 		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
-		    Decipher( l, r )
+		    Decipher( l, r, buffer, bufferPtr )
 		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
@@ -277,13 +270,15 @@ Implements BcryptInterface
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim l, r as UInt32
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  for i as integer = 1 to blocks
 		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
 		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
-		    Decipher( l, r )
+		    Decipher( l, r, buffer, bufferPtr )
 		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
@@ -300,12 +295,8 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32)
+		Private Sub Encipher(ByRef x0 As UInt32, ByRef x1 As UInt32, buffer As MemoryBlock, bufferPtr As Ptr)
 		  // The main loop for processing Encipher
-		  
-		  while not FlagEncipher.TrySignal
-		    App.YieldToNextThread
-		  wend
 		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -317,9 +308,9 @@ Implements BcryptInterface
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
 		  
-		  static mb as new MemoryBlock( 4 )
-		  static pt as Ptr = mb
-		  static isLittleEndian as boolean = mb.LittleEndian
+		  dim mb as MemoryBlock = buffer
+		  dim pt as Ptr = bufferPtr
+		  static isLittleEndian as boolean = mb.LittleEndian // This will never change
 		  
 		  dim xl as UInt32 = x0
 		  dim xr as Uint32 = x1
@@ -377,8 +368,6 @@ Implements BcryptInterface
 		  x0 = xr
 		  x1 = xl
 		  
-		  FlagEncipher.Release
-		  
 		End Sub
 	#tag EndMethod
 
@@ -396,11 +385,13 @@ Implements BcryptInterface
 		  dim byteIndex as integer
 		  dim x0 as UInt32
 		  dim x1 as UInt32
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  for thisBlock as integer = 1 to blocks
 		    x0 = dataPtr.UInt32( byteIndex )
 		    x1 = dataPtr.UInt32( byteIndex + 4 )
-		    Encipher( x0, x1 )
+		    Encipher( x0, x1, buffer, bufferPtr )
 		    dataPtr.UInt32( byteIndex ) = x0
 		    dataPtr.UInt32( byteIndex + 4 ) = x1
 		    
@@ -436,6 +427,8 @@ Implements BcryptInterface
 		  dim dataPtr as Ptr = data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex, dataIndex as integer
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  for i as integer = 1 to blocks
 		    for j as integer = 0 to 7
@@ -446,7 +439,7 @@ Implements BcryptInterface
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
 		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
-		    Encipher( l, r )
+		    Encipher( l, r, buffer, bufferPtr )
 		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
@@ -479,13 +472,15 @@ Implements BcryptInterface
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim l, r as UInt32
+		  dim buffer as new MemoryBlock( 4 )
+		  dim bufferPtr as ptr = buffer
 		  
 		  for i as integer = 1 to blocks
 		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
 		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
 		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
-		    Encipher( l, r )
+		    Encipher( l, r, buffer, bufferPtr )
 		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
 		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
@@ -501,7 +496,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(key As MemoryBlock)
+		Private Sub Expand0State(key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr)
 		  if key.Size = 0 then
 		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		  end if
@@ -520,17 +515,20 @@ Implements BcryptInterface
 		  dim d0, d1 as UInt32
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
+		  dim streamBuffer as new MemoryBlock( 4 )
+		  streamBuffer.LittleEndian = false
+		  dim streamBufferPtr as ptr = streamBuffer
 		  
 		  const kLastIndex as integer = BLF_N + 1
 		  for i = 0 to kLastIndex
-		    temp = Stream2Word( key, j )
+		    temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		    arrIndex = i * 4
 		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
-		    self.Encipher( d0, d1 )
+		    self.Encipher( d0, d1, buffer, bufferPtr )
 		    arrIndex = i * 4
 		    myPPtr.UInt32( arrIndex ) = d0
 		    myPPtr.Uint32( arrIndex + 4 ) = d1
@@ -539,7 +537,7 @@ Implements BcryptInterface
 		  for i = 0 to 3
 		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
-		      self.Encipher( d0, d1 )
+		      self.Encipher( d0, d1, buffer, bufferPtr )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
 		      mySPtr.UInt32( arrIndex ) = d0
@@ -551,7 +549,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ExpandState(data As MemoryBlock, key As MemoryBlock)
+		Private Sub ExpandState(data As MemoryBlock, key As MemoryBlock, buffer As MemoryBlock, bufferPtr As Ptr)
 		  RaiseErrorIf( key.Size = 0, kErrorKeyCannotBeEmpty )
 		  WasKeySet = true
 		  
@@ -567,20 +565,23 @@ Implements BcryptInterface
 		  dim temp as UInt32
 		  dim x0 as UInt32
 		  dim x1 as UInt32
+		  dim streamBuffer as new MemoryBlock( 4 )
+		  streamBuffer.LittleEndian = false
+		  dim streamBufferPtr as ptr = streamBuffer
 		  
 		  const kLastIndex as Integer = BLF_N + 1
 		  for i = 0 to kLastIndex
-		    temp = Stream2Word( key, j )
+		    temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
-		    x0 = x0 Xor Stream2Word( data, j )
-		    x1 = x1 Xor Stream2Word( data, j )
+		    x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		    x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
 		    
-		    Encipher( x0, x1 )
+		    Encipher( x0, x1, buffer, bufferPtr )
 		    
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = x0
@@ -590,10 +591,10 @@ Implements BcryptInterface
 		  for i = 0 to 3
 		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
-		      x0 = x0 Xor Stream2Word( data, j )
-		      x1 = x1 Xor Stream2Word( data, j )
+		      x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		      x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
 		      
-		      Encipher( x0, x1 )
+		      Encipher( x0, x1, buffer, bufferPtr )
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
 		      self.SPtr.UInt32( arrIndex ) = x0
@@ -930,7 +931,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer) As UInt32
+		Private Shared Function Stream2Word(data As MemoryBlock, ByRef current As Integer, buffer As MemoryBlock, bufferPtr As Ptr) As UInt32
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -958,34 +959,17 @@ Implements BcryptInterface
 		    
 		  else
 		    
-		    #if not DebugBuild
-		      #pragma BackgroundTasks true
-		    #endif
-		    
-		    while not FlagStream2Word.TrySignal
-		      App.YieldToNextThread
-		    wend
-		    
-		    #if not DebugBuild
-		      #pragma BackgroundTasks false
-		    #endif
-		    
 		    dim dataPtr as Ptr = data
 		    
-		    static newMB as new MemoryBlock( 4 )
-		    static newMBPtr as Ptr = newMB
-		    newMB.LittleEndian = false
 		    for i as Integer = 0 to 3
 		      if j >= databytes then
 		        j = 0
 		      end if
 		      'r = Bitwise.ShiftLeft( r, 8, 32 ) or dataPtr.Byte( j )
-		      newMBPtr.Byte( i ) = dataPtr.Byte( j )
+		      bufferPtr.Byte( i ) = dataPtr.Byte( j )
 		      j = j + 1
 		    next i
-		    r = newMB.UInt32Value( 0 )
-		    
-		    FlagStream2Word.Release
+		    r = buffer.UInt32Value( 0 )
 		  end if
 		  
 		  current = j
@@ -1043,18 +1027,6 @@ Implements BcryptInterface
 		#tag EndGetter
 		Private BLF_MAXKEYLEN As Integer
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
-		Private Shared FlagDecipher As Semaphore
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared FlagEncipher As Semaphore
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared FlagStream2Word As Semaphore
-	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private P As MemoryBlock

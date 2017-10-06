@@ -100,14 +100,17 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
+		  dim smallBuffer as new MemoryBlock( 4 )
+		  dim smallBufferPtr as ptr = smallBuffer
+		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
-		  state.ExpandState( csalt, key )
+		  state.ExpandState( csalt, key, smallBuffer, smallBufferPtr )
 		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
-		    state.Expand0State( key )
-		    state.Expand0State( csalt )
+		    state.Expand0State( key, smallBuffer, smallBufferPtr )
+		    state.Expand0State( csalt, smallBuffer, smallBufferPtr )
 		  next k
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
