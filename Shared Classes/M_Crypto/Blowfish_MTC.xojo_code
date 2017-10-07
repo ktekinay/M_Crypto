@@ -237,6 +237,8 @@ Implements BcryptInterface
 		    zCurrentVector = tempMB.StringValue( byteIndex, 8 ) // For chain decrypting
 		  end if
 		  
+		  data.LittleEndian = false
+		  
 		  const kFF as Byte = &hFF
 		  
 		  for i as integer = blocks downto 1
@@ -257,16 +259,8 @@ Implements BcryptInterface
 		      vectorMB.Left( 8 ) = data.Mid( byteIndex - 8, 8 )
 		    end if
 		    
-		    l = _
-		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
-		    r = _
-		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    l = data.UInt32Value( byteIndex )
+		    r = data.UInt32Value( byteIndex + 4 )
 		    
 		    Decipher( l, r, buffer, bufferPtr )
 		    
@@ -303,19 +297,13 @@ Implements BcryptInterface
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  data.LittleEndian = false
+		  
 		  const kFF as Byte = &hFF
 		  
 		  for i as integer = 1 to blocks
-		    l = _
-		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
-		    r = _
-		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    l = data.UInt32Value( byteIndex )
+		    r = data.UInt32Value( byteIndex + 4 )
 		    
 		    Decipher( l, r, buffer, bufferPtr )
 		    
@@ -472,21 +460,15 @@ Implements BcryptInterface
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  data.LittleEndian = false
+		  
 		  const kFF as Byte = &hFF
 		  
 		  for i as integer = 1 to blocks
 		    dataPtr.UInt64( byteIndex ) = dataPtr.UInt64( byteIndex ) xor vectorPtr.UInt64( 0 )
 		    
-		    l = _
-		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
-		    r = _
-		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    l = data.UInt32Value( byteIndex )
+		    r = data.UInt32Value( byteIndex + 4 )
 		    
 		    Encipher( l, r, buffer, bufferPtr )
 		    
@@ -526,19 +508,13 @@ Implements BcryptInterface
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  data.LittleEndian = false
+		  
 		  const kFF as Byte = &hFF
 		  
 		  for i as integer = 1 to blocks
-		    l = _
-		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
-		    r = _
-		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
-		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
-		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    l = data.UInt32Value( byteIndex )
+		    r = data.UInt32Value( byteIndex + 4 )
 		    
 		    Encipher( l, r, buffer, bufferPtr )
 		    
