@@ -148,7 +148,6 @@ Protected Module Bcrypt_MTC
 		  r = r + buffer.CStringValue( 0 )
 		  
 		  ciphertext = new Xojo.Core.MutableMemoryBlock( ciphertext.Left( ciphertext.Size - 1 ) ) // Lop off last character
-		  'ciphertext.Size = ciphertext.Size - 1 // Lop off last character
 		  pEncodeBase64( buffer, ciphertext )
 		  r = r + buffer.CStringValue( 0 )
 		  
