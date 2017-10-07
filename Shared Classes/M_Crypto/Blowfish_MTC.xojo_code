@@ -414,8 +414,7 @@ Implements BcryptInterface
 		  
 		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
 		  if vectorMB is nil and InitialVector isa object then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
-		    vectorMB.Left( vectorMB.Size ) = InitialVector
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
 		    zCurrentVector = vectorMB
 		  end if
 		  

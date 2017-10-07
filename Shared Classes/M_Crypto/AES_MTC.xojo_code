@@ -332,8 +332,7 @@ Inherits M_Crypto.Encrypter
 		  if zCurrentVector isa object then
 		    vectorMB = zCurrentVector
 		  elseif InitialVector isa object then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
-		    vectorMB.Left( vectorMB.Size ) = InitialVector
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
 		  else
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
