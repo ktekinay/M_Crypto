@@ -136,7 +136,7 @@ Implements BcryptInterface
 		    end if
 		    
 		    j = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		     Xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		    Xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		    + mySPtr.UInt32( ( 768 + d ) * 4 )
 		    
 		    xr = xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
@@ -204,12 +204,6 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
-		  dim vector as string = zCurrentVector
-		  
-		  if vector = "" then
-		    vector = InitialVector
-		  end if
-		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -217,42 +211,35 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
-		  dim vectorPtr as Ptr = vectorMB.Data
-		  dim dataPtr as Ptr = data.Data
 		  dim l, r as UInt32
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
-		  if vector = "" then
-		    vector = CurrentVector
+		  dim savedInitialVectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
+		  if zCurrentVector isa object then
+		    savedInitialVectorMB.Left( 8 ) = zCurrentVector.Left( 8 )
+		  elseif InitialVector isa object then
+		    savedInitialVectorMB.Left( 8 ) = InitialVector.Left( 8 )
 		  end if
 		  
-		  if isFinalBlock then
-		    zCurrentVector = ""
-		  else
-		    dim tempMB as MemoryBlock = dataPtr
-		    zCurrentVector = tempMB.StringValue( byteIndex, 8 ) // For chain decrypting
+		  if not isFinalBlock then
+		    if zCurrentVector is nil then
+		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( 8 )
+		    end if
+		    zCurrentVector.Left( 8 ) = data.Mid( byteIndex, 8 ) // For chain decrypting
 		  end if
 		  
+		  dim dataPtr as ptr = data.Data
 		  data.LittleEndian = false
+		  
+		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
+		  dim vectorPtr as Ptr = vectorMB.Data
 		  
 		  for i as integer = blocks downto 1
 		    if i = 1 then
-		      if vector = "" then
-		        vectorMB = new Xojo.Core.MutableMemoryBlock( 8 )
-		        vectorPtr = vectorMB.Data
-		      else
-		        if vectorMB is nil then
-		          vectorMB = new Xojo.Core.MutableMemoryBlock( 8 )
-		          vectorPtr = vectorMB.Data
-		        end if
-		        dim tempMB as MemoryBlock = vector
-		        dim temp2MB as new Xojo.Core.MemoryBlock( tempMB, tempMB.Size )
-		        vectorMB.Left( 8 ) = temp2MB.Left( 8 )
-		      end if
+		      vectorMB.Left( 8 ) = savedInitialVectorMB.Left( 8 )
 		    else // i <> 1
 		      vectorMB.Left( 8 ) = data.Mid( byteIndex - 8, 8 )
 		    end if
@@ -282,7 +269,6 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim l, r as UInt32
@@ -417,6 +403,8 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		  #pragma unused isFinalBlock
+		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -424,18 +412,16 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim vector as string = zCurrentVector
-		  
-		  if vector = "" then
-		    vector = InitialVector
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
+		    vectorMB.Left( vectorMB.Size ) = InitialVector.Left( InitialVector.Size )
+		    zCurrentVector = vectorMB
 		  end if
 		  
-		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
-		  if vector = "" then vector = CurrentVector
-		  if vector <> "" then
-		    dim tempMB as MemoryBlock = vector
-		    dim temp2MB as new Xojo.Core.MemoryBlock( tempMB, tempMB.Size )
-		    vectorMB.Left( 8 ) = temp2MB.Left( 8 )
+		  if vectorMB is nil then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( 8 )
+		    zCurrentVector = vectorMB
 		  end if
 		  dim vectorPtr as ptr = vectorMB.Data
 		  
@@ -463,10 +449,6 @@ Implements BcryptInterface
 		    byteIndex = byteIndex + 8
 		  next i
 		  
-		  if not isFinalBlock then
-		    dim tempMB as MemoryBlock = vectorPtr
-		    zCurrentVector = tempMB.StringValue( 0, vectorMB.Size ) // So the user can block chain if desired
-		  end if
 		End Sub
 	#tag EndMethod
 
@@ -479,7 +461,6 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim l, r as UInt32

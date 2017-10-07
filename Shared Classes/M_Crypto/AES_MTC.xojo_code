@@ -277,13 +277,14 @@ Inherits M_Crypto.Encrypter
 		  dim originalData as MemoryBlock = data.StringValue( 0, data.Size )
 		  dim originalDataPtr as ptr = originalData
 		  
-		  dim vector as string = zCurrentVector
-		  if vector = "" then
-		    vector = InitialVector
+		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		  if zCurrentVector isa object then
+		    vectorMB.Left( vectorMB.Size ) = zCurrentVector.Left( zCurrentVector.Size )
+		  elseif InitialVector isa object then
+		    vectorMB.Left( kBlockLen ) = InitialVector.Left( kBlockLen )
 		  end if
 		  
-		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
-		  dim vectorPtr as ptr = vectorMB
+		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
@@ -293,8 +294,11 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = vectorPtr
-		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
+		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
+		    if zCurrentVector is nil then
+		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    end if
+		    zCurrentVector.Left( kBlockLen ) = temp.Left( kBlockLen )
 		  end if
 		  
 		  
@@ -324,25 +328,31 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data 
 		  
-		  dim vector as string = zCurrentVector
-		  if vector = "" then
-		    vector = InitialVector
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock
+		  if zCurrentVector isa object then
+		    vectorMB = zCurrentVector
+		  elseif InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
+		    vectorMB.Left( vectorMB.Size ) = InitialVector.Left( InitialVector.Size )
+		  else
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
-		  dim vectorPtr as ptr = vectorMB
+		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
 		    XorWithVector dataPtr, startAt, vectorPtr
 		    Cipher dataPtr, startAt
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
-		    'vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = vectorPtr
-		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
+		    if zCurrentVector is nil then
+		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    end if
+		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
+		    zCurrentVector.Left( kBlockLen ) = temp.Left( kBlockLen )
 		  end if
 		  
 		End Sub

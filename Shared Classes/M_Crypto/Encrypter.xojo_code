@@ -30,7 +30,7 @@ Protected Class Encrypter
 		    
 		    if isFinalBlock then
 		      DepadIfNeeded( d )
-		      zCurrentVector = ""
+		      zCurrentVector = nil
 		    end if
 		    
 		    return d
@@ -175,7 +175,7 @@ Protected Class Encrypter
 		    RaiseEvent Encrypt( f, d, isfinalBlock )
 		    
 		    if isFinalBlock then
-		      zCurrentVector = ""
+		      zCurrentVector = nil
 		    end if
 		    
 		    return d
@@ -308,12 +308,15 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Sub SetInitialVector(vector As String)
-		  if vector <> "" then
-		    vector = InterpretVector( vector )
-		    RaiseErrorIf vector.LenB <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
+		  if vector = "" then
+		    InitialVector = nil
+		    return
 		  end if
 		  
-		  InitialVector = vector
+		  vector = InterpretVector( vector )
+		  RaiseErrorIf vector.LenB <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
+		  
+		  InitialVector = StringToMutableMemoryBlock( vector )
 		  
 		End Sub
 	#tag EndMethod
@@ -353,14 +356,15 @@ Protected Class Encrypter
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  return zCurrentVector
+			  return MemoryBlockToString( zCurrentVector )
+			  
 			End Get
 		#tag EndGetter
 		CurrentVector As String
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
-		Protected InitialVector As String
+		Protected InitialVector As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
@@ -384,7 +388,7 @@ Protected Class Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected zCurrentVector As String
+		Protected zCurrentVector As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 

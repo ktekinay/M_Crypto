@@ -1,5 +1,20 @@
 #tag Module
 Protected Module M_Crypto
+	#tag Method, Flags = &h21
+		Private Sub CopyStringToMutableMemoryBlock(s As MemoryBlock, ByRef mb As Xojo.Core.MutableMemoryBlock)
+		  dim temp as new Xojo.Core.MemoryBlock( s, s.Size )
+		  
+		  dim required as integer = s.Size
+		  dim current as integer = mb.Size
+		  
+		  if required <> current then
+		    mb = new Xojo.Core.MutableMemoryBlock( required )
+		  end if 
+		  
+		  mb.Left( required ) = temp.Left( required )
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function GenerateUUID() As String
 		  // Tries to use declares to let the native system functions handle this.
@@ -180,6 +195,26 @@ Protected Module M_Crypto
 		  end if
 		  
 		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MemoryBlockToString(mb As Xojo.Core.MemoryBlock) As String
+		  if mb is nil or mb.Size = 0 then
+		    return ""
+		  end if
+		  
+		  dim temp as MemoryBlock = mb.Data
+		  return temp.StringValue( 0, mb.Size )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function StringToMutableMemoryBlock(s As MemoryBlock) As Xojo.Core.MutableMemoryBlock
+		  dim temp as new Xojo.Core.MemoryBlock( s, s.Size )
+		  dim mb as new Xojo.Core.MutableMemoryBlock( s.Size )
+		  mb.Left( s.Size ) = temp.Left( s.Size )
+		  return mb
 		End Function
 	#tag EndMethod
 
