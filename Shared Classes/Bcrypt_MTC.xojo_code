@@ -254,7 +254,7 @@ Protected Module Bcrypt_MTC
 		  dim bp, p as integer
 		  dim bufferPtr as Ptr = buffer.Data
 		  dim dataPtr as Ptr = data.Data
-		  dim base64AlphabetPtr as Ptr = zBase64AlphabetMB
+		  dim base64AlphabetPtr as Ptr = Base64AlphabetMB
 		  
 		  dim c1, c2 as byte
 		  
@@ -359,7 +359,7 @@ Protected Module Bcrypt_MTC
 			  return mb
 			End Get
 		#tag EndGetter
-		Private zBase64AlphabetMB As MemoryBlock
+		Private Base64AlphabetMB As MemoryBlock
 	#tag EndComputedProperty
 
 
