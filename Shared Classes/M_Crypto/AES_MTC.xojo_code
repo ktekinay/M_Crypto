@@ -279,9 +279,9 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  if zCurrentVector isa object then
-		    vectorMB.Left( vectorMB.Size ) = zCurrentVector.Left( zCurrentVector.Size )
+		    vectorMB.Left( vectorMB.Size ) = zCurrentVector
 		  elseif InitialVector isa object then
-		    vectorMB.Left( kBlockLen ) = InitialVector.Left( kBlockLen )
+		    vectorMB.Left( kBlockLen ) = InitialVector
 		  end if
 		  
 		  dim vectorPtr as ptr = vectorMB.Data
@@ -298,7 +298,7 @@ Inherits M_Crypto.Encrypter
 		    if zCurrentVector is nil then
 		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		    end if
-		    zCurrentVector.Left( kBlockLen ) = temp.Left( kBlockLen )
+		    zCurrentVector.Left( kBlockLen ) = temp
 		  end if
 		  
 		  
@@ -333,7 +333,7 @@ Inherits M_Crypto.Encrypter
 		    vectorMB = zCurrentVector
 		  elseif InitialVector isa object then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
-		    vectorMB.Left( vectorMB.Size ) = InitialVector.Left( InitialVector.Size )
+		    vectorMB.Left( vectorMB.Size ) = InitialVector
 		  else
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
@@ -352,7 +352,7 @@ Inherits M_Crypto.Encrypter
 		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		    end if
 		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
-		    zCurrentVector.Left( kBlockLen ) = temp.Left( kBlockLen )
+		    zCurrentVector.Left( kBlockLen ) = temp
 		  end if
 		  
 		End Sub
@@ -432,18 +432,6 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function GetVectorMB(vector As String) As MemoryBlock
-		  dim mb as new MemoryBlock( kBlockLen )
-		  if vector <> "" then
-		    vector = vector.LeftB( kBlockLen )
-		    mb.StringValue( 0, vector.LenB ) = vector
-		  end if
-		  
-		  return mb
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21

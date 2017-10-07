@@ -219,9 +219,9 @@ Implements BcryptInterface
 		  
 		  dim savedInitialVectorMB as new Xojo.Core.MutableMemoryBlock( 8 )
 		  if zCurrentVector isa object then
-		    savedInitialVectorMB.Left( 8 ) = zCurrentVector.Left( 8 )
+		    savedInitialVectorMB.Left( 8 ) = zCurrentVector
 		  elseif InitialVector isa object then
-		    savedInitialVectorMB.Left( 8 ) = InitialVector.Left( 8 )
+		    savedInitialVectorMB.Left( 8 ) = InitialVector
 		  end if
 		  
 		  if not isFinalBlock then
@@ -415,7 +415,7 @@ Implements BcryptInterface
 		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
 		  if vectorMB is nil and InitialVector isa object then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector.Size )
-		    vectorMB.Left( vectorMB.Size ) = InitialVector.Left( InitialVector.Size )
+		    vectorMB.Left( vectorMB.Size ) = InitialVector
 		    zCurrentVector = vectorMB
 		  end if
 		  
