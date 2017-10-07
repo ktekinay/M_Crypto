@@ -239,8 +239,6 @@ Implements BcryptInterface
 		  
 		  data.LittleEndian = false
 		  
-		  const kFF as Byte = &hFF
-		  
 		  for i as integer = blocks downto 1
 		    if i = 1 then
 		      if vector = "" then
@@ -264,14 +262,8 @@ Implements BcryptInterface
 		    
 		    Decipher( l, r, buffer, bufferPtr )
 		    
-		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    data.UInt32Value( byteIndex ) = l
+		    data.UInt32Value( byteIndex + 4 ) = r
 		    
 		    dataPtr.UInt64( byteIndex ) = dataPtr.UInt64( byteIndex ) xor vectorPtr.UInt64( 0 )
 		    
@@ -299,7 +291,7 @@ Implements BcryptInterface
 		  
 		  data.LittleEndian = false
 		  
-		  const kFF as Byte = &hFF
+		  const kFF as UInt32 = &hFF
 		  
 		  for i as integer = 1 to blocks
 		    l = data.UInt32Value( byteIndex )
@@ -307,14 +299,8 @@ Implements BcryptInterface
 		    
 		    Decipher( l, r, buffer, bufferPtr )
 		    
-		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    data.UInt32Value( byteIndex ) = l
+		    data.UInt32Value( byteIndex + 4 ) = r
 		    
 		    byteIndex = byteIndex + 8
 		  next i
@@ -462,8 +448,6 @@ Implements BcryptInterface
 		  
 		  data.LittleEndian = false
 		  
-		  const kFF as Byte = &hFF
-		  
 		  for i as integer = 1 to blocks
 		    dataPtr.UInt64( byteIndex ) = dataPtr.UInt64( byteIndex ) xor vectorPtr.UInt64( 0 )
 		    
@@ -472,14 +456,8 @@ Implements BcryptInterface
 		    
 		    Encipher( l, r, buffer, bufferPtr )
 		    
-		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    data.UInt32Value( byteIndex ) = l
+		    data.UInt32Value( byteIndex + 4 ) = r
 		    
 		    vectorMB.Left( 8 ) = data.Mid( byteIndex, 8 )
 		    byteIndex = byteIndex + 8
@@ -510,22 +488,14 @@ Implements BcryptInterface
 		  
 		  data.LittleEndian = false
 		  
-		  const kFF as Byte = &hFF
-		  
 		  for i as integer = 1 to blocks
 		    l = data.UInt32Value( byteIndex )
 		    r = data.UInt32Value( byteIndex + 4 )
 		    
 		    Encipher( l, r, buffer, bufferPtr )
 		    
-		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
-		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
+		    data.UInt32Value( byteIndex ) = l
+		    data.UInt32Value( byteIndex + 4 ) = r
 		    
 		    byteIndex = byteIndex + 8
 		  next i
