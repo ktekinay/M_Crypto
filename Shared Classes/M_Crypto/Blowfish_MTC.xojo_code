@@ -223,7 +223,6 @@ Implements BcryptInterface
 		  dim l, r as UInt32
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer = ( ( data.Size \ 8 ) * 8 ) - 8
-		  dim dataIndex as integer
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
@@ -237,6 +236,8 @@ Implements BcryptInterface
 		    dim tempMB as MemoryBlock = dataPtr
 		    zCurrentVector = tempMB.StringValue( byteIndex, 8 ) // For chain decrypting
 		  end if
+		  
+		  const kFF as Byte = &hFF
 		  
 		  for i as integer = blocks downto 1
 		    if i = 1 then
@@ -256,24 +257,29 @@ Implements BcryptInterface
 		      vectorMB.Left( 8 ) = data.Mid( byteIndex - 8, 8 )
 		    end if
 		    
-		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
-		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    l = _
+		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
+		    r = _
+		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    
 		    Decipher( l, r, buffer, bufferPtr )
-		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    
+		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
-		    for j as integer = 0 to 7
-		      dataIndex = byteIndex + j
-		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) Xor vectorPtr.Byte( j )
-		    next j
+		    dataPtr.UInt64( byteIndex ) = dataPtr.UInt64( byteIndex ) xor vectorPtr.UInt64( 0 )
 		    
 		    byteIndex = byteIndex - 8
 		  next i
@@ -297,19 +303,29 @@ Implements BcryptInterface
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  const kFF as Byte = &hFF
+		  
 		  for i as integer = 1 to blocks
-		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
-		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    l = _
+		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
+		    r = _
+		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    
 		    Decipher( l, r, buffer, bufferPtr )
-		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    
+		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
 		    byteIndex = byteIndex + 8
@@ -452,27 +468,35 @@ Implements BcryptInterface
 		  dim r, l as UInt32
 		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
-		  dim byteIndex, dataIndex as integer
+		  dim byteIndex as integer
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  const kFF as Byte = &hFF
+		  
 		  for i as integer = 1 to blocks
-		    for j as integer = 0 to 7
-		      dataIndex = byteIndex + j
-		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) Xor vectorPtr.Byte( j )
-		    next j
-		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
-		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    dataPtr.UInt64( byteIndex ) = dataPtr.UInt64( byteIndex ) xor vectorPtr.UInt64( 0 )
+		    
+		    l = _
+		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
+		    r = _
+		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    
 		    Encipher( l, r, buffer, bufferPtr )
-		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    
+		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
 		    vectorMB.Left( 8 ) = data.Mid( byteIndex, 8 )
@@ -502,19 +526,29 @@ Implements BcryptInterface
 		  dim buffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim bufferPtr as ptr = buffer.Data
 		  
+		  const kFF as Byte = &hFF
+		  
 		  for i as integer = 1 to blocks
-		    l = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 1 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 2 ), 8, 32 ) or dataPtr.Byte( byteIndex + 3 )
-		    r = Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 4 ), 24, 32 ) or Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 5 ), 16, 32 ) or _
-		    Bitwise.ShiftLeft( dataPtr.Byte( byteIndex + 6 ), 8, 32 ) or dataPtr.Byte( byteIndex + 7 )
+		    l = _
+		    ( CType( dataPtr.Byte( byteIndex ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 1 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 2 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 3 ), UInt32 )
+		    r = _
+		    ( CType( dataPtr.Byte( byteIndex + 4 ), UInt32 ) * CType( 2 ^ 24, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 5 ), UInt32 ) * CType( 2 ^ 16, UInt32 ) ) or _
+		    ( CType( dataPtr.Byte( byteIndex + 6 ), UInt32 ) * CType( 2 ^ 8, UInt32 ) ) or _
+		    CType( dataPtr.Byte( byteIndex + 7 ), UInt32 )
+		    
 		    Encipher( l, r, buffer, bufferPtr )
-		    dataPtr.Byte( byteIndex ) = Bitwise.ShiftRight( l, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 1 ) = Bitwise.ShiftRight( l, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 2 ) = Bitwise.ShiftRight( l, 8, 32 ) and &hFF
+		    
+		    dataPtr.Byte( byteIndex ) = CType( l \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 1 ) = CType( l \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 2 ) = CType( l \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 3 ) = l and &hFF
-		    dataPtr.Byte( byteIndex + 4 ) = Bitwise.ShiftRight( r, 24, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 5 ) = Bitwise.ShiftRight( r, 16, 32 ) and &hFF
-		    dataPtr.Byte( byteIndex + 6 ) = Bitwise.ShiftRight( r, 8, 32 ) and &hFF
+		    dataPtr.Byte( byteIndex + 4 ) = CType( r \ CType( 2 ^ 24, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 5 ) = CType( r \ CType( 2 ^ 16, UInt32 ), Byte ) and kFF
+		    dataPtr.Byte( byteIndex + 6 ) = CType( r \ CType( 2 ^ 8, UInt32 ), Byte ) and kFF
 		    dataPtr.Byte( byteIndex + 7 ) = r and &hFF
 		    
 		    byteIndex = byteIndex + 8

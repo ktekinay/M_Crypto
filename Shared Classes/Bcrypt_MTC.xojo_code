@@ -92,7 +92,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  logr = n
-		  rounds = Bitwise.ShiftLeft( 1, logr )
+		  rounds = 2 ^ logr
 		  if rounds < BCRYPT_MINROUNDS then
 		    return ""
 		  end if
