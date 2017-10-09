@@ -3,7 +3,8 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  WndEncryption.Show
+		  dim w as new WndEncryption
+		  w.Show
 		  
 		End Sub
 	#tag EndEvent
@@ -11,7 +12,8 @@ Inherits Application
 
 	#tag MenuHandler
 		Function FileEncryptionWindow() As Boolean Handles FileEncryptionWindow.Action
-			WndEncryption.Show
+			dim w as new WndEncryption
+			w.Show
 			return true
 			
 		End Function
