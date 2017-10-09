@@ -300,6 +300,11 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.2.2__ (_)
+
+- Harness now allows multiple encryption windows.
+- Encryption window hides the encryption key unless that field has focus.
+
 __2.2.1__ (Oct. 7, 2017)
 
 - Dramatically sped up Scrypt.
