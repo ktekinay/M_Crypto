@@ -8,10 +8,10 @@ Begin Menu MenuBar1
       Visible = True
       Begin MenuItem FileEncryptionWindow
          SpecialMenu = 0
-         Text = "Encryption"
+         Text = "New Encryption"
          Index = -2147483648
-         ShortcutKey = "1"
-         Shortcut = "Cmd+1"
+         ShortcutKey = "N"
+         Shortcut = "Cmd+N"
          MenuModifier = True
          AutoEnable = True
          Visible = True
