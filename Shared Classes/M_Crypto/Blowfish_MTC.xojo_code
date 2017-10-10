@@ -21,9 +21,6 @@ Implements BcryptInterface
 		    
 		  end select
 		  
-		  dim temp as MemoryBlock = newData.Data
-		  data.StringValue( 0, data.Size ) = temp.StringValue( 0 , data.Size )
-		  
 		End Sub
 	#tag EndEvent
 
@@ -45,9 +42,6 @@ Implements BcryptInterface
 		    raise new M_Crypto.UnsupportedFunctionException
 		    
 		  end select
-		  
-		  dim temp as MemoryBlock = newData.Data
-		  data.StringValue( 0, data.Size ) = temp.StringValue( 0 , data.Size )
 		  
 		End Sub
 	#tag EndEvent
