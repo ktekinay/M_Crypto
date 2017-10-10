@@ -91,7 +91,6 @@ Inherits M_Crypto.Encrypter
 		  dim row3col2 as integer = row0col2 + 3
 		  dim row3col3 as integer = row0col3 + 3
 		  
-		  
 		  dim ptrSbox as ptr = Sbox
 		  dim round As integer = 0
 		  
@@ -99,7 +98,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the dataPtr, startAt before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrRoundKey as ptr = RoundKey.Data
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -387,25 +386,25 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub ExpandKey(key As String, nk As Integer)
-		  RoundKey = new MemoryBlock( KeyExpSize )
-		  dim ptrRoundKey as Ptr = RoundKey
-		  
 		  //
 		  // The first round key is the key itself.
 		  //
-		  RoundKey.StringValue( 0, KeyLen ) = key.LeftB( KeyLen )
+		  RoundKey = new Xojo.Core.MutableMemoryBlock( KeyExpSize )
+		  M_Crypto.CopyStringToMutableMemoryBlock( key.LeftB( KeyLen ), RoundKey )
+		  
+		  dim ptrRoundKey as Ptr = RoundKey.Data
 		  
 		  //
 		  // All other round keys are found from the previous round keys.
 		  //
-		  dim tempa as new MemoryBlock( 4 )
-		  dim ptrTempa as ptr = tempa
+		  dim tempa as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim ptrTempa as ptr = tempa.Data
 		  dim ptrSbox as ptr = Sbox
 		  dim ptrRcon as ptr = Rcon
 		  
 		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
 		  for i As integer = nk to iLast
-		    tempa.StringValue( 0, 4 ) = RoundKey.StringValue( ( i - 1 ) * 4, 4 )
+		    tempa.Left( 4 ) = RoundKey.Mid( ( i - 1 ) * 4, 4 )
 		    
 		    if ( i mod nk ) = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
@@ -413,7 +412,7 @@ Inherits M_Crypto.Encrypter
 		      
 		      // Function RotWord()
 		      dim firstByte As integer = ptrTempa.Byte( 0 )
-		      tempa.StringValue( 0, 3 ) = tempa.StringValue( 1, 3 )
+		      tempa.Left( 3 ) = tempa.Mid( 1, 3 )
 		      ptrTempa.Byte( 3 ) = firstByte
 		      
 		      // SubWord() is a function that takes a four-byte input word and 
@@ -592,7 +591,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the state before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrRoundKey as ptr = RoundKey.Data
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -1038,7 +1037,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private RoundKey As MemoryBlock
+		Private RoundKey As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
