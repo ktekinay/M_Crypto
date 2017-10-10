@@ -71,10 +71,26 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Used for ShiftRows
 		  //
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
+		  
 		  
 		  dim ptrSbox as ptr = Sbox
 		  dim round As integer = 0
@@ -117,31 +133,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 columns to left  
 		    //
-		    temp = dataPtr.Byte( index0 + 1 )
-		    dataPtr.Byte( index0 + 1 ) = dataPtr.Byte( index1 + 1 )
-		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index2 + 1 )
-		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index3 + 1 )
-		    dataPtr.Byte( index3 + 1 ) = temp
+		    temp = dataPtr.Byte( row1col0 )
+		    dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
+		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
+		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
+		    dataPtr.Byte( row1col3 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to left  
 		    //
-		    temp = dataPtr.Byte( index0 + 2 )
-		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		    dataPtr.Byte( index2 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col0 )
+		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		    dataPtr.Byte( row2col2 ) = temp
 		    
-		    temp = dataPtr.Byte( index1 + 2 )
-		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		    dataPtr.Byte( index3 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col1 )
+		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		    dataPtr.Byte( row2col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to left
 		    //
-		    temp = dataPtr.Byte( index0 + 3 )
-		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index3 + 3 )
-		    dataPtr.Byte( index3 + 3 ) = dataPtr.Byte( index2 + 3 )
-		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index1 + 3 )
-		    dataPtr.Byte( index1 + 3 ) = temp
+		    temp = dataPtr.Byte( row3col0 )
+		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
+		    dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
+		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
+		    dataPtr.Byte( row3col1 ) = temp
 		    
 		    if round <> NumberOfRounds then
 		      //
@@ -549,10 +565,25 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Used for InvShiftRows
 		  //
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim ptrInvSbox as ptr = InvSbox
 		  dim round As integer = NumberOfRounds
@@ -585,31 +616,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 columns to right
 		    //
-		    temp = dataPtr.Byte( index3 + 1 )
-		    dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
-		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
-		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
-		    dataPtr.Byte( index0 + 1 ) = temp
+		    temp = dataPtr.Byte( row1col3 )
+		    dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
+		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
+		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
+		    dataPtr.Byte( row1col0 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to right 
 		    //
-		    temp = dataPtr.Byte( index0 + 2 )
-		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		    dataPtr.Byte( index2 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col0 )
+		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		    dataPtr.Byte( row2col2 ) = temp
 		    
-		    temp = dataPtr.Byte( index1 + 2 )
-		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		    dataPtr.Byte( index3 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col1 )
+		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		    dataPtr.Byte( row2col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to right
 		    //
-		    temp = dataPtr.Byte( index0 + 3 )
-		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
-		    dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
-		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
-		    dataPtr.Byte( index3 + 3 ) = temp
+		    temp = dataPtr.Byte( row3col0 )
+		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
+		    dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
+		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
+		    dataPtr.Byte( row3col3 ) = temp
 		    
 		    //
 		    // InvSubBytes
@@ -690,41 +721,56 @@ Inherits M_Crypto.Encrypter
 		  // This was manually unrolled into InvCipher
 		  //
 		  
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim temp As integer 
 		  
 		  //
 		  // Rotate first row 1 columns to right
 		  //
-		  temp = dataPtr.Byte( index3 + 1 )
-		  dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
-		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
-		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
-		  dataPtr.Byte( index0 + 1 ) = temp
+		  temp = dataPtr.Byte( row1col3 )
+		  dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
+		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
+		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
+		  dataPtr.Byte( row1col0 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to right 
 		  //
-		  temp = dataPtr.Byte( index0 + 2 )
-		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		  dataPtr.Byte( index2 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col0 )
+		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		  dataPtr.Byte( row2col2 ) = temp
 		  
-		  temp = dataPtr.Byte( index1 + 2 )
-		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		  dataPtr.Byte( index3 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col1 )
+		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		  dataPtr.Byte( row2col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to right
 		  //
-		  temp = dataPtr.Byte( index0 + 3 )
-		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
-		  dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
-		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
-		  dataPtr.Byte( index3 + 3 ) = temp
+		  temp = dataPtr.Byte( row3col0 )
+		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
+		  dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
+		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
+		  dataPtr.Byte( row3col3 ) = temp
 		  
 		End Sub
 	#tag EndMethod
@@ -842,41 +888,56 @@ Inherits M_Crypto.Encrypter
 		  // This was manually unrolled into Cipher
 		  //
 		  
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim temp As integer 
 		  
 		  //
 		  // Rotate first row 1 columns to left  
 		  //
-		  temp = dataPtr.Byte( index0 + 1 )
-		  dataPtr.Byte( index0 + 1 ) = dataPtr.Byte( index1 + 1 )
-		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index2 + 1 )
-		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index3 + 1 )
-		  dataPtr.Byte( index3 + 1 ) = temp
+		  temp = dataPtr.Byte( row1col0 )
+		  dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
+		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
+		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
+		  dataPtr.Byte( row1col3 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to left  
 		  //
-		  temp = dataPtr.Byte( index0 + 2 )
-		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		  dataPtr.Byte( index2 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col0 )
+		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		  dataPtr.Byte( row2col2 ) = temp
 		  
-		  temp = dataPtr.Byte( index1 + 2 )
-		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		  dataPtr.Byte( index3 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col1 )
+		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		  dataPtr.Byte( row2col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to left
 		  //
-		  temp = dataPtr.Byte( index0 + 3 )
-		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index3 + 3 )
-		  dataPtr.Byte( index3 + 3 ) = dataPtr.Byte( index2 + 3 )
-		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index1 + 3 )
-		  dataPtr.Byte( index1 + 3 ) = temp
+		  temp = dataPtr.Byte( row3col0 )
+		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
+		  dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
+		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
+		  dataPtr.Byte( row3col1 ) = temp
 		  
 		  
 		  
