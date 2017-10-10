@@ -1,17 +1,9 @@
 #tag Module
 Protected Module M_Crypto
 	#tag Method, Flags = &h21
-		Private Sub CopyStringToMutableMemoryBlock(s As MemoryBlock, ByRef mb As Xojo.Core.MutableMemoryBlock)
+		Private Sub CopyStringToMutableMemoryBlock(s As MemoryBlock, mb As Xojo.Core.MutableMemoryBlock)
 		  dim temp as new Xojo.Core.MemoryBlock( s, s.Size )
-		  
-		  dim required as integer = s.Size
-		  dim current as integer = mb.Size
-		  
-		  if required <> current then
-		    mb = new Xojo.Core.MutableMemoryBlock( required )
-		  end if 
-		  
-		  mb.Left( required ) = temp.Left( required )
+		  mb.Left( s.size ) = temp.Left( s.Size )
 		End Sub
 	#tag EndMethod
 
