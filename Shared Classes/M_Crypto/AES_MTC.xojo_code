@@ -233,7 +233,7 @@ Inherits M_Crypto.Encrypter
 		Sub Constructor(key As String, bits As EncryptionBits=EncryptionBits.Bits128, paddingMethod As Padding=Padding.PKCS)
 		  if XtimeMB is nil then
 		    //
-		    // Needs to be initialed
+		    // Needs to be initialized
 		    //
 		    InitXtime
 		    InitMultiplyTables
@@ -428,7 +428,7 @@ Inherits M_Crypto.Encrypter
 		      ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
 		      ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
 		      
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i / nk )
+		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ nk )
 		      
 		    end if
 		    
