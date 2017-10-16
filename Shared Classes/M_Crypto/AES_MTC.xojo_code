@@ -3,12 +3,14 @@ Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
 		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
+		  
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    DecryptECB data
+		    DecryptECB newData
 		    
 		  case Functions.CBC
-		    DecryptCBC data, isFinalBlock
+		    DecryptCBC newData, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -19,12 +21,14 @@ Inherits M_Crypto.Encrypter
 
 	#tag Event
 		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
+		  
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    EncryptECB data
+		    EncryptECB newData
 		    
 		  case Functions.CBC
-		    EncryptCBC( data, isFinalBlock )
+		    EncryptCBC newData, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -275,7 +279,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -283,14 +287,14 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data
+		  dim dataPtr as ptr = data.Data
 		  
 		  //
 		  // Copy the original data so we have source
 		  // for the vector
 		  //
-		  dim originalData as MemoryBlock = data.StringValue( 0, data.Size )
-		  dim originalDataPtr as ptr = originalData
+		  dim originalData as new Xojo.Core.MemoryBlock( data.Left( data.Size ) )
+		  dim originalDataPtr as ptr = originalData.Data
 		  
 		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  if zCurrentVector isa object then
@@ -321,8 +325,8 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As MemoryBlock)
-		  dim dataPtr as ptr = data
+		Private Sub DecryptECB(data As Xojo.Core.MutableMemoryBlock)
+		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastIndex As integer = data.Size - 1
 		  for startAt As integer = 0 to lastIndex step kBlockLen
@@ -333,7 +337,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -341,7 +345,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data 
+		  dim dataPtr as ptr = data.Data
 		  
 		  dim vectorMB as Xojo.Core.MutableMemoryBlock
 		  if zCurrentVector isa object then
@@ -373,8 +377,8 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As MemoryBlock)
-		  dim dataPtr as ptr = data
+		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
+		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
