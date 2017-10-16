@@ -38,7 +38,8 @@ Begin Menu MenuBar1
          Text = "#App.kFileQuit"
          Index = -2147483648
          ShortcutKey = "#App.kFileQuitShortcut"
-         Shortcut = "#App.kFileQuitShortcut"
+         Shortcut = "Cmd+#App.kFileQuitShortcut"
+         MenuModifier = True
          AutoEnable = True
          Visible = True
       End
