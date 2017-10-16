@@ -495,7 +495,7 @@ Inherits M_Crypto.Encrypter
 		      dim p as ptr = ptrs( i )
 		      dim v as integer = values( i )
 		      
-		      for x as integer = 0 to 256
+		      for x as integer = 0 to 255
 		        p.Byte( x ) = Multiply( x, v )
 		      next
 		    next
