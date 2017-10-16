@@ -2,15 +2,13 @@
 Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
-		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
-		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
-		  
+		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    DecryptECB newData
+		    DecryptECB data
 		    
 		  case Functions.CBC
-		    DecryptCBC newData, isFinalBlock
+		    DecryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -20,15 +18,13 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 	#tag Event
-		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
-		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
-		  
+		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    EncryptECB newData
+		    EncryptECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC newData, isFinalBlock
+		    EncryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -313,7 +309,7 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
+		    dim temp as new Xojo.Core.MemoryBlock( vectorPtr, kBlockLen )
 		    if zCurrentVector is nil then
 		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		    end if
@@ -1100,7 +1096,7 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4", Scope = Public
 	#tag EndConstant
 
 

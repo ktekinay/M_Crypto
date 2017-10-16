@@ -300,11 +300,13 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.2.2__ (_)
+__2.3__ (Oct. 16, 2017)
 
 - Harness now allows multiple encryption windows.
 - Encryption window hides the encryption key unless that field has focus.
 - Fixed bug in AES that could lead to a crash (using a Ptr to overwrite the bounds of a MemoryBlock by one byte).
+- Refactored around new framework MemoryBlock.
+- Quicker initialization for AES.
 
 __2.2.1__ (Oct. 7, 2017)
 

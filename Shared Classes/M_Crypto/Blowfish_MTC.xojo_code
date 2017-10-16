@@ -3,18 +3,16 @@ Class Blowfish_MTC
 Inherits M_Crypto.Encrypter
 Implements BcryptInterface
 	#tag Event
-		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
-		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
-		  
+		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Decrypt newData
+		    Decrypt data
 		    
 		  case Functions.ECB
-		    DecryptECB newData 
+		    DecryptECB data 
 		    
 		  case Functions.CBC
-		    DecryptCBC newData, isFinalBlock
+		    DecryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -25,18 +23,16 @@ Implements BcryptInterface
 	#tag EndEvent
 
 	#tag Event
-		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
-		  dim newData as new Xojo.Core.MutableMemoryBlock( data, data.Size )
-		  
+		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Encrypt newData
+		    Encrypt data
 		    
 		  case Functions.ECB
-		    EncryptECB newData
+		    EncryptECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC newData, isFinalBlock
+		    EncryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException

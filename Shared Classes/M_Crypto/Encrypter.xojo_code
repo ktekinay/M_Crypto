@@ -9,61 +9,64 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function Decrypt(f As Functions, data As String, isFinalBlock As Boolean) As String
+		Private Sub Decrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  
-		  if data = "" then
-		    return data
+		  if data.Size = 0 then
+		    return
 		  end if
 		  
 		  select case f
 		  case Functions.Default, Functions.CBC, Functions.ECB
-		    dim d as MemoryBlock = data
-		    
 		    if isFinalBlock then
-		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
+		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
 		    else
-		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		    end if
 		    
-		    RaiseEvent Decrypt( f, d, isFinalBlock )
+		    RaiseEvent Decrypt( f, data, isFinalBlock )
 		    
 		    if isFinalBlock then
-		      DepadIfNeeded( d )
+		      DepadIfNeeded( data )
 		      zCurrentVector = nil
 		    end if
-		    
-		    return d
 		    
 		  case else
 		    raise new M_Crypto.UnimplementedEnumException
 		    
 		  end select
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  return Decrypt( UseFunction, data, isFinalBlock )
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Decrypt( UseFunction, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  return Decrypt( Functions.CBC, data, isFinalBlock )
-		  
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Decrypt( Functions.CBC, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  return Decrypt( Functions.ECB, data, isFinalBlock )
-		  
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Decrypt( Functions.ECB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DepadIfNeeded(data As MemoryBlock)
+		Private Sub DepadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
 		  // See PadIfNeeded for a description of how padding works.
 		  
 		  if data is nil or data.Size = 0 then
@@ -71,35 +74,16 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim originalSize as integer = data.Size
+		  dim dataPtr as ptr = data.Data
 		  
 		  select case PaddingMethod
 		  case Padding.PKCS
 		    //
-		    // A pad is expected so this is the only method that will raise an exception if
+		    // A pad is expected so this will raise an exception if
 		    // it's not present
 		    //
-		    static paddingStrings() as string
-		    if paddingStrings.Ubound < BlockSize then
-		      dim firstIndex as integer = paddingStrings.Ubound + 1
-		      if firstIndex = 0 then
-		        //
-		        // Can never be a pad of zero
-		        //
-		        firstIndex = 1
-		      end if
-		      
-		      redim paddingStrings( BlockSize )
-		      for index as integer = firstIndex to BlockSize
-		        dim pad as string = ChrB( index )
-		        while pad.LenB < index
-		          pad = pad + pad
-		        wend
-		        pad = pad.LeftB( index )
-		        paddingStrings( index ) = pad
-		      next
-		    end if
 		    
-		    dim stripCount as integer = data.Byte( originalSize - 1 )
+		    dim stripCount as integer = dataPtr.Byte( originalSize - 1 )
 		    if stripCount = 0 or stripCount > BlockSize or stripCount > originalSize then
 		      //
 		      // These are impossible with PKCS
@@ -108,43 +92,67 @@ Protected Class Encrypter
 		      raise new M_Crypto.InvalidPaddingException
 		    end if
 		    
-		    dim testPad as string = data.StringValue( originalSize - stripCount, stripCount ) 
-		    if testPad = paddingStrings( stripCount ) then
-		      data.Size = originalSize - stripCount
-		    else
-		      //
-		      // Something is wrong
-		      //
-		      raise new M_Crypto.InvalidPaddingException
+		    dim lastIndex as integer = originalSize - 2
+		    dim firstIndex as integer = originalSize - stripCount
+		    if firstIndex < 0 then
+		      firstIndex = 0
 		    end if
+		    
+		    for byteIndex as integer = firstIndex to lastIndex
+		      if dataPtr.Byte( byteIndex ) <> stripCount then
+		        //
+		        // Something is wrong
+		        //
+		        raise new M_Crypto.InvalidPaddingException
+		      end if
+		    next
+		    
+		    data.Remove firstIndex, stripCount
 		    
 		  case Padding.NullsWithCount
 		    // Counterpart to padding. Will remove nulls followed by the number of nulls
 		    // from the end of the MemoryBlock.
-		    
 		    //
-		    // the original implementation would never add one just one byte, but rather would
+		    // The original implementation would never add one just one byte, but rather would
 		    // add BlockSize + 1. I've since discovered that the standard calls for padding to be
 		    // added in all cases so a single byte can be added to the end. However, to keep
-		    // compatible with the previous implementation, this will attempt to string
+		    // compatible with the previous implementation, this will attempt to strip
 		    // BlockSize + 1 if specified and if possible.
 		    //
 		    
-		    dim lastByte as integer = data.Byte( data.Size - 1 )
-		    if lastByte = 0 or lastByte > ( BlockSize + 1 ) or lastByte > data.Size then
+		    dim stripCount as integer = dataPtr.Byte( data.Size - 1 )
+		    if stripCount = 0 or stripCount > ( BlockSize + 1 ) or stripCount > data.Size then
 		      raise new M_Crypto.InvalidPaddingException
 		    end if
 		    
-		    data.Size = data.Size - lastByte
+		    dim lastIndex as integer = originalSize - 2
+		    dim firstIndex as integer = originalSize - stripCount
+		    if firstIndex < 0 then
+		      firstIndex = 0
+		    end if
+		    
+		    for byteIndex as integer = firstIndex to lastIndex
+		      if dataPtr.Byte( byteIndex ) <> 0 then
+		        //
+		        // Something is wrong
+		        //
+		        raise new M_Crypto.InvalidPaddingException
+		      end if
+		    next
+		    
+		    data.Remove firstIndex, stripCount
 		    
 		  case Padding.NullsOnly
 		    dim lastIndex as integer = originalSize - 1
 		    dim firstIndex as integer = originalSize - BlockSize
+		    if firstIndex < 0 then
+		      firstIndex = 0
+		    end if
 		    for index as integer = lastIndex downto firstIndex
-		      if data.Byte( index ) <> 0 then
+		      if dataPtr.Byte( index ) <> 0 then
 		        dim newSize as integer = index + 1
 		        if originalSize > newSize then
-		          data.Size = newSize
+		          data.Remove newSize, originalSize - newSize
 		        end if
 		        exit
 		      end if
@@ -155,54 +163,60 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function Encrypt(f As Functions, data As String, isFinalBlock As Boolean) As String
+		Private Sub Encrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  
-		  if data = "" then
-		    return data
+		  if data.Size = 0 then
+		    return
 		  end if
 		  
 		  select case f
 		  case Functions.Default, Functions.CBC, Functions.ECB
-		    dim d as MemoryBlock = data
-		    
 		    if isFinalBlock then
-		      PadIfNeeded( d )
+		      PadIfNeeded( data )
 		    else
-		      RaiseErrorIf( ( d.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		    end if
 		    
-		    RaiseEvent Encrypt( f, d, isfinalBlock )
+		    RaiseEvent Encrypt( f, data, isfinalBlock )
 		    
 		    if isFinalBlock then
 		      zCurrentVector = nil
 		    end if
 		    
-		    return d
+		    return
 		    
 		  case else
 		    raise new M_Crypto.UnimplementedEnumException
 		    
 		  end select
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
-		  return Encrypt( UseFunction, data, isFinalBlock )
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Encrypt( UseFunction, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  return Encrypt( Functions.CBC, data, isFinalBlock )
-		  
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Encrypt( Functions.CBC, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  return Encrypt( Functions.ECB, data, isFinalBlock )
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Encrypt( Functions.ECB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
 		End Function
 	#tag EndMethod
 
@@ -227,7 +241,7 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PadIfNeeded(data As MemoryBlock)
+		Private Sub PadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
 		  if data is nil or data.Size = 0 then
 		    return
 		  end if
@@ -246,14 +260,14 @@ Protected Class Encrypter
 		      padToAdd = BlockSize
 		    end if
 		    
-		    dim newSize as integer = originalSize + padToAdd
-		    data.Size = newSize
-		    dim firstIndex as integer = originalSize
-		    dim lastIndex as integer = newSize - 1
-		    dim p as Ptr = data
-		    for i as integer = firstIndex to lastIndex
-		      p.Byte( i ) = padToAdd
+		    dim adder as new Xojo.Core.MemoryBlock( padToAdd )
+		    dim adderLastIndex as integer = adder.Size - 1
+		    dim adderPtr as ptr = adder.Data
+		    
+		    for i as integer = 0 to adderLastIndex
+		      adderPtr.Byte( i ) = padToAdd
 		    next
+		    data.Append adder
 		    
 		  case Padding.NullsWithCount
 		    //
@@ -269,15 +283,17 @@ Protected Class Encrypter
 		    if padToAdd = 0 then
 		      padToAdd = BlockSize
 		    end if
-		    data.Size = data.Size + padToAdd
-		    data.Byte( data.Size - 1 ) = padToAdd
+		    dim adder as new Xojo.Core.MemoryBlock( padToAdd )
+		    adder.Data.Byte( adder.Size - 1 ) = padToAdd
+		    data.Append adder
 		    
 		  case Padding.NullsOnly
 		    //
 		    // Adds nulls to the end
 		    //
 		    if padToAdd <> 0 then
-		      data.Size = originalSize + padToAdd
+		      dim adder as new Xojo.Core.MemoryBlock( padToAdd )
+		      data.Append adder
 		    end if
 		    
 		  end select
@@ -332,11 +348,11 @@ Protected Class Encrypter
 
 
 	#tag Hook, Flags = &h0
-		Event Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		Event Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		Event Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
