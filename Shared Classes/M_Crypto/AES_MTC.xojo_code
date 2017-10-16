@@ -2,7 +2,7 @@
 Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
-		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
 		    DecryptECB data
@@ -18,13 +18,13 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 	#tag Event
-		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
+		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
 		    EncryptECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC( data, isFinalBlock )
+		    EncryptCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -71,10 +71,25 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Used for ShiftRows
 		  //
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim ptrSbox as ptr = Sbox
 		  dim round As integer = 0
@@ -83,7 +98,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the dataPtr, startAt before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrRoundKey as ptr = RoundKey.Data
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -117,31 +132,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 columns to left  
 		    //
-		    temp = dataPtr.Byte( index0 + 1 )
-		    dataPtr.Byte( index0 + 1 ) = dataPtr.Byte( index1 + 1 )
-		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index2 + 1 )
-		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index3 + 1 )
-		    dataPtr.Byte( index3 + 1 ) = temp
+		    temp = dataPtr.Byte( row1col0 )
+		    dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
+		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
+		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
+		    dataPtr.Byte( row1col3 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to left  
 		    //
-		    temp = dataPtr.Byte( index0 + 2 )
-		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		    dataPtr.Byte( index2 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col0 )
+		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		    dataPtr.Byte( row2col2 ) = temp
 		    
-		    temp = dataPtr.Byte( index1 + 2 )
-		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		    dataPtr.Byte( index3 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col1 )
+		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		    dataPtr.Byte( row2col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to left
 		    //
-		    temp = dataPtr.Byte( index0 + 3 )
-		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index3 + 3 )
-		    dataPtr.Byte( index3 + 3 ) = dataPtr.Byte( index2 + 3 )
-		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index1 + 3 )
-		    dataPtr.Byte( index1 + 3 ) = temp
+		    temp = dataPtr.Byte( row3col0 )
+		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
+		    dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
+		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
+		    dataPtr.Byte( row3col1 ) = temp
 		    
 		    if round <> NumberOfRounds then
 		      //
@@ -214,7 +229,7 @@ Inherits M_Crypto.Encrypter
 		Sub Constructor(key As String, bits As EncryptionBits=EncryptionBits.Bits128, paddingMethod As Padding=Padding.PKCS)
 		  if XtimeMB is nil then
 		    //
-		    // Needs to be initialed
+		    // Needs to be initialized
 		    //
 		    InitXtime
 		    InitMultiplyTables
@@ -260,7 +275,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -268,22 +283,23 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data
+		  dim dataPtr as ptr = data.Data
 		  
 		  //
 		  // Copy the original data so we have source
 		  // for the vector
 		  //
-		  dim originalData as MemoryBlock = data.StringValue( 0, data.Size )
-		  dim originalDataPtr as ptr = originalData
+		  dim originalData as new Xojo.Core.MemoryBlock( data.Left( data.Size ) )
+		  dim originalDataPtr as ptr = originalData.Data
 		  
-		  dim vector as string = zCurrentVector
-		  if vector = "" then
-		    vector = InitialVector
+		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		  if zCurrentVector isa object then
+		    vectorMB.Left( vectorMB.Size ) = zCurrentVector
+		  elseif InitialVector isa object then
+		    vectorMB.Left( kBlockLen ) = InitialVector
 		  end if
 		  
-		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
-		  dim vectorPtr as ptr = vectorMB
+		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
@@ -293,8 +309,11 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = vectorPtr
-		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
+		    dim temp as new Xojo.Core.MemoryBlock( vectorPtr, kBlockLen )
+		    if zCurrentVector is nil then
+		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    end if
+		    zCurrentVector.Left( kBlockLen ) = temp
 		  end if
 		  
 		  
@@ -302,8 +321,8 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As MemoryBlock)
-		  dim dataPtr as ptr = data
+		Private Sub DecryptECB(data As Xojo.Core.MutableMemoryBlock)
+		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastIndex As integer = data.Size - 1
 		  for startAt As integer = 0 to lastIndex step kBlockLen
@@ -314,7 +333,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -322,35 +341,40 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data 
+		  dim dataPtr as ptr = data.Data
 		  
-		  dim vector as string = zCurrentVector
-		  if vector = "" then
-		    vector = InitialVector
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock
+		  if zCurrentVector isa object then
+		    vectorMB = zCurrentVector
+		  elseif InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  else
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorMB as MemoryBlock = GetVectorMB( vector )
-		  dim vectorPtr as ptr = vectorMB
+		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
 		    XorWithVector dataPtr, startAt, vectorPtr
 		    Cipher dataPtr, startAt
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
-		    'vectorMB.StringValue( 0, vectorMB.Size ) = data.StringValue( startAt, vectorMB.Size )
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = vectorPtr
-		    zCurrentVector = vectorMB.StringValue( 0, kBlockLen )
+		    if zCurrentVector is nil then
+		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    end if
+		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
+		    zCurrentVector.Left( kBlockLen ) = temp
 		  end if
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As MemoryBlock)
-		  dim dataPtr as ptr = data
+		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
+		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
@@ -362,25 +386,25 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub ExpandKey(key As String, nk As Integer)
-		  RoundKey = new MemoryBlock( KeyExpSize )
-		  dim ptrRoundKey as Ptr = RoundKey
-		  
 		  //
 		  // The first round key is the key itself.
 		  //
-		  RoundKey.StringValue( 0, KeyLen ) = key.LeftB( KeyLen )
+		  RoundKey = new Xojo.Core.MutableMemoryBlock( KeyExpSize )
+		  M_Crypto.CopyStringToMutableMemoryBlock( key.LeftB( KeyLen ), RoundKey )
+		  
+		  dim ptrRoundKey as Ptr = RoundKey.Data
 		  
 		  //
 		  // All other round keys are found from the previous round keys.
 		  //
-		  dim tempa as new MemoryBlock( 4 )
-		  dim ptrTempa as ptr = tempa
+		  dim tempa as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim ptrTempa as ptr = tempa.Data
 		  dim ptrSbox as ptr = Sbox
 		  dim ptrRcon as ptr = Rcon
 		  
 		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
 		  for i As integer = nk to iLast
-		    tempa.StringValue( 0, 4 ) = RoundKey.StringValue( ( i - 1 ) * 4, 4 )
+		    tempa.Left( 4 ) = RoundKey.Mid( ( i - 1 ) * 4, 4 )
 		    
 		    if ( i mod nk ) = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
@@ -388,7 +412,7 @@ Inherits M_Crypto.Encrypter
 		      
 		      // Function RotWord()
 		      dim firstByte As integer = ptrTempa.Byte( 0 )
-		      tempa.StringValue( 0, 3 ) = tempa.StringValue( 1, 3 )
+		      tempa.Left( 3 ) = tempa.Mid( 1, 3 )
 		      ptrTempa.Byte( 3 ) = firstByte
 		      
 		      // SubWord() is a function that takes a four-byte input word and 
@@ -400,7 +424,7 @@ Inherits M_Crypto.Encrypter
 		      ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
 		      ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
 		      
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i / nk )
+		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ nk )
 		      
 		    end if
 		    
@@ -422,18 +446,6 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function GetVectorMB(vector As String) As MemoryBlock
-		  dim mb as new MemoryBlock( kBlockLen )
-		  if vector <> "" then
-		    vector = vector.LeftB( kBlockLen )
-		    mb.StringValue( 0, vector.LenB ) = vector
-		  end if
-		  
-		  return mb
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -459,35 +471,52 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Shared Sub InitMultiplyTables()
 		  if MultiplyH9MB is nil then
-		    const kH9 As integer = &h09
-		    const kHB As integer = &h0B
-		    const kHD As integer = &h0D
-		    const kHE As integer = &h0E
+		    'const kH9 As integer = &h09
+		    'const kHB As integer = &h0B
+		    'const kHD As integer = &h0D
+		    'const kHE As integer = &h0E
+		    '
+		    'MultiplyH9MB = new MemoryBlock( 256 )
+		    'MultiplyH9Ptr = MultiplyH9MB
+		    '
+		    'MultiplyHBMB = new MemoryBlock( 256 )
+		    'MultiplyHBPtr = MultiplyHBMB
+		    '
+		    'MultiplyHDMB = new MemoryBlock( 256 )
+		    'MultiplyHDPtr = MultiplyHDMB
+		    '
+		    'MultiplyHEMB = new MemoryBlock( 256 )
+		    'MultiplyHEPtr = MultiplyHEMB
+		    '
+		    'dim ptrs() as ptr = array( MultiplyH9Ptr, MultiplyHBPtr, MultiplyHDPtr, MultiplyHEPtr )
+		    'dim values() as integer = array( kH9, kHB, kHD, kHE )
+		    '
+		    'for i as integer = 0 to ptrs.Ubound
+		    'dim p as ptr = ptrs( i )
+		    'dim v as integer = values( i )
+		    '
+		    'for x as integer = 0 to 255
+		    'p.Byte( x ) = Multiply( x, v )
+		    'next
+		    'next
+		    '
+		    'System.DebugLog EncodeHex( MultiplyH9MB )
+		    'System.DebugLog EncodeHex( MultiplyHBMB )
+		    'System.DebugLog EncodeHex( MultiplyHDMB )
+		    'System.DebugLog EncodeHex( MultiplyHEMB )
 		    
-		    MultiplyH9MB = new MemoryBlock( 256 )
+		    MultiplyH9MB = DecodeHex( kMultiplyH9Hex )
+		    MultiplyHBMB = DecodeHex( kMultiplyHBHex )
+		    MultiplyHDMB = DecodeHex( kMultiplyHDHex )
+		    MultiplyHEMB = DecodeHex( kMultiplyHEHex )
+		    
 		    MultiplyH9Ptr = MultiplyH9MB
-		    
-		    MultiplyHBMB = new MemoryBlock( 256 )
 		    MultiplyHBPtr = MultiplyHBMB
-		    
-		    MultiplyHDMB = new MemoryBlock( 256 )
 		    MultiplyHDPtr = MultiplyHDMB
-		    
-		    MultiplyHEMB = new MemoryBlock( 256 )
 		    MultiplyHEPtr = MultiplyHEMB
-		    
-		    dim ptrs() as ptr = array( MultiplyH9Ptr, MultiplyHBPtr, MultiplyHDPtr, MultiplyHEPtr )
-		    dim values() as integer = array( kH9, kHB, kHD, kHE )
-		    
-		    for i as integer = 0 to ptrs.Ubound
-		      dim p as ptr = ptrs( i )
-		      dim v as integer = values( i )
-		      
-		      for x as integer = 0 to 256
-		        p.Byte( x ) = Multiply( x, v )
-		      next
-		    next
 		  end if
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -552,10 +581,25 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Used for InvShiftRows
 		  //
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim ptrInvSbox as ptr = InvSbox
 		  dim round As integer = NumberOfRounds
@@ -564,7 +608,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the state before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrRoundKey as ptr = RoundKey.Data
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -588,31 +632,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 columns to right
 		    //
-		    temp = dataPtr.Byte( index3 + 1 )
-		    dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
-		    dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
-		    dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
-		    dataPtr.Byte( index0 + 1 ) = temp
+		    temp = dataPtr.Byte( row1col3 )
+		    dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
+		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
+		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
+		    dataPtr.Byte( row1col0 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to right 
 		    //
-		    temp = dataPtr.Byte( index0 + 2 )
-		    dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		    dataPtr.Byte( index2 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col0 )
+		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		    dataPtr.Byte( row2col2 ) = temp
 		    
-		    temp = dataPtr.Byte( index1 + 2 )
-		    dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		    dataPtr.Byte( index3 + 2 ) = temp
+		    temp = dataPtr.Byte( row2col1 )
+		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		    dataPtr.Byte( row2col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to right
 		    //
-		    temp = dataPtr.Byte( index0 + 3 )
-		    dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
-		    dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
-		    dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
-		    dataPtr.Byte( index3 + 3 ) = temp
+		    temp = dataPtr.Byte( row3col0 )
+		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
+		    dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
+		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
+		    dataPtr.Byte( row3col3 ) = temp
 		    
 		    //
 		    // InvSubBytes
@@ -657,7 +701,7 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub InvMixColumns(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
@@ -686,53 +730,68 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub InvShiftRows(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
 		  // This was manually unrolled into InvCipher
 		  //
 		  
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim temp As integer 
 		  
 		  //
 		  // Rotate first row 1 columns to right
 		  //
-		  temp = dataPtr.Byte( index3 + 1 )
-		  dataPtr.Byte( index3 + 1 ) = dataPtr.Byte( index2 + 1 )
-		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index1 + 1 )
-		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index0 + 1 )
-		  dataPtr.Byte( index0 + 1 ) = temp
+		  temp = dataPtr.Byte( row1col3 )
+		  dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
+		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
+		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
+		  dataPtr.Byte( row1col0 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to right 
 		  //
-		  temp = dataPtr.Byte( index0 + 2 )
-		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		  dataPtr.Byte( index2 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col0 )
+		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		  dataPtr.Byte( row2col2 ) = temp
 		  
-		  temp = dataPtr.Byte( index1 + 2 )
-		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		  dataPtr.Byte( index3 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col1 )
+		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		  dataPtr.Byte( row2col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to right
 		  //
-		  temp = dataPtr.Byte( index0 + 3 )
-		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index1 + 3 )
-		  dataPtr.Byte( index1 + 3 ) = dataPtr.Byte( index2 + 3 )
-		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index3 + 3 )
-		  dataPtr.Byte( index3 + 3 ) = temp
+		  temp = dataPtr.Byte( row3col0 )
+		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
+		  dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
+		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
+		  dataPtr.Byte( row3col3 ) = temp
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub InvSubBytes(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
@@ -750,7 +809,7 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub MixColumns(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
@@ -803,8 +862,12 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Shared Function Multiply(x As Integer, y As Integer) As integer
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
+		Attributes( deprecated ) Private Shared Function Multiply(x As Integer, y As Integer) As integer
+		  //
+		  // For reference only
+		  // The results were precomputed and used in InitMultiplyTables
+		  //
 		  const kOne As integer = 1
 		  const kShift1 As integer = 2
 		  const kShift2 As integer = 4
@@ -838,55 +901,69 @@ Inherits M_Crypto.Encrypter
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub ShiftRows(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
 		  // This was manually unrolled into Cipher
 		  //
 		  
-		  dim index0 As integer = startAt
-		  dim index1 As integer = index0 + 4
-		  dim index2 As integer = index0 + 8
-		  dim index3 As integer = index0 + 12
+		  dim row0col0 As integer = startAt + 0
+		  dim row0col1 As integer = startAt + 4
+		  dim row0col2 As integer = startAt + 8
+		  dim row0col3 As integer = startAt + 12
+		  
+		  dim row1col0 as integer = row0col0 + 1
+		  dim row1col1 as integer = row0col1 + 1
+		  dim row1col2 as integer = row0col2 + 1
+		  dim row1col3 as integer = row0col3 + 1
+		  
+		  dim row2col0 as integer = row0col0 + 2
+		  dim row2col1 as integer = row0col1 + 2
+		  dim row2col2 as integer = row0col2 + 2
+		  dim row2col3 as integer = row0col3 + 2
+		  
+		  dim row3col0 as integer = row0col0 + 3
+		  dim row3col1 as integer = row0col1 + 3
+		  dim row3col2 as integer = row0col2 + 3
+		  dim row3col3 as integer = row0col3 + 3
 		  
 		  dim temp As integer 
 		  
 		  //
 		  // Rotate first row 1 columns to left  
 		  //
-		  temp = dataPtr.Byte( index0 + 1 )
-		  dataPtr.Byte( index0 + 1 ) = dataPtr.Byte( index1 + 1 )
-		  dataPtr.Byte( index1 + 1 ) = dataPtr.Byte( index2 + 1 )
-		  dataPtr.Byte( index2 + 1 ) = dataPtr.Byte( index3 + 1 )
-		  dataPtr.Byte( index3 + 1 ) = temp
+		  temp = dataPtr.Byte( row1col0 )
+		  dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
+		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
+		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
+		  dataPtr.Byte( row1col3 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to left  
 		  //
-		  temp = dataPtr.Byte( index0 + 2 )
-		  dataPtr.Byte( index0 + 2 ) = dataPtr.Byte( index2 + 2 )
-		  dataPtr.Byte( index2 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col0 )
+		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		  dataPtr.Byte( row2col2 ) = temp
 		  
-		  temp = dataPtr.Byte( index1 + 2 )
-		  dataPtr.Byte( index1 + 2 ) = dataPtr.Byte( index3 + 2 )
-		  dataPtr.Byte( index3 + 2 ) = temp
+		  temp = dataPtr.Byte( row2col1 )
+		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		  dataPtr.Byte( row2col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to left
 		  //
-		  temp = dataPtr.Byte( index0 + 3 )
-		  dataPtr.Byte( index0 + 3 ) = dataPtr.Byte( index3 + 3 )
-		  dataPtr.Byte( index3 + 3 ) = dataPtr.Byte( index2 + 3 )
-		  dataPtr.Byte( index2 + 3 ) = dataPtr.Byte( index1 + 3 )
-		  dataPtr.Byte( index1 + 3 ) = temp
-		  
+		  temp = dataPtr.Byte( row3col0 )
+		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
+		  dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
+		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
+		  dataPtr.Byte( row3col1 ) = temp
 		  
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit))
 		Attributes( deprecated ) Private Sub SubBytes(dataPtr As Ptr, startAt As Integer)
 		  //
 		  // For reference only
@@ -901,6 +978,7 @@ Inherits M_Crypto.Encrypter
 		      dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
 		    next
 		  next
+		  
 		End Sub
 	#tag EndMethod
 
@@ -980,7 +1058,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private RoundKey As MemoryBlock
+		Private RoundKey As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1003,10 +1081,22 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kBlockLen, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kMultiplyH9Hex, Type = String, Dynamic = False, Default = \"0009121B242D363F48415A536C657E779099828BB4BDA6AFD8D1CAC3FCF5EEE73B3229201F160D04737A6168575E454CABA2B9B08F869D94E3EAF1F8C7CED5DC767F646D525B40493E372C251A130801E6EFF4FDC2CBD0D9AEA7BCB58A8398914D445F5669607B72050C171E2128333ADDD4CFC6F9F0EBE2959C878EB1B8A3AAECE5FEF7C8C1DAD3A4ADB6BF8089929B7C756E6758514A43343D262F1019020BD7DEC5CCF3FAE1E89F968D84BBB2A9A0474E555C636A71780F061D142B2239309A938881BEB7ACA5D2DBC0C9F6FFE4ED0A0318112E273C35424B5059666F747DA1A8B3BA858C979EE9E0FBF2CDC4DFD63138232A151C070E79706B625D544F46", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kMultiplyHBHex, Type = String, Dynamic = False, Default = \"000B161D2C273A3158534E45747F6269B0BBA6AD9C978A81E8E3FEF5C4CFD2D97B706D66575C414A2328353E0F041912CBC0DDD6E7ECF1FA9398858EBFB4A9A2F6FDE0EBDAD1CCC7AEA5B8B38289949F464D505B6A617C771E1508033239242F8D869B90A1AAB7BCD5DEC3C8F9F2EFE43D362B20111A070C656E737849425F54F7FCE1EADBD0CDC6AFA4B9B28388959E474C515A6B607D761F1409023338252E8C879A91A0ABB6BDD4DFC2C9F8F3EEE53C372A21101B060D646F727948435E55010A171C2D263B3059524F44757E6368B1BAA7AC9D968B80E9E2FFF4C5CED3D87A716C67565D404B2229343F0E051813CAC1DCD7E6EDF0FB9299848FBEB5A8A3", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kMultiplyHDHex, Type = String, Dynamic = False, Default = \"000D1A1734392E236865727F5C51464BD0DDCAC7E4E9FEF3B8B5A2AF8C81969BBBB6A1AC8F829598D3DEC9C4E7EAFDF06B66717C5F524548030E1914373A2D206D60777A5954434E05081F12313C2B26BDB0A7AA8984939ED5D8CFC2E1ECFBF6D6DBCCC1E2EFF8F5BEB3A4A98A87909D060B1C11323F28256E6374795A57404DDAD7C0CDEEE3F4F9B2BFA8A5868B9C910A07101D3E332429626F7875565B4C41616C7B7655584F420904131E3D30272AB1BCABA685889F92D9D4C3CEEDE0F7FAB7BAADA0838E9994DFD2C5C8EBE6F1FC676A7D70535E49440F0215183B36212C0C01161B3835222F64697E73505D4A47DCD1C6CBE8E5F2FFB4B9AEA3808D9A97", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kMultiplyHEHex, Type = String, Dynamic = False, Default = \"000E1C123836242A707E6C624846545AE0EEFCF2D8D6C4CA909E8C82A8A6B4BADBD5C7C9E3EDFFF1ABA5B7B9939D8F813B352729030D1F114B455759737D6F61ADA3B1BF959B8987DDD3C1CFE5EBF9F74D43515F757B69673D33212F050B191776786A644E40525C06081A143E30222C96988A84AEA0B2BCE6E8FAF4DED0C2CC414F5D537977656B313F2D230907151BA1AFBDB39997858BD1DFCDC3E9E7F5FB9A948688A2ACBEB0EAE4F6F8D2DCCEC07A746668424C5E500A041618323C2E20ECE2F0FED4DAC8C69C92808EA4AAB8B60C02101E343A28267C72606E444A585637392B250F01131D47495B557F71636DD7D9CBC5EFE1F3FDA7A9BBB59F91838D", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4", Scope = Public
 	#tag EndConstant
 
 

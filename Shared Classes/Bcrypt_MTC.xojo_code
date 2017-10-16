@@ -14,7 +14,9 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h1
 		Protected Function GenerateSalt(rounds As UInt8, preferredPrefix As Prefix = Prefix.Y) As String
-		  dim csalt as MemoryBlock = Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
+		  dim temp as Xojo.Core.MemoryBlock = Xojo.Crypto.GenerateRandomBytes( BCRYPT_MAXSALT )
+		  dim csalt as new Xojo.Core.MutableMemoryBlock( temp )
+		  temp = nil
 		  
 		  const kMinRounds as UInt8 = 4
 		  const kMaxRounds as UInt8 = 31
@@ -47,10 +49,10 @@ Protected Module Bcrypt_MTC
 		  dim state as M_Crypto.BcryptInterface
 		  dim rounds as Integer
 		  dim logr, minor as UInt8
-		  dim ciphertext as MemoryBlock = "OrpheanBeholderScryDoubt"
-		  dim precomputedCiphertext as string = "hprOBnaeloheSredDyrctbuo" // Same every time
-		  dim csalt as new MemoryBlock( BCRYPT_MAXSALT )
-		  dim cdata as new MemoryBlock( BCRYPT_BLOCKS * 4 )
+		  dim ciphertext as new Xojo.Core.MutableMemoryBlock( Xojo.Core.TextEncoding.UTF8.ConvertTextToData( "OrpheanBeholderScryDoubt" ) )
+		  static precomputedCiphertext as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( "hprOBnaeloheSredDyrctbuo" ) // Same every time
+		  dim csalt as new Xojo.Core.MutableMemoryBlock( BCRYPT_MAXSALT )
+		  dim cdata as new Xojo.Core.MutableMemoryBlock( BCRYPT_BLOCKS * 4 )
 		  dim n as Integer
 		  
 		  dim saltFields() as string = salt.Split( "$" )
@@ -63,7 +65,13 @@ Protected Module Bcrypt_MTC
 		  dim saltVersion as integer = Val( saltVersionString )
 		  dim saltRounds as string = saltFields( 2 )
 		  dim saltText as string = saltFields( 3 )
-		  
+		  dim saltMB as Xojo.Core.MutableMemoryBlock
+		  if true then
+		    dim temp as MemoryBlock = saltText
+		    dim temp2 as new Xojo.Core.MemoryBlock( temp, temp.Size )
+		    saltMB = new Xojo.Core.MutableMemoryBlock( temp2.Size )
+		    saltMB.Left( saltMB.Size ) = temp2.Left( temp2.Size )
+		  end if
 		  if saltVersionString = "" or saltVersion > Val( BCRYPT_VERSION ) then
 		    return ""
 		  end if
@@ -84,7 +92,7 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  logr = n
-		  rounds = Bitwise.ShiftLeft( 1, logr )
+		  rounds = 2 ^ logr
 		  if rounds < BCRYPT_MINROUNDS then
 		    return ""
 		  end if
@@ -94,24 +102,32 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Get the raw data behind the salt
-		  pDecodeBase64( csalt, saltText )
+		  pDecodeBase64( csalt, saltMB )
 		  if minor >= AscB( "a" ) then
 		    key = key + ChrB( 0 ) // Set it up as CString
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
+		  dim smallBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  dim smallBufferPtr as ptr = smallBuffer.Data
+		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  streamBuffer.LittleEndian = false
+		  dim streamBufferPtr as ptr = streamBuffer.Data
+		  dim keyTemp as MemoryBlock = key
+		  dim keyMB as new Xojo.Core.MutableMemoryBlock( keyTemp, keyTemp.Size )
+		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
-		  state.ExpandState( csalt, key )
+		  state.ExpandState( csalt, keyMB, smallBuffer, smallBufferPtr )
 		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
-		    state.Expand0State( key )
-		    state.Expand0State( csalt )
+		    state.Expand0State( keyMB, smallBuffer, smallBufferPtr, streamBuffer, streamBufferPtr )
+		    state.Expand0State( csalt, smallBuffer, smallBufferPtr, streamBuffer, streamBufferPtr )
 		  next k
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
-		  cdata = precomputedCiphertext // Same every time, no need to recompute
+		  cdata.Left( cdata.Size ) = precomputedCiphertext.Left( cdata.Size ) // Same every time, no need to recompute
 		  
 		  // Now to encrypt
 		  for k as Integer = 0 to 63
@@ -127,13 +143,13 @@ Protected Module Bcrypt_MTC
 		  
 		  r = "$" + BCRYPT_VERSION + ChrB( minor ) + "$" + format( logr, "00" ) + "$"
 		  
-		  dim buffer as new MemoryBlock( 128 )
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( 128 )
 		  pEncodeBase64( buffer, csalt )
-		  r = r + buffer.CString( 0 )
+		  r = r + buffer.CStringValue( 0 )
 		  
-		  ciphertext.Size = ciphertext.Size - 1 // Lop off last character
+		  ciphertext = new Xojo.Core.MutableMemoryBlock( ciphertext.Left( ciphertext.Size - 1 ) ) // Lop off last character
 		  pEncodeBase64( buffer, ciphertext )
-		  r = r + buffer.CString( 0 )
+		  r = r + buffer.CStringValue( 0 )
 		  
 		  return r.DefineEncoding( Encodings.UTF8 )
 		End Function
@@ -175,7 +191,7 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub pDecodeBase64(buffer As MemoryBlock, data As MemoryBlock)
+		Private Sub pDecodeBase64(buffer As Xojo.Core.MutableMemoryBlock, data As Xojo.Core.MemoryBlock)
 		  #pragma BackgroundTasks False
 		  #pragma BoundsChecking False
 		  #pragma NilObjectChecking False
@@ -184,8 +200,8 @@ Protected Module Bcrypt_MTC
 		  dim bp, p as integer
 		  dim c1, c2, c3, c4 as byte
 		  dim lastByteIndex as integer = buffer.Size - 1
-		  dim bufferPtr as Ptr = buffer
-		  dim dataPtr as Ptr = data
+		  dim bufferPtr as Ptr = buffer.Data
+		  dim dataPtr as Ptr = data.Data
 		  
 		  while bp <= lastByteIndex
 		    c1 = pChar64( dataPtr.Byte( p ) )
@@ -225,7 +241,7 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub pEncodeBase64(buffer As MemoryBlock, data As MemoryBlock)
+		Private Sub pEncodeBase64(buffer As Xojo.Core.MutableMemoryBlock, data As Xojo.Core.MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -235,9 +251,9 @@ Protected Module Bcrypt_MTC
 		  
 		  dim lastByteIndex as integer = data.Size - 1
 		  dim bp, p as integer
-		  dim bufferPtr as Ptr = buffer
-		  dim dataPtr as Ptr = data
-		  dim base64AlphabetPtr as Ptr = zBase64AlphabetMB
+		  dim bufferPtr as Ptr = buffer.Data
+		  dim dataPtr as Ptr = data.Data
+		  dim base64AlphabetPtr as Ptr = Base64AlphabetMB
 		  
 		  dim c1, c2 as byte
 		  
@@ -285,16 +301,16 @@ Protected Module Bcrypt_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function pEncodeSalt(csalt As MemoryBlock, rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
+		Private Function pEncodeSalt(csalt As Xojo.Core.MemoryBlock, rounds As UInt8, preferredPrefix As Prefix = Prefix.A) As String
 		  dim prefixLetter as string = Chr( Integer( preferredPrefix ) )
 		  
 		  dim salt as string = "$" + BCRYPT_VERSION + prefixLetter + "$"
 		  salt = salt + format( rounds, "00" ) + "$"
 		  
-		  dim buffer as new MemoryBlock( csalt.Size * 2 )
+		  dim buffer as new Xojo.Core.MutableMemoryBlock( csalt.Size * 2 )
 		  pEncodeBase64( buffer, csalt )
 		  
-		  salt = salt + buffer.CString( 0 )
+		  salt = salt + buffer.CStringValue( 0 )
 		  return salt
 		  
 		End Function
@@ -342,7 +358,7 @@ Protected Module Bcrypt_MTC
 			  return mb
 			End Get
 		#tag EndGetter
-		Private zBase64AlphabetMB As MemoryBlock
+		Private Base64AlphabetMB As MemoryBlock
 	#tag EndComputedProperty
 
 

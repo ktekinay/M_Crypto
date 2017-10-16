@@ -10,19 +10,19 @@ Begin Window WndEncryption
    FullScreenButton=   False
    HasBackColor    =   False
    Height          =   474
-   ImplicitInstance=   True
+   ImplicitInstance=   False
    LiveResize      =   True
    MacProcID       =   0
-   MaxHeight       =   32000
-   MaximizeButton  =   True
-   MaxWidth        =   32000
+   MaxHeight       =   474
+   MaximizeButton  =   False
+   MaxWidth        =   792
    MenuBar         =   410277764
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   474
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   792
    Placement       =   0
-   Resizeable      =   True
+   Resizeable      =   False
    Title           =   "Encryption"
    Visible         =   True
    Width           =   792
@@ -59,7 +59,7 @@ Begin Window WndEncryption
       ScrollbarHorizontal=   False
       ScrollbarVertical=   True
       Styled          =   False
-      TabIndex        =   0
+      TabIndex        =   6
       TabPanelIndex   =   0
       TabStop         =   True
       Text            =   ""
@@ -106,7 +106,7 @@ Begin Window WndEncryption
       ScrollbarHorizontal=   False
       ScrollbarVertical=   True
       Styled          =   False
-      TabIndex        =   1
+      TabIndex        =   22
       TabPanelIndex   =   0
       TabStop         =   True
       Text            =   ""
@@ -140,7 +140,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   2
+      TabIndex        =   0
       TabPanelIndex   =   0
       Text            =   "Source"
       TextAlign       =   0
@@ -174,7 +174,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   3
+      TabIndex        =   1
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -205,7 +205,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   4
+      TabIndex        =   3
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -259,7 +259,7 @@ Begin Window WndEncryption
       InitialParent   =   ""
       InitialValue    =   ""
       Italic          =   False
-      Left            =   368
+      Left            =   626
       ListIndex       =   0
       LockBottom      =   False
       LockedInPosition=   False
@@ -267,7 +267,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   6
+      TabIndex        =   12
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "SystemSmall"
@@ -298,7 +298,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   7
+      TabIndex        =   2
       TabPanelIndex   =   0
       Text            =   "From"
       TextAlign       =   0
@@ -332,7 +332,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   8
+      TabIndex        =   4
       TabPanelIndex   =   0
       Text            =   "To"
       TextAlign       =   1
@@ -357,7 +357,7 @@ Begin Window WndEncryption
       Index           =   3
       InitialParent   =   ""
       Italic          =   False
-      Left            =   287
+      Left            =   545
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
@@ -366,7 +366,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   9
+      TabIndex        =   11
       TabPanelIndex   =   0
       Text            =   "Padding"
       TextAlign       =   0
@@ -392,7 +392,7 @@ Begin Window WndEncryption
       InitialParent   =   ""
       InitialValue    =   ""
       Italic          =   False
-      Left            =   621
+      Left            =   364
       ListIndex       =   0
       LockBottom      =   False
       LockedInPosition=   False
@@ -422,7 +422,7 @@ Begin Window WndEncryption
       Index           =   4
       InitialParent   =   ""
       Italic          =   False
-      Left            =   543
+      Left            =   286
       LockBottom      =   False
       LockedInPosition=   False
       LockLeft        =   True
@@ -431,7 +431,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   11
+      TabIndex        =   9
       TabPanelIndex   =   0
       Text            =   "Function"
       TextAlign       =   0
@@ -465,7 +465,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   12
+      TabIndex        =   8
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -496,7 +496,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   13
+      TabIndex        =   7
       TabPanelIndex   =   0
       Text            =   "Encrypter"
       TextAlign       =   0
@@ -504,7 +504,7 @@ Begin Window WndEncryption
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
-      Top             =   198
+      Top             =   197
       Transparent     =   True
       Underline       =   False
       Visible         =   True
@@ -572,7 +572,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   15
+      TabIndex        =   13
       TabPanelIndex   =   0
       Text            =   "Key"
       TextAlign       =   0
@@ -606,7 +606,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   16
+      TabIndex        =   15
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -645,7 +645,7 @@ Begin Window WndEncryption
       Password        =   False
       ReadOnly        =   False
       Scope           =   2
-      TabIndex        =   17
+      TabIndex        =   19
       TabPanelIndex   =   0
       TabStop         =   True
       Text            =   ""
@@ -713,7 +713,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   19
+      TabIndex        =   17
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -744,7 +744,7 @@ Begin Window WndEncryption
       Multiline       =   False
       Scope           =   2
       Selectable      =   False
-      TabIndex        =   20
+      TabIndex        =   16
       TabPanelIndex   =   0
       Text            =   "Apply Hash"
       TextAlign       =   0
@@ -809,7 +809,7 @@ Begin Window WndEncryption
       LockRight       =   False
       LockTop         =   True
       Scope           =   2
-      TabIndex        =   22
+      TabIndex        =   20
       TabPanelIndex   =   0
       TabStop         =   True
       TextFont        =   "System"
@@ -878,6 +878,9 @@ End
 		Private Function Encode(s As String, encoding As String) As String
 		  select case encoding
 		  case kLabelPlainText
+		    if Encodings.UTF8.IsValidData( s ) then
+		      s = s.DefineEncoding( Encodings.UTF8 )
+		    end if
 		    return s
 		    
 		  case kLabelHex
@@ -951,9 +954,22 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub SetTitle()
+		  dim t as string
+		  
+		  t = mnuAction.Text + " " + mnuEncrypter.Text + " " + mnuEncryptFunction.Text + "/" + mnuPadding.Text
+		  self.Title = t
+		End Sub
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h21
 		Private Encrypter As M_Crypto.Encrypter
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private IsGettingFocus As Boolean
 	#tag EndProperty
 
 
@@ -1080,6 +1096,8 @@ End
 		  if mnuToEncoding.ListIndex = -1 then
 		    mnuToEncoding.ListIndex = mnuToEncoding.ListCount - 1
 		  end if
+		  
+		  SetTitle
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -1095,6 +1113,11 @@ End
 		  
 		End Sub
 	#tag EndEvent
+	#tag Event
+		Sub Change()
+		  SetTitle
+		End Sub
+	#tag EndEvent
 #tag EndEvents
 #tag Events mnuEncryptFunction
 	#tag Event
@@ -1108,18 +1131,48 @@ End
 		  
 		End Sub
 	#tag EndEvent
+	#tag Event
+		Sub Change()
+		  SetTitle
+		End Sub
+	#tag EndEvent
 #tag EndEvents
 #tag Events mnuEncrypter
 	#tag Event
 		Sub Change()
 		  Encrypter = M_Crypto.GetEncrypter( me.Text )
 		  fldVector.CueText = "plain or hex of " + str( Encrypter.BlockSize ) + " bytes"
+		  SetTitle
 		End Sub
 	#tag EndEvent
 	#tag Event
 		Sub Open()
 		  me.ListIndex = 0
 		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events fldKey
+	#tag Event
+		Sub GotFocus()
+		  if IsGettingFocus then
+		    return
+		  end if
+		  
+		  IsGettingFocus = true
+		  me.Password = false
+		  me.SetFocus
+		  IsGettingFocus = false
+		  
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub LostFocus()
+		  if IsGettingFocus then
+		    return
+		  end if
+		  
+		  me.Password = true
 		End Sub
 	#tag EndEvent
 #tag EndEvents
