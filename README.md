@@ -304,6 +304,7 @@ __2.2.2__ (_)
 
 - Harness now allows multiple encryption windows.
 - Encryption window hides the encryption key unless that field has focus.
+- Fixed bug in AES that could lead to a crash (using a Ptr to overwrite the bounds of a MemoryBlock by one byte).
 
 __2.2.1__ (Oct. 7, 2017)
 
