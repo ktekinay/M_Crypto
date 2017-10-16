@@ -878,6 +878,9 @@ End
 		Private Function Encode(s As String, encoding As String) As String
 		  select case encoding
 		  case kLabelPlainText
+		    if Encodings.UTF8.IsValidData( s ) then
+		      s = s.DefineEncoding( Encodings.UTF8 )
+		    end if
 		    return s
 		    
 		  case kLabelHex

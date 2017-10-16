@@ -11,6 +11,7 @@ Inherits TestController
 		  'group = New XojoUnitFailTests(Self, "Always Fail")
 		  
 		  group = new AES128NullsTests( self, "AES-128-Nulls" )
+		  group = new AES128NullsWithCountTests( self, "AES-128-NullsWithCount" )
 		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
 		  group = new AES256NullsTests( self, "AES-256-Nulls" )
 		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
