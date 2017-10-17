@@ -300,6 +300,10 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.3.1__ (_)
+
+- Added pragmas that dramatically increase the speed of AES decryption.
+
 __2.3__ (Oct. 16, 2017)
 
 - Harness now allows multiple encryption windows.
