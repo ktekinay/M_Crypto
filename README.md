@@ -25,6 +25,7 @@ An encryption library for Xojo that implements Blowfish and AES encryption and B
 	- [Postgres](#postgres)
 	- [JavaScript Crypto Module](#javascript-crypto-module)
 - [Other](#other)
+- [A Word About Threads](#about-threads)
 - [License](#license)
 - [Comments and Contributions](#comments-and-contributions)
 - [Who Did This?!?](#who-did-this)
@@ -280,6 +281,10 @@ Blowfish CBC: Will take any key.
 
 `M_Crypto.GeenrateUUID` will create a UUI using the OS tools, if possible, or native Xojo code if note. In any case, the output conforms to standards and is cryptographically safe.
 
+## <a name='about-threads'></a>A Word About Threads
+
+You may use the same instance of an `M_Crypto.Encrypter` in multiple threads simultaneously as long as you do not change the key or Initial Vector while another thread might be using it. Otherwise, create another instance of that `Encrypter`, which is probably safer anyway.
+
 ## License
 
 This is an open-source project.
@@ -300,9 +305,13 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.3.1__ (_)
+__2.4__ (_)
 
-- Added pragmas that dramatically increase the speed of AES decryption.
+- Added pragmas that dramatically increase the speed of `AES_MTC` decryption.
+- The same instance of an `M_Crypto.Encrypter` is now safe to use in multiple threads. Just don't change the key or Initial Vector of that instance.
+- More efficient handling of the current vector in `AES_MTC`.
+- Better description in CLI help.
+- Removed unneeded property in `M_Crypto.Encrypter`.
 
 __2.3__ (Oct. 16, 2017)
 
@@ -311,6 +320,7 @@ __2.3__ (Oct. 16, 2017)
 - Fixed bug in AES that could lead to a crash (using a Ptr to overwrite the bounds of a MemoryBlock by one byte).
 - Refactored around new framework MemoryBlock.
 - Quicker initialization for AES.
+- Added clone Constructor.
 
 __2.2.1__ (Oct. 7, 2017)
 
@@ -319,8 +329,8 @@ __2.2.1__ (Oct. 7, 2017)
 __2.2__ (Oct. 4, 2017)
 
 - Added `M_Crypto.GenerateUUID`.
-- Fixed Windows bug in M_ANSI.
-- Added `Scrypt\_MTC`.
+- Fixed Windows bug in M\_ANSI.
+- Added `Scrypt_MTC`.
 - Added Scrypt and Get-bytes to CLI project.
 
 __2.1__ (Sept. 27, 2017)

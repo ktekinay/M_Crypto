@@ -3,6 +3,23 @@ Class Blowfish_MTC
 Inherits M_Crypto.Encrypter
 Implements BcryptInterface
 	#tag Event
+		Sub CloneFrom(e As M_Crypto.Encrypter)
+		  dim other as M_Crypto.Blowfish_MTC = M_Crypto.Blowfish_MTC( e )
+		  
+		  if other.P isa object then
+		    P = new Xojo.Core.MemoryBlock( other.P )
+		    PPtr = other.PPtr
+		  end if
+		  
+		  if other.S isa object then
+		    S = new Xojo.Core.MemoryBlock( other.S )
+		    SPtr = other.SPtr
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+	#tag Event
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
@@ -1045,7 +1062,7 @@ Implements BcryptInterface
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.5", Scope = Public
 	#tag EndConstant
 
 

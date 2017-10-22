@@ -19,6 +19,35 @@ Inherits TestGroup
 
 
 	#tag Method, Flags = &h0
+		Sub CloneTest()
+		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  e.UseFunction = M_Crypto.Encrypter.Functions.CBC
+		  
+		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( e )
+		  dim c as Xojo.Introspection.ConstructorInfo
+		  for each test as Xojo.Introspection.ConstructorInfo in ti.Constructors
+		    dim params() as Xojo.Introspection.ParameterInfo = test.Parameters
+		    if params.Ubound = 0 and params( 0 ).ParameterType = GetTypeInfo( M_Crypto.Encrypter ) then
+		      c = test
+		      exit
+		    end if
+		  next
+		  
+		  if c is nil then
+		    return
+		  end if
+		  
+		  dim params() as Auto
+		  params.Append e
+		  dim clone as M_Crypto.Encrypter = c.Invoke( params )
+		  
+		  Assert.AreEqual clone.Decrypt( e.Encrypt( kLongData ) ), e.Decrypt( clone.Encrypt( kLongData ) )
+		  e = nil
+		  Assert.AreEqual kLongData, clone.Decrypt( clone.Encrypt( kLongData ) ), "After original is nil"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SimultaneousEncryptionTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "some password" )
 		  

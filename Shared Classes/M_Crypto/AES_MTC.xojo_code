@@ -2,6 +2,21 @@
 Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
+		Sub CloneFrom(e As M_Crypto.Encrypter)
+		  dim other as M_Crypto.AES_MTC = M_Crypto.AES_MTC( e )
+		  
+		  KeyExpSize = other.KeyExpSize
+		  KeyLen = other.KeyLen
+		  Nk = other.Nk
+		  NumberOfRounds = other.NumberOfRounds
+		  if other.RoundKey isa object then
+		    RoundKey = new Xojo.Core.MutableMemoryBlock( other.RoundKey )
+		  end if
+		  zBits = other.zBits
+		End Sub
+	#tag EndEvent
+
+	#tag Event
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
@@ -1101,7 +1116,7 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.5", Scope = Public
 	#tag EndConstant
 
 

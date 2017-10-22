@@ -2,6 +2,23 @@
 Protected Class EncrypterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub BadCloneTest()
+		  dim e1 as new AES_MTC( 128 )
+		  
+		  #pragma BreakOnExceptions false
+		  try
+		    dim e2 as new Blowfish_MTC( e1 )
+		    #pragma unused e2
+		    Assert.Fail "Should have raised an exception"
+		  catch err as TypeMismatchException
+		    Assert.Pass
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ChangePasswordTest()
 		  dim e as M_Crypto.Encrypter
 		  

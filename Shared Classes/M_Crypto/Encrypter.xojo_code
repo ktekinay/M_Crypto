@@ -8,6 +8,31 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(cloneFrom As M_Crypto.Encrypter)
+		  //
+		  // Clone Constructor
+		  //
+		  
+		  if Xojo.Introspection.GetType( self ) <> Xojo.Introspection.GetType( cloneFrom ) then
+		    dim err as new TypeMismatchException
+		    err.Message = "Can only clone from like types"
+		    raise err
+		  end if
+		  
+		  zBlockSize = cloneFrom.zBlockSize
+		  WasKeySet = cloneFrom.WasKeySet
+		  UseFunction = cloneFrom.UseFunction
+		  PaddingMethod = cloneFrom.PaddingMethod
+		  
+		  if cloneFrom.InitialVector isa object then
+		    InitialVector = new Xojo.Core.MutableMemoryBlock( cloneFrom.InitialVector )
+		  end if
+		  
+		  RaiseEvent CloneFrom( cloneFrom )
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Decrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
@@ -360,6 +385,10 @@ Protected Class Encrypter
 
 
 	#tag Hook, Flags = &h0
+		Event CloneFrom(e As M_Crypto.Encrypter)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
@@ -419,7 +448,7 @@ Protected Class Encrypter
 		#tag Getter
 			Get
 			  //
-			  // If the same encrypter is used in different threads to 
+			  // If the same encrypter is used in different threads to
 			  // process blocks, have to make sure one thread's vector doesn't clobber the other
 			  //
 			  
