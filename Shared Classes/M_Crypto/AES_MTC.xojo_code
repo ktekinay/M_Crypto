@@ -130,7 +130,7 @@ Inherits M_Crypto.Encrypter
 		    dim temp As integer 
 		    
 		    //
-		    // Rotate first row 1 columns to left  
+		    // Rotate first row 1 column to left  
 		    //
 		    temp = dataPtr.Byte( row1col0 )
 		    dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
