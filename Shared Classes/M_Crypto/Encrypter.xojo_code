@@ -14,12 +14,6 @@ Protected Class Encrypter
 		  // Clone Constructor
 		  //
 		  
-		  if Xojo.Introspection.GetType( self ) <> Xojo.Introspection.GetType( cloneFrom ) then
-		    dim err as new TypeMismatchException
-		    err.Message = "Can only clone from like types"
-		    raise err
-		  end if
-		  
 		  zBlockSize = cloneFrom.zBlockSize
 		  WasKeySet = cloneFrom.WasKeySet
 		  UseFunction = cloneFrom.UseFunction

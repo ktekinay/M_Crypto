@@ -10,7 +10,7 @@ Inherits TestGroup
 		    dim e2 as new Blowfish_MTC( e1 )
 		    #pragma unused e2
 		    Assert.Fail "Should have raised an exception"
-		  catch err as TypeMismatchException
+		  catch err as IllegalCastException
 		    Assert.Pass
 		  end try
 		  #pragma BreakOnExceptions default
