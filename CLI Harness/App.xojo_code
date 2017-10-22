@@ -645,7 +645,8 @@ Inherits ConsoleApplication
 			    " is used]", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
-			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt utilty v." + kVersion
+			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt/Scrypt utilty v." + kVersion + _
+			    " (" + if(Target32Bit, "32-bit", "64-bit") + ")"
 			    parser.AdditionalHelpNotes = kHelpNotes
 			    
 			  end if
