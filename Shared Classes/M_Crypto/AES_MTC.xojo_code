@@ -309,11 +309,8 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    dim temp as new Xojo.Core.MemoryBlock( vectorPtr, kBlockLen )
-		    if zCurrentVector is nil then
-		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
-		    end if
-		    zCurrentVector.Left( kBlockLen ) = temp
+		    vectorMB.Left( kBlockLen ) = originalData.Right( kBlockLen )
+		    zCurrentVector = vectorMB
 		  end if
 		  
 		  
@@ -343,12 +340,12 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data.Data
 		  
-		  dim vectorMB as Xojo.Core.MutableMemoryBlock
-		  if zCurrentVector isa object then
-		    vectorMB = zCurrentVector
-		  elseif InitialVector isa object then
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  
+		  if vectorMB is nil and InitialVector isa object then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
-		  else
+		  end if
+		  if vectorMB is nil then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
 		  
@@ -362,11 +359,8 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    if zCurrentVector is nil then
-		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
-		    end if
-		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
-		    zCurrentVector.Left( kBlockLen ) = temp
+		    vectorMB.Left( kBlockLen ) = data.Right( kBlockLen )
+		    zCurrentVector = vectorMB
 		  end if
 		  
 		End Sub
