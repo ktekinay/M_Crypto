@@ -220,6 +220,18 @@ Protected Class Encrypter
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function GetCurrentThreadId() As Integer
+		  dim t as Thread = App.CurrentThread
+		  if t is nil then
+		    return 0
+		  else
+		    return t.ThreadID
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function InterpretVector(vector As String) As String
 		  if vector = "" then 
@@ -395,6 +407,10 @@ Protected Class Encrypter
 		UseFunction As Functions
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private VectorDict As Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected WasKeySet As Boolean
 	#tag EndProperty
@@ -403,9 +419,34 @@ Protected Class Encrypter
 		Private zBlockSize As Integer
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
+	#tag ComputedProperty, Flags = &h1
+		#tag Getter
+			Get
+			  //
+			  // If the same encrypter is used in different threads to 
+			  // process blocks, have to make sure one thread's vector doesn't clobber the other
+			  //
+			  
+			  if VectorDict is nil then
+			    VectorDict = new Dictionary
+			    return nil // Can't be a vector yet
+			  end if
+			  
+			  return VectorDict.Lookup( GetCurrentThreadId, nil )
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if VectorDict is nil then
+			    VectorDict = new Dictionary
+			  end if
+			  
+			  VectorDict.Value( GetCurrentThreadId ) = value
+			End Set
+		#tag EndSetter
 		Protected zCurrentVector As Xojo.Core.MutableMemoryBlock
-	#tag EndProperty
+	#tag EndComputedProperty
 
 
 	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of BlockSize", Scope = Private
