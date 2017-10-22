@@ -395,10 +395,6 @@ Protected Class Encrypter
 		Protected InitialVector As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected LastBlockHadNull As Boolean
-	#tag EndProperty
-
 	#tag Property, Flags = &h0
 		PaddingMethod As Padding
 	#tag EndProperty
