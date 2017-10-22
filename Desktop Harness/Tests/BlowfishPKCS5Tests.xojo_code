@@ -1,6 +1,13 @@
 #tag Class
 Protected Class BlowfishPKCS5Tests
 Inherits EncrypterTestGroup
+	#tag Event
+		Function GetEncrypter(key As String) As M_Crypto.Encrypter
+		  return GetBF( key )
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub EncryptCBCLongBlockTest()
 		  dim key as string 

@@ -1,6 +1,14 @@
 #tag Class
 Protected Class AES128NullsTests
 Inherits EncrypterTestGroup
+	#tag Event
+		Function GetEncrypter(key As String) As M_Crypto.Encrypter
+		  return GetAES( key )
+		  
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub EncryptCBC1BlockTest()
 		  dim key as string 
