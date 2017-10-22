@@ -35,7 +35,7 @@ Inherits M_Crypto.Encrypter
 
 	#tag Event
 		Sub KeyChanged(key As String)
-		  ExpandKey key, Nk
+		  ExpandKey key
 		End Sub
 	#tag EndEvent
 
@@ -385,7 +385,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ExpandKey(key As String, nk As Integer)
+		Private Sub ExpandKey(key As String)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -410,10 +410,10 @@ Inherits M_Crypto.Encrypter
 		  dim ptrRcon as ptr = Rcon
 		  
 		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
-		  for i As integer = nk to iLast
-		    tempa.Left( 4 ) = RoundKey.Mid( ( i - 1 ) * 4, 4 )
+		  for i As integer = Nk to iLast
+		    ptrTempa.UInt32( 0 ) = ptrRoundKey.UInt32( ( i - 1 ) * 4 )
 		    
-		    if ( i mod nk ) = 0 then
+		    if ( i mod Nk ) = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
 		      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 		      
@@ -431,12 +431,12 @@ Inherits M_Crypto.Encrypter
 		      ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
 		      ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
 		      
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ nk )
+		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ Nk )
 		      
 		    end if
 		    
 		    if Bits = 256 then
-		      if ( i mod nk ) = 4 then
+		      if ( i mod Nk ) = 4 then
 		        ptrTempa.Byte( 0 ) = ptrSbox.Byte( ptrTempa.Byte( 0 ) )
 		        ptrTempa.Byte( 1 ) = ptrSbox.Byte( ptrTempa.Byte( 1 ) )
 		        ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
@@ -445,11 +445,8 @@ Inherits M_Crypto.Encrypter
 		    end if
 		    
 		    dim iTimes4 As integer = i * 4
-		    dim iMinusNk As integer = ( i - nk ) * 4
-		    ptrRoundKey.Byte( iTimes4 + 0 ) = ptrRoundKey.Byte( iMinusNk + 0 ) xor ptrTempa.Byte( 0 )
-		    ptrRoundKey.Byte( iTimes4 + 1 ) = ptrRoundKey.Byte( iMinusNk + 1 ) xor ptrTempa.Byte( 1 )
-		    ptrRoundKey.Byte( iTimes4 + 2 ) = ptrRoundKey.Byte( iMinusNk + 2 ) xor ptrTempa.Byte( 2 )
-		    ptrRoundKey.Byte( iTimes4 + 3 ) = ptrRoundKey.Byte( iMinusNk + 3 ) xor ptrTempa.Byte( 3 )
+		    dim iMinusNk As integer = ( i - Nk ) * 4
+		    ptrRoundKey.UInt32( iTimes4 ) = ptrRoundKey.UInt32( iMinusNk ) xor ptrTempa.UInt32( 0 )
 		  next
 		  
 		End Sub
