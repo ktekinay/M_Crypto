@@ -77,9 +77,11 @@ Inherits TestGroup
 		  
 		  dim clone as M_Crypto.Encrypter = CloneEncrypter( e )
 		  
-		  Assert.AreEqual clone.Decrypt( e.Encrypt( kLongData ) ), e.Decrypt( clone.Encrypt( kLongData ) )
+		  dim data as string = kLongData.LeftB( 64 )
+		  
+		  Assert.AreEqual clone.Decrypt( e.Encrypt( data ) ), e.Decrypt( clone.Encrypt( data ) )
 		  e = nil
-		  Assert.AreEqual kLongData, clone.Decrypt( clone.Encrypt( kLongData ) ), "After original is nil"
+		  Assert.AreEqual data, clone.Decrypt( clone.Encrypt( data ) ), "After original is nil"
 		End Sub
 	#tag EndMethod
 

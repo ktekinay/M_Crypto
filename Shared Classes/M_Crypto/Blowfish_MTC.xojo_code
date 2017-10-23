@@ -7,13 +7,13 @@ Implements BcryptInterface
 		  dim other as M_Crypto.Blowfish_MTC = M_Crypto.Blowfish_MTC( e )
 		  
 		  if other.P isa object then
-		    P = new Xojo.Core.MemoryBlock( other.P )
-		    PPtr = other.PPtr
+		    P = new Xojo.Core.MutableMemoryBlock( other.P )
+		    PPtr = P.Data
 		  end if
 		  
 		  if other.S isa object then
-		    S = new Xojo.Core.MemoryBlock( other.S )
-		    SPtr = other.SPtr
+		    S = new Xojo.Core.MutableMemoryBlock( other.S )
+		    SPtr = S.Data
 		  end if
 		  
 		End Sub
@@ -598,9 +598,9 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h21
 		Private Sub InitKeyValues()
-		  P = new Xojo.Core.MemoryBlock( ( BLF_N + 2 ) * 4 )
+		  P = new Xojo.Core.MutableMemoryBlock( ( BLF_N + 2 ) * 4 )
 		  PPtr = P.Data
-		  S = new Xojo.Core.MemoryBlock( 4 * 256 * 4 )
+		  S = new Xojo.Core.MutableMemoryBlock( 4 * 256 * 4 )
 		  SPtr = S.Data
 		  
 		  dim x as integer
@@ -1043,7 +1043,7 @@ Implements BcryptInterface
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private P As Xojo.Core.MemoryBlock
+		Private P As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1051,7 +1051,7 @@ Implements BcryptInterface
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private S As Xojo.Core.MemoryBlock
+		Private S As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
