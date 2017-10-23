@@ -115,9 +115,9 @@ Implements BcryptInterface
 		  dim myPPtr as Ptr = PPtr
 		  
 		  const kFF as UInt32 = &hFF
-		  const kShiftRight3 as UInt32 = 2 ^ 24
-		  const kShiftRight2 as UInt32 = 2 ^ 16
-		  const kShiftRight1 as UInt32 = 2 ^ 8
+		  const kShiftRight3 as UInt32 = 256 ^ 3
+		  const kShiftRight2 as UInt32 = 256 ^ 2
+		  const kShiftRight1 as UInt32 = 256
 		  
 		  dim xl as UInt32 = x0
 		  dim xr as UInt32 = x1
@@ -299,9 +299,9 @@ Implements BcryptInterface
 		  xl = xl Xor myPPtr.UInt32( 0 )
 		  
 		  const kFF as UInt32 = &hFF
-		  const kShiftRight3 as UInt32 = 2 ^ 24
-		  const kShiftRight2 as UInt32 = 2 ^ 16
-		  const kShiftRight1 as UInt32 = 2 ^ 8
+		  const kShiftRight3 as UInt32 = 256 ^ 3
+		  const kShiftRight2 as UInt32 = 256 ^ 2
+		  const kShiftRight1 as UInt32 = 256
 		  
 		  dim a, b, c, d as integer
 		  dim j as UInt32
@@ -890,38 +890,39 @@ Implements BcryptInterface
 		  dim r as UInt32
 		  
 		  dim dataPtr as Ptr = data.Data
-		  dim dataBytes as Integer = data.Size
+		  dim dataSize as Integer = data.Size
 		  dim j as Integer = current
 		  
-		  if j = dataBytes then 
+		  if j = dataSize then 
 		    j = 0 // Special case optimization
 		  end if
 		  
 		  data.LittleEndian = false
 		  
-		  if dataBytes >= 4 and j <= ( dataBytes - 4 ) then
+		  if dataSize >= 4 and j <= ( dataSize - 4 ) then
 		    
 		    'r = dataPtr.UInt32( j ) // Can't use this because of endian issues
 		    r = data.UInt32Value( j )
 		    j = j + 4
 		    
-		  elseif dataBytes >= 2 and j = ( dataBytes - 2 ) then
+		  elseif dataSize >= 2 and j = ( dataSize - 2 ) then
 		    
 		    dim big as UInt32 = data.UInt16Value( j )
 		    dim small as UInt32 = data.UInt16Value( 0 )
 		    r = big * CType( 256 ^ 2, UInt32 ) + small
 		    j = 2
 		    
-		  elseif dataBytes > 2 then
+		  elseif dataSize > 2 then
 		    
-		    dim fromTheEnd as integer = dataBytes - j
+		    dim fromTheEnd as integer = dataSize - j
 		    dim fromTheStart as integer = 4 - fromTheEnd
+		    
 		    buffer.Left( fromTheEnd ) = data.Right( fromTheEnd )
 		    buffer.Right( fromTheStart ) = data.Left( fromTheStart )
 		    j = fromTheStart
 		    r = buffer.UInt32Value( 0 )
 		    
-		  elseif dataBytes = 1 then
+		  elseif dataSize = 1 then
 		    //
 		    // j must be 0
 		    //
@@ -932,7 +933,7 @@ Implements BcryptInterface
 		  else
 		    
 		    for i as Integer = 0 to 3
-		      if j >= databytes then
+		      if j >= dataSize then
 		        j = 0
 		      end if
 		      'r = Bitwise.ShiftLeft( r, 8, 32 ) or dataPtr.Byte( j )
