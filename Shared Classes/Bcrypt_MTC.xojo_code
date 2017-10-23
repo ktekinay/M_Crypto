@@ -63,6 +63,10 @@ Protected Module Bcrypt_MTC
 		  
 		  dim saltVersionString as string = saltFields( 1 )
 		  dim saltVersion as integer = Val( saltVersionString )
+		  if saltVersionString = "" or saltVersion > Val( BCRYPT_VERSION ) then
+		    return ""
+		  end if
+		  
 		  dim saltRounds as string = saltFields( 2 )
 		  dim saltText as string = saltFields( 3 )
 		  dim saltMB as Xojo.Core.MutableMemoryBlock
@@ -70,10 +74,7 @@ Protected Module Bcrypt_MTC
 		    dim temp as MemoryBlock = saltText
 		    dim temp2 as new Xojo.Core.MemoryBlock( temp, temp.Size )
 		    saltMB = new Xojo.Core.MutableMemoryBlock( temp2.Size )
-		    saltMB.Left( saltMB.Size ) = temp2.Left( temp2.Size )
-		  end if
-		  if saltVersionString = "" or saltVersion > Val( BCRYPT_VERSION ) then
-		    return ""
+		    saltMB.Left( saltMB.Size ) = temp2
 		  end if
 		  
 		  saltVersionString = NthFieldB( saltVersionString, str( saltVersion ), 2 )
@@ -374,7 +375,7 @@ Protected Module Bcrypt_MTC
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0.1", Scope = Protected
 	#tag EndConstant
 
 
