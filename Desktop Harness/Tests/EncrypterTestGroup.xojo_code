@@ -19,10 +19,35 @@ Inherits TestGroup
 
 
 	#tag Method, Flags = &h0
-		Sub CloneTest()
+		Sub CloneDuringStreamingTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
-		  e.UseFunction = M_Crypto.Encrypter.Functions.CBC
+		  e.SetInitialVector "1234567890123456"
 		  
+		  dim data as string = kLongData.LeftB( 64 )
+		  
+		  dim expected as string = e.EncryptCBC( data )
+		  
+		  //
+		  // Get it streaming
+		  //
+		  call e.EncryptCBC( data, false )
+		  
+		  //
+		  // Get the clone
+		  //
+		  dim clone as M_Crypto.Encrypter = CloneEncrypter( e )
+		  
+		  //
+		  // Compare it
+		  //
+		  dim actual as string = clone.EncryptCBC( data )
+		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function CloneEncrypter(e As M_Crypto.Encrypter) As M_Crypto.Encrypter
 		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( e )
 		  dim c as Xojo.Introspection.ConstructorInfo
 		  for each test as Xojo.Introspection.ConstructorInfo in ti.Constructors
@@ -34,12 +59,23 @@ Inherits TestGroup
 		  next
 		  
 		  if c is nil then
-		    return
+		    return nil
 		  end if
 		  
 		  dim params() as Auto
 		  params.Append e
 		  dim clone as M_Crypto.Encrypter = c.Invoke( params )
+		  
+		  return clone
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CloneTest()
+		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  e.UseFunction = M_Crypto.Encrypter.Functions.CBC
+		  
+		  dim clone as M_Crypto.Encrypter = CloneEncrypter( e )
 		  
 		  Assert.AreEqual clone.Decrypt( e.Encrypt( kLongData ) ), e.Decrypt( clone.Encrypt( kLongData ) )
 		  e = nil
