@@ -109,8 +109,6 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  dim smallBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  dim smallBufferPtr as ptr = smallBuffer.Data
 		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  streamBuffer.LittleEndian = false
 		  dim streamBufferPtr as ptr = streamBuffer.Data
@@ -118,13 +116,13 @@ Protected Module Bcrypt_MTC
 		  dim keyMB as new Xojo.Core.MutableMemoryBlock( keyTemp, keyTemp.Size )
 		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
-		  state.ExpandState( csalt, keyMB, smallBuffer, smallBufferPtr )
+		  state.ExpandState( csalt, keyMB )
 		  dim lastRound as UInt32 = rounds - 1
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
-		    state.Expand0State( keyMB, smallBuffer, smallBufferPtr, streamBuffer, streamBufferPtr )
-		    state.Expand0State( csalt, smallBuffer, smallBufferPtr, streamBuffer, streamBufferPtr )
+		    state.Expand0State( keyMB, streamBuffer, streamBufferPtr )
+		    state.Expand0State( csalt, streamBuffer, streamBufferPtr )
 		  next k
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
