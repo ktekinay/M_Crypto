@@ -315,9 +315,7 @@ Implements BcryptInterface
 		  dim mySPtr as Ptr = SPtr
 		  dim myPPtr as Ptr = PPtr
 		  
-		  dim mb as Xojo.Core.MutableMemoryBlock = buffer
-		  dim pt as Ptr = bufferPtr
-		  static isLittleEndian as boolean = mb.LittleEndian // This will never change
+		  static isLittleEndian as boolean = buffer.LittleEndian // This will never change
 		  
 		  dim xl as UInt32 = x0
 		  dim xr as Uint32 = x1
@@ -328,18 +326,18 @@ Implements BcryptInterface
 		  dim j as UInt32
 		  for i as integer = 1 to 16 step 2
 		    j = xl
-		    pt.UInt32( 0 ) = j
+		    bufferPtr.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
-		      a = pt.Byte( 3 )
-		      b = pt.Byte( 2 )
-		      c = pt.Byte( 1 )
-		      d = pt.Byte( 0 )
+		      a = bufferPtr.Byte( 3 )
+		      b = bufferPtr.Byte( 2 )
+		      c = bufferPtr.Byte( 1 )
+		      d = bufferPtr.Byte( 0 )
 		    else
-		      a = pt.Byte( 0 )
-		      b = pt.Byte( 1 )
-		      c = pt.Byte( 2 )
-		      d = pt.Byte( 3 )
+		      a = bufferPtr.Byte( 0 )
+		      b = bufferPtr.Byte( 1 )
+		      c = bufferPtr.Byte( 2 )
+		      d = bufferPtr.Byte( 3 )
 		    end if
 		    
 		    j = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
@@ -349,18 +347,18 @@ Implements BcryptInterface
 		    xr = xr Xor ( j Xor myPPtr.UInt32( i * 4 ) )
 		    
 		    j = xr
-		    pt.UInt32( 0 ) = j
+		    bufferPtr.UInt32( 0 ) = j
 		    
 		    if isLittleEndian then
-		      a = pt.Byte( 3 )
-		      b = pt.Byte( 2 )
-		      c = pt.Byte( 1 )
-		      d = pt.Byte( 0 )
+		      a = bufferPtr.Byte( 3 )
+		      b = bufferPtr.Byte( 2 )
+		      c = bufferPtr.Byte( 1 )
+		      d = bufferPtr.Byte( 0 )
 		    else
-		      a = pt.Byte( 0 )
-		      b = pt.Byte( 1 )
-		      c = pt.Byte( 2 )
-		      d = pt.Byte( 3 )
+		      a = bufferPtr.Byte( 0 )
+		      b = bufferPtr.Byte( 1 )
+		      c = bufferPtr.Byte( 2 )
+		      d = bufferPtr.Byte( 3 )
 		    end if
 		    
 		    j = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
