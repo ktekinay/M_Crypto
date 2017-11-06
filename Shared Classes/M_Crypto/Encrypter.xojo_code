@@ -8,6 +8,25 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(cloneFrom As M_Crypto.Encrypter)
+		  //
+		  // Clone Constructor
+		  //
+		  
+		  zBlockSize = cloneFrom.zBlockSize
+		  WasKeySet = cloneFrom.WasKeySet
+		  UseFunction = cloneFrom.UseFunction
+		  PaddingMethod = cloneFrom.PaddingMethod
+		  
+		  if cloneFrom.InitialVector isa object then
+		    InitialVector = new Xojo.Core.MutableMemoryBlock( cloneFrom.InitialVector )
+		  end if
+		  
+		  RaiseEvent CloneFrom( cloneFrom )
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub Decrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
@@ -220,6 +239,18 @@ Protected Class Encrypter
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function GetCurrentThreadId() As Integer
+		  dim t as Thread = App.CurrentThread
+		  if t is nil then
+		    return 0
+		  else
+		    return t.ThreadID
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function InterpretVector(vector As String) As String
 		  if vector = "" then 
@@ -348,6 +379,10 @@ Protected Class Encrypter
 
 
 	#tag Hook, Flags = &h0
+		Event CloneFrom(e As M_Crypto.Encrypter)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
@@ -383,16 +418,16 @@ Protected Class Encrypter
 		Protected InitialVector As Xojo.Core.MutableMemoryBlock
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected LastBlockHadNull As Boolean
-	#tag EndProperty
-
 	#tag Property, Flags = &h0
 		PaddingMethod As Padding
 	#tag EndProperty
 
 	#tag Property, Flags = &h0, Description = 5768656E207365742C20456E637279707420616E6420446563727970742077696C6C2075736520746865207370656369666965642066756E6374696F6E
 		UseFunction As Functions
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private VectorDict As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
@@ -403,9 +438,34 @@ Protected Class Encrypter
 		Private zBlockSize As Integer
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
+	#tag ComputedProperty, Flags = &h1
+		#tag Getter
+			Get
+			  //
+			  // If the same encrypter is used in different threads to
+			  // process blocks, have to make sure one thread's vector doesn't clobber the other
+			  //
+			  
+			  if VectorDict is nil then
+			    VectorDict = new Dictionary
+			    return nil // Can't be a vector yet
+			  end if
+			  
+			  return VectorDict.Lookup( GetCurrentThreadId, nil )
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if VectorDict is nil then
+			    VectorDict = new Dictionary
+			  end if
+			  
+			  VectorDict.Value( GetCurrentThreadId ) = value
+			End Set
+		#tag EndSetter
 		Protected zCurrentVector As Xojo.Core.MutableMemoryBlock
-	#tag EndProperty
+	#tag EndComputedProperty
 
 
 	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of BlockSize", Scope = Private

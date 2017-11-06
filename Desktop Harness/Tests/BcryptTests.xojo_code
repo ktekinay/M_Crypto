@@ -55,6 +55,19 @@ Inherits TestGroup
 		    Assert.AreSame( expected, actual )
 		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected )
 		  next
+		  
+		  dim hash as string = "$2a$12$fEYmH3px9mOdUMQw4mglvubfTSJLb55SK/3wWe3nQ5kpxCLDXtSoG"
+		  
+		  dim sw as new Stopwatch_MTC
+		  sw.Start
+		  
+		  dim isValid as boolean = Bcrypt_MTC.Verify("test123", hash)
+		  
+		  sw.Stop
+		  
+		  Assert.IsTrue isValid
+		  Assert.Message "Verification of 12 rounds took " + sw.ElapsedSeconds.ToText( Xojo.Core.Locale.Current, "###,0.0##" ) + " s"
+		  
 		End Sub
 	#tag EndMethod
 

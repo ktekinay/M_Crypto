@@ -2,6 +2,21 @@
 Class AES_MTC
 Inherits M_Crypto.Encrypter
 	#tag Event
+		Sub CloneFrom(e As M_Crypto.Encrypter)
+		  dim other as M_Crypto.AES_MTC = M_Crypto.AES_MTC( e )
+		  
+		  KeyExpSize = other.KeyExpSize
+		  KeyLen = other.KeyLen
+		  Nk = other.Nk
+		  NumberOfRounds = other.NumberOfRounds
+		  if other.RoundKey isa object then
+		    RoundKey = new Xojo.Core.MutableMemoryBlock( other.RoundKey )
+		  end if
+		  zBits = other.zBits
+		End Sub
+	#tag EndEvent
+
+	#tag Event
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
@@ -35,7 +50,7 @@ Inherits M_Crypto.Encrypter
 
 	#tag Event
 		Sub KeyChanged(key As String)
-		  ExpandKey key, Nk
+		  ExpandKey key
 		End Sub
 	#tag EndEvent
 
@@ -130,7 +145,7 @@ Inherits M_Crypto.Encrypter
 		    dim temp As integer 
 		    
 		    //
-		    // Rotate first row 1 columns to left  
+		    // Rotate first row 1 column to left  
 		    //
 		    temp = dataPtr.Byte( row1col0 )
 		    dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
@@ -309,11 +324,8 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    dim temp as new Xojo.Core.MemoryBlock( vectorPtr, kBlockLen )
-		    if zCurrentVector is nil then
-		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
-		    end if
-		    zCurrentVector.Left( kBlockLen ) = temp
+		    vectorMB.Left( kBlockLen ) = originalData.Right( kBlockLen )
+		    zCurrentVector = vectorMB
 		  end if
 		  
 		  
@@ -343,12 +355,12 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data.Data
 		  
-		  dim vectorMB as Xojo.Core.MutableMemoryBlock
-		  if zCurrentVector isa object then
-		    vectorMB = zCurrentVector
-		  elseif InitialVector isa object then
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  
+		  if vectorMB is nil and InitialVector isa object then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
-		  else
+		  end if
+		  if vectorMB is nil then
 		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
 		  end if
 		  
@@ -362,11 +374,8 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    if zCurrentVector is nil then
-		      zCurrentVector = new Xojo.Core.MutableMemoryBlock( kBlockLen )
-		    end if
-		    dim temp as new Xojo.Core.MutableMemoryBlock( vectorPtr, kBlockLen )
-		    zCurrentVector.Left( kBlockLen ) = temp
+		    vectorMB.Left( kBlockLen ) = data.Right( kBlockLen )
+		    zCurrentVector = vectorMB
 		  end if
 		  
 		End Sub
@@ -385,7 +394,14 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ExpandKey(key As String, nk As Integer)
+		Private Sub ExpandKey(key As String)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  //
 		  // The first round key is the key itself.
 		  //
@@ -403,10 +419,10 @@ Inherits M_Crypto.Encrypter
 		  dim ptrRcon as ptr = Rcon
 		  
 		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
-		  for i As integer = nk to iLast
-		    tempa.Left( 4 ) = RoundKey.Mid( ( i - 1 ) * 4, 4 )
+		  for i As integer = Nk to iLast
+		    ptrTempa.UInt32( 0 ) = ptrRoundKey.UInt32( ( i - 1 ) * 4 )
 		    
-		    if ( i mod nk ) = 0 then
+		    if ( i mod Nk ) = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
 		      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 		      
@@ -424,12 +440,12 @@ Inherits M_Crypto.Encrypter
 		      ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
 		      ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
 		      
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ nk )
+		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ Nk )
 		      
 		    end if
 		    
 		    if Bits = 256 then
-		      if ( i mod nk ) = 4 then
+		      if ( i mod Nk ) = 4 then
 		        ptrTempa.Byte( 0 ) = ptrSbox.Byte( ptrTempa.Byte( 0 ) )
 		        ptrTempa.Byte( 1 ) = ptrSbox.Byte( ptrTempa.Byte( 1 ) )
 		        ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
@@ -438,11 +454,8 @@ Inherits M_Crypto.Encrypter
 		    end if
 		    
 		    dim iTimes4 As integer = i * 4
-		    dim iMinusNk As integer = ( i - nk ) * 4
-		    ptrRoundKey.Byte( iTimes4 + 0 ) = ptrRoundKey.Byte( iMinusNk + 0 ) xor ptrTempa.Byte( 0 )
-		    ptrRoundKey.Byte( iTimes4 + 1 ) = ptrRoundKey.Byte( iMinusNk + 1 ) xor ptrTempa.Byte( 1 )
-		    ptrRoundKey.Byte( iTimes4 + 2 ) = ptrRoundKey.Byte( iMinusNk + 2 ) xor ptrTempa.Byte( 2 )
-		    ptrRoundKey.Byte( iTimes4 + 3 ) = ptrRoundKey.Byte( iMinusNk + 3 ) xor ptrTempa.Byte( 3 )
+		    dim iMinusNk As integer = ( i - Nk ) * 4
+		    ptrRoundKey.UInt32( iTimes4 ) = ptrRoundKey.UInt32( iMinusNk ) xor ptrTempa.UInt32( 0 )
 		  next
 		  
 		End Sub
@@ -578,6 +591,13 @@ Inherits M_Crypto.Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub InvCipher(dataPtr As Ptr, startAt As Integer)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  //
 		  // Used for InvShiftRows
 		  //
@@ -1096,7 +1116,7 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.4", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.5", Scope = Public
 	#tag EndConstant
 
 

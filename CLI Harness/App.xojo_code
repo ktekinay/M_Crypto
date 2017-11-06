@@ -645,7 +645,8 @@ Inherits ConsoleApplication
 			    " is used]", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
-			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt utilty v." + kVersion
+			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt/Scrypt utilty v." + kVersion + _
+			    " (" + if(Target32Bit, "32-bit", "64-bit") + ")"
 			    parser.AdditionalHelpNotes = kHelpNotes
 			    
 			  end if
@@ -768,7 +769,7 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kPaddingPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.1", Scope = Private
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.2", Scope = Private
 	#tag EndConstant
 
 

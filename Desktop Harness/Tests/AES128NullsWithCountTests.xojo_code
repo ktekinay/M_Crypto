@@ -1,6 +1,13 @@
 #tag Class
 Protected Class AES128NullsWithCountTests
 Inherits EncrypterTestGroup
+	#tag Event
+		Function GetEncrypter(key As String) As M_Crypto.Encrypter
+		  return GetAES( key )
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub EncryptCBCEvenBlockTest()
 		  dim key as string 

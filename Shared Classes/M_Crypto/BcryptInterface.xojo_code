@@ -7,13 +7,13 @@ Protected Interface BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Expand0State(key As Xojo.Core.MutableMemoryBlock, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr, streamBuffer As Xojo.Core.MutableMemoryBlock, streamBufferPtr As Ptr)
+		Sub Expand0State(key As Xojo.Core.MutableMemoryBlock, streamBuffer As Xojo.Core.MutableMemoryBlock, streamBufferPtr As Ptr)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub ExpandState(data As Xojo.Core.MutableMemoryBlock, key As Xojo.Core.MutableMemoryBlock, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr)
+		Sub ExpandState(data As Xojo.Core.MutableMemoryBlock, key As Xojo.Core.MutableMemoryBlock)
 		  
 		End Sub
 	#tag EndMethod
