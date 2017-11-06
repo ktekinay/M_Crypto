@@ -305,7 +305,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.4__ (_)
+__2.4__ (Nov. 6, 2017)
 
 - Added pragmas that dramatically increase the speed of `AES_MTC` decryption.
 - The same instance of an `M_Crypto.Encrypter` is now safe to use in multiple threads. Just don't change the key or Initial Vector of that instance.
