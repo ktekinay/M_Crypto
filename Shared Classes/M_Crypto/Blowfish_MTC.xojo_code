@@ -491,6 +491,9 @@ Implements BcryptInterface
 		      mySPtr.UInt32( arrIndex ) = d0
 		      mySPtr.UInt32( arrIndex + 4 ) = d1
 		    next k
+		    #if DebugBuild then
+		      i = i // A place to break
+		    #endif
 		  next i
 		  
 		End Sub

@@ -123,6 +123,12 @@ Protected Module Bcrypt_MTC
 		  for k as Integer = 0 to lastRound
 		    state.Expand0State( keyMB, streamBuffer, streamBufferPtr )
 		    state.Expand0State( csalt, streamBuffer, streamBufferPtr )
+		    
+		    #if DebugBuild then
+		      if k = lastRound then
+		        k = k // A place to break
+		      end if
+		    #endif
 		  next k
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
