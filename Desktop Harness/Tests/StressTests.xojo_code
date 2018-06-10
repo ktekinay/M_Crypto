@@ -86,11 +86,27 @@ Inherits TestGroup
 		  Assert.Message "PHP: " + avgMs.ToText + " ms per round"
 		  
 		  dim nativeHash as string
-		  sw.Start
+		  
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  for i as integer = 1 to kRounds
+		    sw.Start
 		    nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
+		    sw.Stop
 		  next
-		  sw.Stop
+		  
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks true
+		    #pragma BoundsChecking true
+		    #pragma NilObjectChecking true
+		    #pragma StackOverflowChecking true
+		  #endif
+		  
 		  avgMs = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  
 		  Assert.Message "Bcrypt_MTC: " + avgMs.ToText + " ms per round"
