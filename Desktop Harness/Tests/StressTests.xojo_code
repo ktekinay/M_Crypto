@@ -60,6 +60,45 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub BcryptTimingTest()
+		  //
+		  // Times Bcrypt as compared to PHP
+		  //
+		  
+		  dim kRounds as integer = 20
+		  dim kCost as integer = 12
+		  dim kPassword as string = "password"
+		  
+		  Assert.Message "Rounds: " + kRounds.ToText + ", Cost: " + kCost.ToText
+		  
+		  dim phpScript as string = kBcryptTimingScript
+		  phpScript = phpScript.Replace( "%rounds%", str( kRounds ) )
+		  phpScript = phpScript.Replace( "%cost%", str( kCost ) )
+		  phpScript = phpScript.Replace( "%password%", kPassword )
+		  
+		  dim sw as new Stopwatch_MTC
+		  sw.Start
+		  dim phpHash as string = M_PHP.Execute( phpScript )
+		  sw.Stop
+		  dim avgMs as double = sw.ElapsedMilliseconds / CType( kRounds, Double )
+		  sw.Reset
+		  
+		  Assert.Message "PHP: " + avgMs.ToText + " ms per round"
+		  
+		  dim nativeHash as string
+		  sw.Start
+		  for i as integer = 1 to kRounds
+		    nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
+		  next
+		  sw.Stop
+		  avgMs = sw.ElapsedMilliseconds / CType( kRounds, Double )
+		  
+		  Assert.Message "Bcrypt_MTC: " + avgMs.ToText + " ms per round"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub BlowfishStressTest()
 		  //
 		  // Stress test Blowfish to make sure the result
@@ -287,6 +326,9 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+
+	#tag Constant, Name = kBcryptTimingScript, Type = String, Dynamic = False, Default = \"$options \x3D [ \'cost\' \x3D> %cost% ];\nfor ( $i  \x3D 0; $i < %rounds% ; $i++ ) {\n  $hash \x3D password_hash ( \'%password%\'\x2C PASSWORD_BCRYPT\x2C $options );\n};\necho $hash;\n", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
 	#tag EndConstant
