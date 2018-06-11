@@ -65,6 +65,13 @@ Inherits TestGroup
 		  // Times Bcrypt as compared to PHP
 		  //
 		  
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  dim kRounds as integer = 20
 		  dim kCost as integer = 12
 		  dim kPassword as string = "password"
@@ -79,6 +86,7 @@ Inherits TestGroup
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  dim phpHash as string = M_PHP.Execute( phpScript )
+		  #pragma unused phpHash
 		  sw.Stop
 		  dim avgMs as double = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  sw.Reset
@@ -87,25 +95,18 @@ Inherits TestGroup
 		  
 		  dim nativeHash as string
 		  
-		  #if not DebugBuild then
-		    #pragma BackgroundTasks false
-		    #pragma BoundsChecking false
-		    #pragma NilObjectChecking false
-		    #pragma StackOverflowChecking false
-		  #endif
+		  sw.Start
+		  nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
+		  sw.Stop
+		  
+		  Assert.Message "Bcrypt_MTC (once) : " + sw.ElapsedMilliseconds.ToText + " ms"
+		  sw.Reset
 		  
 		  for i as integer = 1 to kRounds
 		    sw.Start
 		    nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
 		    sw.Stop
 		  next
-		  
-		  #if not DebugBuild then
-		    #pragma BackgroundTasks true
-		    #pragma BoundsChecking true
-		    #pragma NilObjectChecking true
-		    #pragma StackOverflowChecking true
-		  #endif
 		  
 		  avgMs = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  
