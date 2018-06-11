@@ -83,15 +83,18 @@ Inherits TestGroup
 		  phpScript = phpScript.Replace( "%cost%", str( kCost ) )
 		  phpScript = phpScript.Replace( "%password%", kPassword )
 		  
+		  System.DebugLog phpScript
+		  
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  dim phpHash as string = M_PHP.Execute( phpScript )
-		  #pragma unused phpHash
 		  sw.Stop
+		  
 		  dim avgMs as double = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  sw.Reset
 		  
 		  Assert.Message "PHP: " + avgMs.ToText + " ms per round"
+		  Assert.IsTrue Bcrypt_MTC.Verify( kPassword, phpHash )
 		  
 		  dim nativeHash as string
 		  
@@ -111,6 +114,7 @@ Inherits TestGroup
 		  avgMs = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  
 		  Assert.Message "Bcrypt_MTC: " + avgMs.ToText + " ms per round"
+		  Assert.IsTrue PHPVerify( kPassword, nativeHash )
 		  
 		End Sub
 	#tag EndMethod
@@ -344,7 +348,7 @@ Inherits TestGroup
 	#tag EndMethod
 
 
-	#tag Constant, Name = kBcryptTimingScript, Type = String, Dynamic = False, Default = \"$options \x3D [ \'cost\' \x3D> %cost% ];\nfor ( $i  \x3D 0; $i < %rounds% ; $i++ ) {\n  $hash \x3D password_hash ( \'%password%\'\x2C PASSWORD_BCRYPT\x2C $options );\n};\necho $hash;\n", Scope = Private
+	#tag Constant, Name = kBcryptTimingScript, Type = String, Dynamic = False, Default = \"$options \x3D [ \'cost\' \x3D> %cost% ];\nfor ( $i  \x3D 0 ; $i < %rounds% ; $i++ ) {\n  $hash \x3D password_hash ( \'%password%\'\x2C PASSWORD_BCRYPT\x2C $options );\n};\necho $hash;\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
