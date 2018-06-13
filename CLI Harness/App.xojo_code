@@ -3,12 +3,23 @@ Protected Class App
 Inherits ConsoleApplication
 	#tag Event
 		Function Run(args() as String) As Integer
+		  if args.IndexOf( "--" + kOptionDebug ) <> -1 then
+		    print "======================================================================"
+		    print "ARGUMENTS"
+		    print ""
+		    for i as integer = 0 to args.Ubound
+		      print format( i + 1, "00" ) + ": " + ReplaceLineEndings( args( i ), "\n" )
+		    next
+		    print "======================================================================"
+		  end if
+		  
 		  Parser.Parse args
 		  
 		  if Parser.HelpRequested then
 		    Parser.ShowHelp
 		    return 0
 		  end if
+		  
 		  
 		  select case Parser.StringValue( kOptionExecute, "" ).Left( 1 )
 		  case kActionEncrypt.Left( 1 )
@@ -645,6 +656,9 @@ Inherits ConsoleApplication
 			    " is used]", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
+			    o = new Option( "", kOptionDebug, "Print the given arguments", Option.OptionType.Boolean )
+			    parser.AddOption o
+			    
 			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt/Scrypt utilty v." + kVersion + _
 			    " (" + if(Target32Bit, "32-bit", "64-bit") + ")"
 			    parser.AdditionalHelpNotes = kHelpNotes
@@ -704,6 +718,9 @@ Inherits ConsoleApplication
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionDataStdIn, Type = String, Dynamic = False, Default = \"data-stdin", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kOptionDebug, Type = String, Dynamic = False, Default = \"debug-args", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kOptionEncrypter, Type = String, Dynamic = False, Default = \"encrypter", Scope = Private

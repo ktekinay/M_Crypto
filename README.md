@@ -305,6 +305,10 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.5__ (__)
+
+- Added "--debug-args" switch to CLI.
+
 __2.4__ (Nov. 6, 2017)
 
 - Added pragmas that dramatically increase the speed of `AES_MTC` decryption.
