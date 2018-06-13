@@ -308,6 +308,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 __2.5__ (__)
 
 - Added "--debug-args" switch to CLI.
+- Added BcryptTimimg unit test.
 
 __2.4__ (Nov. 6, 2017)
 
