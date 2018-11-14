@@ -25,6 +25,9 @@ Inherits TestController
 		  
 		  group = new ScryptTests( self, "Scrypt" )
 		  
+		  group = new SHA256DigestTest( self, "SHA256Digest" )
+		  group = new SHA512DigestTest( self, "SHA512Digest" )
+		  
 		  group = new StressTests( self, "Stress Tests" )
 		  group.IncludeGroup = false
 		End Sub

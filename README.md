@@ -307,6 +307,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 __2.5__ (__)
 
+- Added `SHA25Digest_MTC` and `SHA512Digest_MTC` classes.
 - Added "--debug-args" switch to CLI.
 - Added BcryptTimimg unit test.
 

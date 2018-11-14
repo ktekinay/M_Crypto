@@ -3,6 +3,8 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
+		  StopProfiling
+		  
 		  dim w as new WndEncryption
 		  w.Show
 		  
