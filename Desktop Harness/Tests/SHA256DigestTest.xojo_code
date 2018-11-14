@@ -23,6 +23,63 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub DigestLargeTest()
+		  dim s as string = "hello "
+		  while s.LenB <= 10000
+		    s = s + s
+		  wend
+		  
+		  dim expected as string = EncodeHex( Crypto.SHA256( s ) ).Lowercase
+		  
+		  dim d as new SHA256Digest_MTC
+		  
+		  for i as integer = 1 to s.LenB step 999
+		    d.Process s.MidB( i, 999 )
+		  next
+		  
+		  dim actual as string = EncodeHex( d.Value ).Lowercase
+		  Assert.AreEqual expected, actual
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DigestSmallTest()
+		  dim d as new SHA256Digest_MTC
+		  
+		  dim t as string = "h"
+		  
+		  for i as integer = 1 to 128
+		    dim expected as string = EncodeHex( Crypto.SHA256( t ) ).Lowercase
+		    
+		    if i = 64 then
+		      i = i // A place to break
+		    end if
+		    
+		    d.Process "h"
+		    dim actual as string = EncodeHex( d.Value ).Lowercase
+		    Assert.AreEqual expected, actual, i.ToText
+		    
+		    t = t + "h"
+		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub ResetTest()
+		  dim d as new SHA256Digest_MTC
+		  
+		  dim strings() as string = array( "123", "456", "abc", "ab123" )
+		  
+		  for each s as string in strings
+		    d.Reset
+		    d.Process( s )
+		    Assert.AreEqual EncodeHex( Crypto.SHA256( s ) ).Lowercase, EncodeHex( d.Value ).Lowercase, s.ToText
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
