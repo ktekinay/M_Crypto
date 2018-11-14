@@ -18,7 +18,7 @@ Protected Class SHA256Digest_MTC
 		  data = Buffer + data
 		  Buffer = ""
 		  
-		  dim remainder as integer = data.LenB mod 64
+		  dim remainder as integer = data.LenB mod kChunkBytes
 		  if remainder <> 0 then
 		    Buffer = data.RightB( remainder )
 		    data = data.LeftB( data.LenB - buffer.LenB )
@@ -58,11 +58,11 @@ Protected Class SHA256Digest_MTC
 		  if isFinal then
 		    
 		    // Add one char to the length
-		    dim padding as integer = 64 - ( ( dataLen + 1 ) mod 64 )
+		    dim padding as integer = kChunkBytes - ( ( dataLen + 1 ) mod kChunkBytes )
 		    
 		    // Check if we have enough room for inserting the length
 		    if padding < 8 then 
-		      padding = padding + 64
+		      padding = padding + kChunkBytes
 		    end if
 		    
 		    mbIn = new MemoryBlock( dataLen + padding + 1 )
@@ -101,13 +101,14 @@ Protected Class SHA256Digest_MTC
 		  dim a, b, c, d, e, f, g, h as UInt32
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
-		  for chunkIndex as integer = 0 to lastByteIndex step 64 // Split into block of 64 bytes
-		    dim w as new MemoryBlock( 256 )
+		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
+		    dim w as new MemoryBlock( ( k.Ubound + 1 ) * 4 )
 		    w.LittleEndian = false
 		    
-		    w.StringValue( 0, 64 ) = mbIn.StringValue( chunkIndex, 64 )
+		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
-		    for wordIndex as integer = 64 to 255 step 4
+		    dim lastMessageByteIndex as integer = w.Size - 1
+		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 4
 		      dim word0 as UInt32 = w.UInt32Value( wordIndex - 64 )
 		      dim word1 as UInt32 = w.UInt32Value( wordIndex - 60 )
 		      dim word9 as UInt32 = w.UInt32Value( wordIndex - 28 )
@@ -128,7 +129,7 @@ Protected Class SHA256Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    for i as integer = 0 to 63
+		    for i as integer = 0 to k.Ubound
 		      dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
 		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
 		      dim temp1 as UInt32 = h + s1 + ch + k( i ) + w.UInt32Value( i * 4 )
@@ -244,6 +245,10 @@ Protected Class SHA256Digest_MTC
 		#tag EndGetter
 		Value As String
 	#tag EndComputedProperty
+
+
+	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"64", Scope = Private
+	#tag EndConstant
 
 
 	#tag ViewBehavior
