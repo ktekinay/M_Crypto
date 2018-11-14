@@ -80,6 +80,31 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub SpeedTest()
+		  dim s as string = "Hello "
+		  while s.LenB <= 100000
+		    s = s + s
+		  wend
+		  
+		  dim expected as string
+		  StartTestTimer "native"
+		  expected = Crypto.SHA256( s )
+		  LogTestTimer "native"
+		  
+		  dim d as new SHA256Digest_MTC
+		  dim actual as string
+		  StartTestTimer "mine"
+		  StartProfiling
+		  d.Process s
+		  actual = d.Value
+		  StopProfiling
+		  LogTestTimer "mine"
+		  
+		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
