@@ -41,16 +41,26 @@ Protected Class SHA256Digest_MTC
 		  //
 		  // Table of constants
 		  //
-		  static k() as UInt32 = ArrayUInt32( _
-		  &h428a2f98, &h71374491, &hb5c0fbcf, &he9b5dba5, &h3956c25b, &h59f111f1, &h923f82a4, &hab1c5ed5, _
-		  &hd807aa98, &h12835b01, &h243185be, &h550c7dc3, &h72be5d74, &h80deb1fe, &h9bdc06a7, &hc19bf174, _
-		  &he49b69c1, &hefbe4786, &h0fc19dc6, &h240ca1cc, &h2de92c6f, &h4a7484aa, &h5cb0a9dc, &h76f988da, _
-		  &h983e5152, &ha831c66d, &hb00327c8, &hbf597fc7, &hc6e00bf3, &hd5a79147, &h06ca6351, &h14292967, _
-		  &h27b70a85, &h2e1b2138, &h4d2c6dfc, &h53380d13, &h650a7354, &h766a0abb, &h81c2c92e, &h92722c85, _
-		  &ha2bfe8a1, &ha81a664b, &hc24b8b70, &hc76c51a3, &hd192e819, &hd6990624, &hf40e3585, &h106aa070, _
-		  &h19a4c116, &h1e376c08, &h2748774c, &h34b0bcb5, &h391c0cb3, &h4ed8aa4a, &h5b9cca4f, &h682e6ff3, _
-		  &h748f82ee, &h78a5636f, &h84c87814, &h8cc70208, &h90befffa, &ha4506ceb, &hbef9a3f7, &hc67178f2 _
-		  )
+		  static k as MemoryBlock
+		  if k is nil then
+		    static arr() as UInt32 = ArrayUInt32( _
+		    &h428a2f98, &h71374491, &hb5c0fbcf, &he9b5dba5, &h3956c25b, &h59f111f1, &h923f82a4, &hab1c5ed5, _
+		    &hd807aa98, &h12835b01, &h243185be, &h550c7dc3, &h72be5d74, &h80deb1fe, &h9bdc06a7, &hc19bf174, _
+		    &he49b69c1, &hefbe4786, &h0fc19dc6, &h240ca1cc, &h2de92c6f, &h4a7484aa, &h5cb0a9dc, &h76f988da, _
+		    &h983e5152, &ha831c66d, &hb00327c8, &hbf597fc7, &hc6e00bf3, &hd5a79147, &h06ca6351, &h14292967, _
+		    &h27b70a85, &h2e1b2138, &h4d2c6dfc, &h53380d13, &h650a7354, &h766a0abb, &h81c2c92e, &h92722c85, _
+		    &ha2bfe8a1, &ha81a664b, &hc24b8b70, &hc76c51a3, &hd192e819, &hd6990624, &hf40e3585, &h106aa070, _
+		    &h19a4c116, &h1e376c08, &h2748774c, &h34b0bcb5, &h391c0cb3, &h4ed8aa4a, &h5b9cca4f, &h682e6ff3, _
+		    &h748f82ee, &h78a5636f, &h84c87814, &h8cc70208, &h90befffa, &ha4506ceb, &hbef9a3f7, &hc67178f2 _
+		    )
+		    
+		    k = new MemoryBlock( ( arr.Ubound + 1 ) * 4 )
+		    k.LittleEndian = false
+		    
+		    for i as integer = 0 to arr.Ubound
+		      k.UInt32Value( i * 4 ) = arr( i )
+		    next
+		  end if
 		  
 		  dim dataLen as integer = data.LenB
 		  dim mbIn as MemoryBlock
@@ -102,7 +112,7 @@ Protected Class SHA256Digest_MTC
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    dim w as new MemoryBlock( ( k.Ubound + 1 ) * 4 )
+		    dim w as new MemoryBlock( k.Size )
 		    w.LittleEndian = false
 		    
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
@@ -129,10 +139,11 @@ Protected Class SHA256Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    for i as integer = 0 to k.Ubound
+		    dim lastRoundIndex as integer = ( k.Size \ 4 ) - 1
+		    for i as integer = 0 to lastRoundIndex
 		      dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
 		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
-		      dim temp1 as UInt32 = h + s1 + ch + k( i ) + w.UInt32Value( i * 4 )
+		      dim temp1 as UInt32 = h + s1 + ch + k.UInt32Value( i * 4 ) + w.UInt32Value( i * 4 )
 		      
 		      dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
 		      dim maj as UInt32 = ( a and b ) xor ( a and c ) xor ( b and c )
