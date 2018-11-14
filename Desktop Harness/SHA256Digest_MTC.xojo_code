@@ -9,7 +9,6 @@ Protected Class SHA256Digest_MTC
 	#tag Method, Flags = &h0
 		Sub Constructor()
 		  Reset
-		  
 		End Sub
 	#tag EndMethod
 
@@ -36,12 +35,28 @@ Protected Class SHA256Digest_MTC
 		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
 		  const k2 as UInt32 = 2
 		  const k3 as UInt32 = 3
+		  const k6 as UInt32 = 6
+		  const k7 as UInt32 = 7
 		  const k10 as UInt32 = 10
+		  const k11 as UInt32 = 11
+		  const k13 as UInt32 = 13
+		  const k14 as UInt32 = 14
+		  const k15 as UInt32 = 15
+		  const k17 as UInt32 = 17
+		  const k18 as UInt32 = 18
+		  const k19 as UInt32 = 19
+		  const k21 as UInt32 = 21
+		  const k22 as UInt32 = 22
+		  const k25 as UInt32 = 25
+		  const k26 as UInt32 = 26
+		  const k30 as UInt32 = 30
 		  
 		  //
 		  // Table of constants
 		  //
 		  static k as MemoryBlock
+		  static kPtr as ptr
+		  
 		  if k is nil then
 		    static arr() as UInt32 = ArrayUInt32( _
 		    &h428a2f98, &h71374491, &hb5c0fbcf, &he9b5dba5, &h3956c25b, &h59f111f1, &h923f82a4, &hab1c5ed5, _
@@ -55,11 +70,16 @@ Protected Class SHA256Digest_MTC
 		    )
 		    
 		    k = new MemoryBlock( ( arr.Ubound + 1 ) * 4 )
-		    k.LittleEndian = false
+		    kPtr = k
 		    
 		    for i as integer = 0 to arr.Ubound
-		      k.UInt32Value( i * 4 ) = arr( i )
+		      kPtr.UInt32( i * 4 ) = arr( i )
 		    next
+		  end if
+		  
+		  if Message is nil then
+		    Message = new MemoryBlock( k.Size )
+		    Message.LittleEndian = false
 		  end if
 		  
 		  dim dataLen as integer = data.LenB
@@ -67,10 +87,14 @@ Protected Class SHA256Digest_MTC
 		  
 		  if isFinal then
 		    
+		    //
 		    // Add one char to the length
+		    //
 		    dim padding as integer = kChunkBytes - ( ( dataLen + 1 ) mod kChunkBytes )
 		    
+		    //
 		    // Check if we have enough room for inserting the length
+		    //
 		    if padding < 8 then 
 		      padding = padding + kChunkBytes
 		    end if
@@ -92,7 +116,7 @@ Protected Class SHA256Digest_MTC
 		      mbIn.StringValue( 0, dataLen ) = data
 		    end if
 		    
-		  else // Not isFinal so the data will already be a multiple of 64
+		  else // Not isFinal so the data will already be a multiple 
 		    
 		    mbIn = data
 		    mbIn.LittleEndian = false
@@ -112,8 +136,7 @@ Protected Class SHA256Digest_MTC
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    dim w as new MemoryBlock( k.Size )
-		    w.LittleEndian = false
+		    dim w as MemoryBlock = Message // Convenience
 		    
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
@@ -124,8 +147,17 @@ Protected Class SHA256Digest_MTC
 		      dim word9 as UInt32 = w.UInt32Value( wordIndex - 28 )
 		      dim word14 as UInt32 = w.UInt32Value( wordIndex - 8 )
 		      
-		      dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ CType( k2 ^ k3, UInt32 ) )
-		      dim s1 as UInt32 = ( RotateRight( word14, 17 ) xor RotateRight( word14, 19 ) ) xor ( word14 \ CType( k2 ^ k10, UInt32 ) )
+		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ CType( k2 ^ k3, UInt32 ) )
+		      dim s0 as UInt32 = _
+		      ( ( ( word1 \ CType( k2 ^ k7, UInt32 ) ) or ( word1 * CType( k2 ^ k25, UInt32 ) ) ) xor _
+		      ( ( word1 \ CType( k2 ^ k18, UInt32 ) ) or ( word1 * CType( k2 ^ k14, UInt32 ) ) ) ) _
+		      xor ( word1 \ CType( k2 ^ k3, UInt32 ) )
+		      
+		      'dim s1 as UInt32 = ( RotateRight( word14, 17 ) xor RotateRight( word14, 19 ) ) xor ( word14 \ CType( k2 ^ k10, UInt32 ) )
+		      dim s1 as UInt32 = _
+		      ( ( ( word14 \ CType( k2 ^ k17, UInt32 ) ) or ( word14 * CType( k2 ^ k15, UInt32 ) ) ) xor _
+		      ( ( word14 \ CType( k2 ^ k19, UInt32 ) ) or ( word14 * CType( k2 ^ k13, UInt32 ) ) ) ) _
+		      xor ( word14 \ CType( k2 ^ k10, UInt32 ) )
 		      
 		      w.UInt32Value( wordIndex ) = word0 + s0 + word9 + s1
 		    next
@@ -141,11 +173,21 @@ Protected Class SHA256Digest_MTC
 		    
 		    dim lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		    for i as integer = 0 to lastRoundIndex
-		      dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
-		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
-		      dim temp1 as UInt32 = h + s1 + ch + k.UInt32Value( i * 4 ) + w.UInt32Value( i * 4 )
+		      'dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
+		      dim s1 as UInt32 = _
+		      ( ( e \ CType( k2 ^ k6, UInt32 ) ) or ( e * CType( k2 ^ k26, UInt32 ) ) ) xor _
+		      ( ( e \ CType( k2 ^ k11, UInt32 ) ) or ( e * CType( k2 ^ k21, UInt32 ) ) ) xor _
+		      ( ( e \ CType( k2 ^ k25, UInt32 ) ) or ( e * CType( k2 ^ k7, UInt32 ) ) )
 		      
-		      dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
+		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
+		      dim temp1 as UInt32 = h + s1 + ch + kPtr.UInt32( i * 4 ) + w.UInt32Value( i * 4 )
+		      
+		      'dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
+		      dim s0 as UInt32 = _
+		      ( ( a \ CType( k2 ^ k2, UInt32 ) ) or ( a * CType( k2 ^ k30, UInt32 ) ) ) xor _
+		      ( ( a \ CType( k2 ^ k13, UInt32 ) ) or ( a * CType( k2 ^ k19, UInt32 ) ) ) xor _
+		      ( ( a \ CType( k2 ^ k22, UInt32 ) ) or ( a * CType( k2 ^ k10, UInt32 ) ) )
+		      
 		      dim maj as UInt32 = ( a and b ) xor ( a and c ) xor ( b and c )
 		      dim temp2 as UInt32 = s0 + maj
 		      
@@ -205,31 +247,6 @@ Protected Class SHA256Digest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function RotateRight(x As UInt32, places As UInt32) As UInt32
-		  const k2 as UInt32 = 2
-		  const k32 as UInt32 = 32
-		  
-		  dim diff as UInt32 = k32 - places
-		  dim leftMost as UInt32 = x * CType( k2 ^ diff, UInt32 )
-		  dim rightMost as UInt32 = x \ CType( k2 ^ places, UInt32 )
-		  
-		  dim result as UInt32 = leftMost or rightMost
-		  
-		  #if DebugBuild and FALSE then
-		    const kZeros as string = "00000000000000000000000000000000"
-		    System.DebugLog "Places: " + str( places )
-		    System.DebugLog "Orig: " + Right( kZeros + bin( x ), 32 )
-		    System.DebugLog "Left: " + Right( kZeros + bin( leftMost ), 32 )
-		    System.DebugLog "Rigt: " + Right( kZeros + bin( rightMost ), 32 )
-		    System.DebugLog "Resl: " + Right( kZeros + bin( result ), 32 )
-		    System.DebugLog "----"
-		  #endif
-		  
-		  return result
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h21
 		Private Buffer As String
@@ -237,6 +254,10 @@ Protected Class SHA256Digest_MTC
 
 	#tag Property, Flags = &h21
 		Private CombinedLength As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Message As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

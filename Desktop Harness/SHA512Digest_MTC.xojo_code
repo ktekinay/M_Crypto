@@ -35,13 +35,34 @@ Protected Class SHA512Digest_MTC
 	#tag Method, Flags = &h21
 		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
 		  const k2 as UInt64 = 2
+		  const k3 as UInt64 = 3
 		  const k6 as UInt64 = 6
 		  const k7 as UInt64 = 7
+		  const k8 as UInt64 = 8
+		  const k14 as UInt64 = 14
+		  const k18 as UInt64 = 18
+		  const k19 as UInt64 = 19
+		  const k23 as UInt64 = 23
+		  const k25 as UInt64 = 25
+		  const k28 as UInt64 = 28
+		  const k30 as UInt64 = 30
+		  const k34 as UInt64 = 34
+		  const k36 as UInt64 = 36
+		  const k39 as UInt64 = 39
+		  const k41 as UInt64 = 41
+		  const k45 as UInt64 = 45
+		  const k46 as UInt64 = 46
+		  const k50 as UInt64 = 50
+		  const k56 as UInt64 = 56
+		  const k61 as UInt64 = 61
+		  const k63 as UInt64 = 63
 		  
 		  //
 		  // Table of constants
 		  //
 		  static k as MemoryBlock
+		  static kPtr as ptr
+		  
 		  if k is nil then
 		    dim arr() as UInt64 = ArrayUInt64( _
 		    &h428a2f98d728ae22, &h7137449123ef65cd, &hb5c0fbcfec4d3b2f, &he9b5dba58189dbbc, &h3956c25bf348b538, _
@@ -63,11 +84,16 @@ Protected Class SHA512Digest_MTC
 		    )
 		    
 		    k = new MemoryBlock( ( arr.Ubound + 1 ) * 8 )
-		    k.LittleEndian = false
+		    kPtr = k
 		    
 		    for i as integer = 0 to arr.Ubound
-		      k.UInt64Value( i * 8 ) = arr( i )
+		      kPtr.UInt64( i * 8 ) = arr( i )
 		    next
+		  end if
+		  
+		  if Message is nil then
+		    Message = new MemoryBlock( k.Size )
+		    Message.LittleEndian = false
 		  end if
 		  
 		  dim dataLen as integer = data.LenB
@@ -100,7 +126,7 @@ Protected Class SHA512Digest_MTC
 		      mbIn.StringValue( 0, dataLen ) = data
 		    end if
 		    
-		  else // Not isFinal so the data will already be a multiple of 64
+		  else // Not isFinal so the data will already be a multiple 
 		    
 		    mbIn = data
 		    mbIn.LittleEndian = false
@@ -120,8 +146,7 @@ Protected Class SHA512Digest_MTC
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    dim w as new MemoryBlock( k.Size )
-		    w.LittleEndian = false
+		    dim w as MemoryBlock = Message // Convenience
 		    
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
@@ -132,8 +157,17 @@ Protected Class SHA512Digest_MTC
 		      dim word9 as UInt64 = w.UInt64Value( wordIndex - 56 )
 		      dim word14 as UInt64 = w.UInt64Value( wordIndex - 16 )
 		      
-		      dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ CType( k2 ^ k7, UInt64 ) )
-		      dim s1 as UInt64 = ( RotateRight( word14, 19 ) xor RotateRight( word14, 61 ) ) xor ( word14 \ CType( k2 ^ k6, UInt64 ) )
+		      'dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ CType( k2 ^ k7, UInt64 ) )
+		      dim s0 as UInt64 = _
+		      ( ( ( word1 \ k2 ) or ( word1 * CType( k2 ^ k63, UInt64 ) ) ) xor _
+		      ( ( word1 \ CType( k2 ^ k8, UInt64 ) ) or ( word1 * CType( k2 ^ k56, UInt64 ) ) ) ) _
+		      xor ( word1 \ CType( k2 ^ k7, UInt64 ) )
+		      
+		      'dim s1 as UInt64 = ( RotateRight( word14, 19 ) xor RotateRight( word14, 61 ) ) xor ( word14 \ CType( k2 ^ k6, UInt64 ) )
+		      dim s1 as UInt64 = _
+		      ( ( ( word14 \ CType( k2 ^ k19, UInt64 ) ) or ( word14 * CType( k2 ^ k45, UInt64 ) ) ) xor _
+		      ( ( word14 \ CType( k2 ^ 61, UInt64 ) ) or ( word14 * CType( k2 ^ k3, UInt64 ) ) ) ) _
+		      xor ( word14 \ CType( k2 ^ k6, UInt64 ) )
 		      
 		      w.UInt64Value( wordIndex ) = word0 + s0 + word9 + s1
 		    next
@@ -149,11 +183,20 @@ Protected Class SHA512Digest_MTC
 		    
 		    dim lastRoundIndex as integer = ( k.Size \ 8 ) - 1
 		    for i as integer = 0 to lastRoundIndex
-		      dim s1 as UInt64 = RotateRight( e, 14 ) xor RotateRight( e, 18 ) xor RotateRight( e, 41 )
+		      'dim s1 as UInt64 = RotateRight( e, 14 ) xor RotateRight( e, 18 ) xor RotateRight( e, 41 )
+		      dim s1 as UInt64 = _
+		      ( ( e \ CType( k2 ^ k14, UInt64 ) ) or ( e * CType( k2 ^ k50, UInt64 ) ) ) xor _
+		      ( ( e \ CType( k2 ^ k18, UInt64 ) ) or ( e * CType( k2 ^ k46, UInt64 ) ) ) xor _
+		      ( ( e \ CType( k2 ^ k41, UInt64 ) ) or ( e * CType( k2 ^ k23, UInt64 ) ) )
 		      dim ch as UInt64 = ( e and f ) xor ( ( not e ) and g )
-		      dim temp1 as UInt64 = h + s1 + ch + k.UInt64Value( i * 8 ) + w.UInt64Value( i * 8 )
+		      dim temp1 as UInt64 = h + s1 + ch + kPtr.UInt64( i * 8 ) + w.UInt64Value( i * 8 )
 		      
-		      dim s0 as UInt64 = RotateRight( a, 28 ) xor RotateRight( a, 34 ) xor RotateRight( a, 39 )
+		      'dim s0 as UInt64 = RotateRight( a, 28 ) xor RotateRight( a, 34 ) xor RotateRight( a, 39 )
+		      dim s0 as UInt64 = _
+		      ( ( a \ CType( k2 ^ k28, UInt64 ) ) or ( a * CType( k2 ^ k36, UInt64 ) ) ) xor _
+		      ( ( a \ CType( k2 ^ k34, UInt64 ) ) or ( a * CType( k2 ^ k30, UInt64 ) ) ) xor _
+		      ( ( a \ CType( k2 ^ k39, UInt64 ) ) or ( a * CType( k2 ^ k25, UInt64 ) ) )
+		      
 		      dim maj as UInt64 = ( a and b ) xor ( a and c ) xor ( b and c )
 		      dim temp2 as UInt64 = s0 + maj
 		      
@@ -213,31 +256,6 @@ Protected Class SHA512Digest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function RotateRight(x As UInt64, places As UInt64) As UInt64
-		  const k2 as UInt64 = 2
-		  const k64 as UInt64 = 64
-		  
-		  dim diff as UInt64 = k64 - places
-		  dim leftMost as UInt64 = x * CType( k2 ^ diff, UInt64 )
-		  dim rightMost as UInt64 = x \ CType( k2 ^ places, UInt64 )
-		  
-		  dim result as UInt64 = leftMost or rightMost
-		  
-		  #if DebugBuild and FALSE then
-		    const kZeros as string = "0000000000000000000000000000000000000000000000000000000000000000"
-		    System.DebugLog "Places: " + str( places )
-		    System.DebugLog "Orig: " + Right( kZeros + bin( x ), 64 )
-		    System.DebugLog "Left: " + Right( kZeros + bin( leftMost ), 64 )
-		    System.DebugLog "Rigt: " + Right( kZeros + bin( rightMost ), 64 )
-		    System.DebugLog "Resl: " + Right( kZeros + bin( result ), 64 )
-		    System.DebugLog "----"
-		  #endif
-		  
-		  return result
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h21
 		Private Buffer As String
@@ -245,6 +263,10 @@ Protected Class SHA512Digest_MTC
 
 	#tag Property, Flags = &h21
 		Private CombinedLength As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Message As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
