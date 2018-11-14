@@ -52,14 +52,14 @@ Protected Class SHA256Digest_MTC
 		  &h748f82ee, &h78a5636f, &h84c87814, &h8cc70208, &h90befffa, &ha4506ceb, &hbef9a3f7, &hc67178f2 _
 		  )
 		  
-		  dim h0 as UInt32 = &h6a09e667
-		  dim h1 as UInt32 = &hbb67ae85
-		  dim h2 as UInt32 = &h3c6ef372
-		  dim h3 as UInt32 = &ha54ff53a
-		  dim h4 as UInt32 = &h510e527f
-		  dim h5 as UInt32 = &h9b05688c
-		  dim h6 as UInt32 = &h1f83d9ab
-		  dim h7 as UInt32 = &h5be0cd19
+		  dim h0 as UInt32 = Registers.UInt32Value( 0 * 4 )
+		  dim h1 as UInt32 = Registers.UInt32Value( 1 * 4 )
+		  dim h2 as UInt32 = Registers.UInt32Value( 2 * 4 )
+		  dim h3 as UInt32 = Registers.UInt32Value( 3 * 4 )
+		  dim h4 as UInt32 = Registers.UInt32Value( 4 * 4 )
+		  dim h5 as UInt32 = Registers.UInt32Value( 5 * 4 )
+		  dim h6 as UInt32 = Registers.UInt32Value( 6 * 4 )
+		  dim h7 as UInt32 = Registers.UInt32Value( 7 * 4 )
 		  dim a, b, c, d, e, f, g, h as UInt32
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
@@ -120,14 +120,14 @@ Protected Class SHA256Digest_MTC
 		    
 		  next chunkIndex
 		  
-		  mValue.UInt32Value( 0 ) = h0
-		  mValue.UInt32Value( 4 ) = h1
-		  mValue.UInt32Value( 8 ) = h2
-		  mValue.UInt32Value( 12 ) = h3
-		  mValue.UInt32Value( 16 ) = h4
-		  mValue.UInt32Value( 20 ) = h5
-		  mValue.UInt32Value( 24 ) = h6
-		  mValue.UInt32Value( 28 ) = h7
+		  Registers.UInt32Value( 0 ) = h0
+		  Registers.UInt32Value( 4 ) = h1
+		  Registers.UInt32Value( 8 ) = h2
+		  Registers.UInt32Value( 12 ) = h3
+		  Registers.UInt32Value( 16 ) = h4
+		  Registers.UInt32Value( 20 ) = h5
+		  Registers.UInt32Value( 24 ) = h6
+		  Registers.UInt32Value( 28 ) = h7
 		  
 		  
 		End Sub
@@ -135,8 +135,20 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Reset()
-		  mValue = new MemoryBlock( 32 )
-		  mValue.LittleEndian = false
+		  if Registers is nil then
+		    Registers = new MemoryBlock( 32 )
+		    Registers.LittleEndian = false
+		  end if
+		  
+		  Registers.UInt32Value( 0 * 4 ) = &h6a09e667
+		  Registers.UInt32Value( 1 * 4 ) = &hbb67ae85
+		  Registers.UInt32Value( 2 * 4 ) = &h3c6ef372
+		  Registers.UInt32Value( 3 * 4 ) = &ha54ff53a
+		  Registers.UInt32Value( 4 * 4 ) = &h510e527f
+		  Registers.UInt32Value( 5 * 4 ) = &h9b05688c
+		  Registers.UInt32Value( 6 * 4 ) = &h1f83d9ab
+		  Registers.UInt32Value( 7 * 4 ) = &h5be0cd19
+		  
 		End Sub
 	#tag EndMethod
 
@@ -167,13 +179,13 @@ Protected Class SHA256Digest_MTC
 
 
 	#tag Property, Flags = &h21
-		Private mValue As MemoryBlock
+		Private Registers As MemoryBlock
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  return mValue
+			  return Registers
 			End Get
 		#tag EndGetter
 		Value As String
