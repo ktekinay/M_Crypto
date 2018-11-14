@@ -1,58 +1,45 @@
 #tag Class
-Protected Class DesktopTestController
-Inherits TestController
-	#tag Event
-		Sub InitializeTestGroups()
-		  // Instantiate TestGroup subclasses here so that they can be run
+Protected Class SHA256DigestTest
+Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub BasicTest()
+		  dim testString as string = "Hello World"
+		  dim expected as string = EncodeHex( Crypto.SHA256( testString ) ).Lowercase
 		  
-		  Dim group As TestGroup
+		  dim d as new SHA256Digest_MTC
+		  d.Process testString
+		  dim actual as string = EncodeHex( d.Value ).Lowercase
 		  
-		  'group = New XojoUnitTests(Self, "Assertion")
-		  'group = New XojoUnitFailTests(Self, "Always Fail")
+		  Assert.AreEqual( expected, actual, "Hello World" )
 		  
-		  group = new AES128NullsTests( self, "AES-128-Nulls" )
-		  group = new AES128NullsWithCountTests( self, "AES-128-NullsWithCount" )
-		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
-		  group = new AES256NullsTests( self, "AES-256-Nulls" )
-		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
+		  dim expectedBlank as string = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		  Assert.AreEqual( expectedBlank, EncodeHex( Crypto.SHA256( "" ) ).Lowercase, "Blank does not match Crypto" )
 		  
-		  group = new BcryptTests( self, "Bcrypt" )
-		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS" )
+		  d = new SHA256Digest_MTC
+		  d.Process( "" )
+		  dim actualBlank as string = EncodeHex( d.Value ).Lowercase
 		  
-		  group = new EncrypterTests( self, "Encrypter" )
-		  
-		  group = new M_CryptoTests( self, "M_Crypto" )
-		  
-		  group = new ScryptTests( self, "Scrypt" )
-		  
-		  group = new SHA256DigestTest( self, "SHA256Digest" )
-		  
-		  group = new StressTests( self, "Stress Tests" )
-		  group.IncludeGroup = false
+		  Assert.AreEqual( expectedBlank, actualBlank, "Blank" )
 		End Sub
-	#tag EndEvent
+	#tag EndMethod
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AllTestCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Duration"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="FailedCount"
+			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="GroupCount"
+			Name="IncludeGroup"
 			Group="Behavior"
-			Type="Integer"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -85,12 +72,7 @@ Inherits TestController
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="PassedCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="RunGroupCount"
+			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
@@ -100,15 +82,25 @@ Inherits TestController
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="SkippedCount"
+			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="StopTestOnFail"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TestCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
