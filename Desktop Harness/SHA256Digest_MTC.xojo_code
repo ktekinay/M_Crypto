@@ -282,6 +282,9 @@ Protected Class SHA256Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
+	#tag EndConstant
+
 
 	#tag Structure, Name = RegisterStruct, Flags = &h21
 		H0 As UInt32
@@ -333,6 +336,7 @@ Protected Class SHA256Digest_MTC
 			Name="Value"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

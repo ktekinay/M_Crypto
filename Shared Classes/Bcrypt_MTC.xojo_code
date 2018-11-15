@@ -379,7 +379,7 @@ Protected Module Bcrypt_MTC
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.0.1", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Protected
 	#tag EndConstant
 
 
