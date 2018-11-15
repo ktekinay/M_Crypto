@@ -13,13 +13,27 @@ Inherits ConsoleApplication
 		    print "======================================================================"
 		  end if
 		  
-		  Parser.Parse args
+		  try
+		    Parser.Parse args
+		  catch err as OptionParserException
+		    if Parser.OptionValue( kOptionVersion ).WasSet then
+		      //
+		      // Do nothing
+		      //
+		    else
+		      raise err
+		    end if
+		  end try
 		  
 		  if Parser.HelpRequested then
 		    Parser.ShowHelp
 		    return 0
 		  end if
 		  
+		  if parser.OptionValue( kOptionVersion ).WasSet then
+		    print "v." + kVersion
+		    return 0
+		  end if
 		  
 		  select case Parser.StringValue( kOptionExecute, "" ).Left( 1 )
 		  case kActionEncrypt.Left( 1 )
@@ -659,6 +673,9 @@ Inherits ConsoleApplication
 			    o = new Option( "", kOptionDebug, "Print the given arguments", Option.OptionType.Boolean )
 			    parser.AddOption o
 			    
+			    o = new Option( "v", kOptionVersion, "The current version", Option.OptionType.Boolean )
+			    parser.AddOption o
+			    
 			    parser.AppDescription = "Encrypt/Decrypt/Bcrypt/Scrypt utilty v." + kVersion + _
 			    " (" + if(Target32Bit, "32-bit", "64-bit") + ")"
 			    parser.AdditionalHelpNotes = kHelpNotes
@@ -777,6 +794,9 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kOptionVerifyAgainstHash, Type = String, Dynamic = False, Default = \"against-hash", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kOptionVersion, Type = String, Dynamic = False, Default = \"version", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kPaddingNullsOnly, Type = String, Dynamic = False, Default = \"Nulls-Only", Scope = Private
 	#tag EndConstant
 
@@ -786,7 +806,7 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kPaddingPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.2", Scope = Private
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Private
 	#tag EndConstant
 
 
