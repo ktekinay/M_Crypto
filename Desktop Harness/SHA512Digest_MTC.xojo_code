@@ -291,6 +291,9 @@ Protected Class SHA512Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"128", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
+	#tag EndConstant
+
 
 	#tag Structure, Name = RegisterStruct, Flags = &h0
 		H0 As UInt64
