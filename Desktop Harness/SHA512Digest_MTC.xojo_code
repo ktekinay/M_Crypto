@@ -34,28 +34,28 @@ Protected Class SHA512Digest_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
-		  const k2 as UInt64 = 2
-		  const k3 as UInt64 = 3
-		  const k6 as UInt64 = 6
-		  const k7 as UInt64 = 7
-		  const k8 as UInt64 = 8
-		  const k14 as UInt64 = 14
-		  const k18 as UInt64 = 18
-		  const k19 as UInt64 = 19
-		  const k23 as UInt64 = 23
-		  const k25 as UInt64 = 25
-		  const k28 as UInt64 = 28
-		  const k30 as UInt64 = 30
-		  const k34 as UInt64 = 34
-		  const k36 as UInt64 = 36
-		  const k39 as UInt64 = 39
-		  const k41 as UInt64 = 41
-		  const k45 as UInt64 = 45
-		  const k46 as UInt64 = 46
-		  const k50 as UInt64 = 50
-		  const k56 as UInt64 = 56
-		  const k61 as UInt64 = 61
-		  const k63 as UInt64 = 63
+		  const k1 as UInt64 = 2 ^ 1
+		  const k3 as UInt64 = 2 ^ 3
+		  const k6 as UInt64 = 2 ^ 6
+		  const k7 as UInt64 = 2 ^ 7
+		  const k8 as UInt64 = 2 ^ 8
+		  const k14 as UInt64 = 2 ^ 14
+		  const k18 as UInt64 = 2 ^ 18
+		  const k19 as UInt64 = 2 ^ 19
+		  const k23 as UInt64 = 2 ^ 23
+		  const k25 as UInt64 = 2 ^ 25
+		  const k28 as UInt64 = 2 ^ 28
+		  const k30 as UInt64 = 2 ^ 30
+		  const k34 as UInt64 = 2 ^ 34
+		  const k36 as UInt64 = 2 ^ 36
+		  const k39 as UInt64 = 2 ^ 39
+		  const k41 as UInt64 = 2 ^ 41
+		  const k45 as UInt64 = 2 ^ 45
+		  const k46 as UInt64 = 2 ^ 46
+		  const k50 as UInt64 = 2 ^ 50
+		  const k56 as UInt64 = 2 ^ 56
+		  const k61 as UInt64 = 2 ^ 61
+		  const k63 as UInt64 = &h8000000000000000 // 2 ^ 63 won't work here
 		  
 		  //
 		  // Table of constants
@@ -157,17 +157,17 @@ Protected Class SHA512Digest_MTC
 		      dim word9 as UInt64 = w.UInt64Value( wordIndex - 56 )
 		      dim word14 as UInt64 = w.UInt64Value( wordIndex - 16 )
 		      
-		      'dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ CType( k2 ^ k7, UInt64 ) )
+		      'dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ k7 )
 		      dim s0 as UInt64 = _
-		      ( ( ( word1 \ k2 ) or ( word1 * CType( k2 ^ k63, UInt64 ) ) ) xor _
-		      ( ( word1 \ CType( k2 ^ k8, UInt64 ) ) or ( word1 * CType( k2 ^ k56, UInt64 ) ) ) ) _
-		      xor ( word1 \ CType( k2 ^ k7, UInt64 ) )
+		      ( ( ( word1 \ k1 ) or ( word1 * k63 ) ) xor _
+		      ( ( word1 \ k8 ) or ( word1 * k56 ) ) ) _
+		      xor ( word1 \ k7 )
 		      
-		      'dim s1 as UInt64 = ( RotateRight( word14, 19 ) xor RotateRight( word14, 61 ) ) xor ( word14 \ CType( k2 ^ k6, UInt64 ) )
+		      'dim s1 as UInt64 = ( RotateRight( word14, 19 ) xor RotateRight( word14, 61 ) ) xor ( word14 \ k6 )
 		      dim s1 as UInt64 = _
-		      ( ( ( word14 \ CType( k2 ^ k19, UInt64 ) ) or ( word14 * CType( k2 ^ k45, UInt64 ) ) ) xor _
-		      ( ( word14 \ CType( k2 ^ 61, UInt64 ) ) or ( word14 * CType( k2 ^ k3, UInt64 ) ) ) ) _
-		      xor ( word14 \ CType( k2 ^ k6, UInt64 ) )
+		      ( ( ( word14 \ k19 ) or ( word14 * k45 ) ) xor _
+		      ( ( word14 \ k61 ) or ( word14 * k3 ) ) ) _
+		      xor ( word14 \ k6 )
 		      
 		      w.UInt64Value( wordIndex ) = word0 + s0 + word9 + s1
 		    next
@@ -185,17 +185,17 @@ Protected Class SHA512Digest_MTC
 		    for i as integer = 0 to lastRoundIndex
 		      'dim s1 as UInt64 = RotateRight( e, 14 ) xor RotateRight( e, 18 ) xor RotateRight( e, 41 )
 		      dim s1 as UInt64 = _
-		      ( ( e \ CType( k2 ^ k14, UInt64 ) ) or ( e * CType( k2 ^ k50, UInt64 ) ) ) xor _
-		      ( ( e \ CType( k2 ^ k18, UInt64 ) ) or ( e * CType( k2 ^ k46, UInt64 ) ) ) xor _
-		      ( ( e \ CType( k2 ^ k41, UInt64 ) ) or ( e * CType( k2 ^ k23, UInt64 ) ) )
+		      ( ( e \ k14 ) or ( e * k50 ) ) xor _
+		      ( ( e \ k18 ) or ( e * k46 ) ) xor _
+		      ( ( e \ k41 ) or ( e * k23 ) )
 		      dim ch as UInt64 = ( e and f ) xor ( ( not e ) and g )
 		      dim temp1 as UInt64 = h + s1 + ch + kPtr.UInt64( i * 8 ) + w.UInt64Value( i * 8 )
 		      
 		      'dim s0 as UInt64 = RotateRight( a, 28 ) xor RotateRight( a, 34 ) xor RotateRight( a, 39 )
 		      dim s0 as UInt64 = _
-		      ( ( a \ CType( k2 ^ k28, UInt64 ) ) or ( a * CType( k2 ^ k36, UInt64 ) ) ) xor _
-		      ( ( a \ CType( k2 ^ k34, UInt64 ) ) or ( a * CType( k2 ^ k30, UInt64 ) ) ) xor _
-		      ( ( a \ CType( k2 ^ k39, UInt64 ) ) or ( a * CType( k2 ^ k25, UInt64 ) ) )
+		      ( ( a \ k28 ) or ( a * k36 ) ) xor _
+		      ( ( a \ k34 ) or ( a * k30 ) ) xor _
+		      ( ( a \ k39 ) or ( a * k25 ) )
 		      
 		      dim maj as UInt64 = ( a and b ) xor ( a and c ) xor ( b and c )
 		      dim temp2 as UInt64 = s0 + maj
@@ -330,6 +330,7 @@ Protected Class SHA512Digest_MTC
 			Name="Value"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

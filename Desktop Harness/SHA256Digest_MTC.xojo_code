@@ -33,23 +33,23 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
-		  const k2 as UInt32 = 2
-		  const k3 as UInt32 = 3
-		  const k6 as UInt32 = 6
-		  const k7 as UInt32 = 7
-		  const k10 as UInt32 = 10
-		  const k11 as UInt32 = 11
-		  const k13 as UInt32 = 13
-		  const k14 as UInt32 = 14
-		  const k15 as UInt32 = 15
-		  const k17 as UInt32 = 17
-		  const k18 as UInt32 = 18
-		  const k19 as UInt32 = 19
-		  const k21 as UInt32 = 21
-		  const k22 as UInt32 = 22
-		  const k25 as UInt32 = 25
-		  const k26 as UInt32 = 26
-		  const k30 as UInt32 = 30
+		  const k2 as UInt32 = 2 ^ 2
+		  const k3 as UInt32 = 2 ^ 3
+		  const k6 as UInt32 = 2 ^ 6
+		  const k7 as UInt32 = 2 ^ 7
+		  const k10 as UInt32 = 2 ^ 10
+		  const k11 as UInt32 = 2 ^ 11
+		  const k13 as UInt32 = 2 ^ 13
+		  const k14 as UInt32 = 2 ^ 14
+		  const k15 as UInt32 = 2 ^ 15
+		  const k17 as UInt32 = 2 ^ 17
+		  const k18 as UInt32 = 2 ^ 18
+		  const k19 as UInt32 = 2 ^ 19
+		  const k21 as UInt32 = 2 ^ 21
+		  const k22 as UInt32 = 2 ^ 22
+		  const k25 as UInt32 = 2 ^ 25
+		  const k26 as UInt32 = 2 ^ 26
+		  const k30 as UInt32 = 2 ^ 30
 		  
 		  //
 		  // Table of constants
@@ -147,17 +147,17 @@ Protected Class SHA256Digest_MTC
 		      dim word9 as UInt32 = w.UInt32Value( wordIndex - 28 )
 		      dim word14 as UInt32 = w.UInt32Value( wordIndex - 8 )
 		      
-		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ CType( k2 ^ k3, UInt32 ) )
+		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ k3 )
 		      dim s0 as UInt32 = _
-		      ( ( ( word1 \ CType( k2 ^ k7, UInt32 ) ) or ( word1 * CType( k2 ^ k25, UInt32 ) ) ) xor _
-		      ( ( word1 \ CType( k2 ^ k18, UInt32 ) ) or ( word1 * CType( k2 ^ k14, UInt32 ) ) ) ) _
-		      xor ( word1 \ CType( k2 ^ k3, UInt32 ) )
+		      ( ( ( word1 \ k7 ) or ( word1 * k25 ) ) xor _
+		      ( ( word1 \ k18 ) or ( word1 * k14 ) ) ) _
+		      xor ( word1 \ k3 )
 		      
-		      'dim s1 as UInt32 = ( RotateRight( word14, 17 ) xor RotateRight( word14, 19 ) ) xor ( word14 \ CType( k2 ^ k10, UInt32 ) )
+		      'dim s1 as UInt32 = ( RotateRight( word14, 17 ) xor RotateRight( word14, 19 ) ) xor ( word14 \ k10 )
 		      dim s1 as UInt32 = _
-		      ( ( ( word14 \ CType( k2 ^ k17, UInt32 ) ) or ( word14 * CType( k2 ^ k15, UInt32 ) ) ) xor _
-		      ( ( word14 \ CType( k2 ^ k19, UInt32 ) ) or ( word14 * CType( k2 ^ k13, UInt32 ) ) ) ) _
-		      xor ( word14 \ CType( k2 ^ k10, UInt32 ) )
+		      ( ( ( word14 \ k17 ) or ( word14 * k15 ) ) xor _
+		      ( ( word14 \ k19 ) or ( word14 * k13 ) ) ) _
+		      xor ( word14 \ k10 )
 		      
 		      w.UInt32Value( wordIndex ) = word0 + s0 + word9 + s1
 		    next
@@ -175,18 +175,18 @@ Protected Class SHA256Digest_MTC
 		    for i as integer = 0 to lastRoundIndex
 		      'dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
 		      dim s1 as UInt32 = _
-		      ( ( e \ CType( k2 ^ k6, UInt32 ) ) or ( e * CType( k2 ^ k26, UInt32 ) ) ) xor _
-		      ( ( e \ CType( k2 ^ k11, UInt32 ) ) or ( e * CType( k2 ^ k21, UInt32 ) ) ) xor _
-		      ( ( e \ CType( k2 ^ k25, UInt32 ) ) or ( e * CType( k2 ^ k7, UInt32 ) ) )
+		      ( ( e \ k6 ) or ( e * k26 ) ) xor _
+		      ( ( e \ k11 ) or ( e * k21 ) ) xor _
+		      ( ( e \ k25 ) or ( e * k7 ) )
 		      
 		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
 		      dim temp1 as UInt32 = h + s1 + ch + kPtr.UInt32( i * 4 ) + w.UInt32Value( i * 4 )
 		      
 		      'dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
 		      dim s0 as UInt32 = _
-		      ( ( a \ CType( k2 ^ k2, UInt32 ) ) or ( a * CType( k2 ^ k30, UInt32 ) ) ) xor _
-		      ( ( a \ CType( k2 ^ k13, UInt32 ) ) or ( a * CType( k2 ^ k19, UInt32 ) ) ) xor _
-		      ( ( a \ CType( k2 ^ k22, UInt32 ) ) or ( a * CType( k2 ^ k10, UInt32 ) ) )
+		      ( ( a \ k2 ) or ( a * k30 ) ) xor _
+		      ( ( a \ k13 ) or ( a * k19 ) ) xor _
+		      ( ( a \ k22 ) or ( a * k10 ) )
 		      
 		      dim maj as UInt32 = ( a and b ) xor ( a and c ) xor ( b and c )
 		      dim temp2 as UInt32 = s0 + maj
@@ -316,6 +316,11 @@ Protected Class SHA256Digest_MTC
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Value"
+			Group="Behavior"
+			Type="String"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
