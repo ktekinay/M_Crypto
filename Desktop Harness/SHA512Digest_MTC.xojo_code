@@ -33,7 +33,7 @@ Protected Class SHA512Digest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
+		Private Sub Process(data As String, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
 		  #if not DebugBuild then
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -140,14 +140,14 @@ Protected Class SHA512Digest_MTC
 		    
 		  end if
 		  
-		  dim h0 as UInt64 = useRegisters.UInt64Value( 0 )
-		  dim h1 as UInt64 = useRegisters.UInt64Value( 8 )
-		  dim h2 as UInt64 = useRegisters.UInt64Value( 16 )
-		  dim h3 as UInt64 = useRegisters.UInt64Value( 24 )
-		  dim h4 as UInt64 = useRegisters.UInt64Value( 32 )
-		  dim h5 as UInt64 = useRegisters.UInt64Value( 40 )
-		  dim h6 as UInt64 = useRegisters.UInt64Value( 48 )
-		  dim h7 as UInt64 = useRegisters.UInt64Value( 56 )
+		  dim h0 as UInt64 = useRegisters.H0
+		  dim h1 as UInt64 = useRegisters.H1
+		  dim h2 as UInt64 = useRegisters.H2
+		  dim h3 as UInt64 = useRegisters.H3
+		  dim h4 as UInt64 = useRegisters.H4
+		  dim h5 as UInt64 = useRegisters.H5
+		  dim h6 as UInt64 = useRegisters.H6
+		  dim h7 as UInt64 = useRegisters.H7
 		  
 		  dim a, b, c, d, e, f, g, h as UInt64
 		  
@@ -228,14 +228,14 @@ Protected Class SHA512Digest_MTC
 		    
 		  next chunkIndex
 		  
-		  useRegisters.UInt64Value( 0 ) = h0
-		  useRegisters.UInt64Value( 8 ) = h1
-		  useRegisters.UInt64Value( 16 ) = h2
-		  useRegisters.UInt64Value( 24 ) = h3
-		  useRegisters.UInt64Value( 32 ) = h4
-		  useRegisters.UInt64Value( 40 ) = h5
-		  useRegisters.UInt64Value( 48 ) = h6
-		  useRegisters.UInt64Value( 56 ) = h7
+		  useRegisters.H0 = h0
+		  useRegisters.H1 = h1
+		  useRegisters.H2 = h2
+		  useRegisters.H3 = h3
+		  useRegisters.H4 = h4
+		  useRegisters.H5 = h5
+		  useRegisters.H6 = h6
+		  useRegisters.H7 = h7
 		  
 		  
 		End Sub
@@ -243,19 +243,14 @@ Protected Class SHA512Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Reset()
-		  if Registers is nil then
-		    Registers = new MemoryBlock( 64 )
-		    Registers.LittleEndian = false
-		  end if
-		  
-		  Registers.UInt64Value( 0 ) = &h6a09e667f3bcc908
-		  Registers.UInt64Value( 8 ) = &hbb67ae8584caa73b
-		  Registers.UInt64Value( 16 ) = &h3c6ef372fe94f82b
-		  Registers.UInt64Value( 24 ) = &ha54ff53a5f1d36f1
-		  Registers.UInt64Value( 32 ) = &h510e527fade682d1
-		  Registers.UInt64Value( 40 ) = &h9b05688c2b3e6c1f
-		  Registers.UInt64Value( 48 ) = &h1f83d9abfb41bd6b
-		  Registers.UInt64Value( 56 ) = &h5be0cd19137e2179
+		  Registers.H0 = &h6a09e667f3bcc908
+		  Registers.H1 = &hbb67ae8584caa73b
+		  Registers.H2 = &h3c6ef372fe94f82b
+		  Registers.H3 = &ha54ff53a5f1d36f1
+		  Registers.H4 = &h510e527fade682d1
+		  Registers.H5 = &h9b05688c2b3e6c1f
+		  Registers.H6 = &h1f83d9abfb41bd6b
+		  Registers.H7 = &h5be0cd19137e2179
 		  
 		  CombinedLength = 0
 		  Buffer = ""
@@ -277,18 +272,16 @@ Protected Class SHA512Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Registers As MemoryBlock
+		Private Registers As RegisterStruct
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  dim r as string = Registers // To string
-			  dim tempRegister as MemoryBlock = r // From string
-			  tempRegister.LittleEndian = false
-			  Process Buffer, tempRegister, true
+			  dim tempRegisters as RegisterStruct = Registers
+			  Process Buffer, tempRegisters, true
 			  
-			  return tempRegister
+			  return tempRegisters.StringValue( false )
 			End Get
 		#tag EndGetter
 		Value As String
@@ -297,6 +290,18 @@ Protected Class SHA512Digest_MTC
 
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"128", Scope = Private
 	#tag EndConstant
+
+
+	#tag Structure, Name = RegisterStruct, Flags = &h0
+		H0 As UInt64
+		  H1 As UInt64
+		  H2 As UInt64
+		  H3 As UInt64
+		  H4 As UInt64
+		  H5 As UInt64
+		  H6 As UInt64
+		H7 As UInt64
+	#tag EndStructure
 
 
 	#tag ViewBehavior
