@@ -33,6 +33,13 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub Process(data As String, useRegisters As MemoryBlock, isFinal As Boolean)
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
 		  const k2 as UInt32 = 2 ^ 2
 		  const k3 as UInt32 = 2 ^ 3
 		  const k6 as UInt32 = 2 ^ 6
