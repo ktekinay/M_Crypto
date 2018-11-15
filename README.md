@@ -13,9 +13,11 @@ An encryption library for Xojo that implements Blowfish and AES encryption and B
 		- [Encrypter (super class)](#encrypter-example)
 		- [Bcrypt](#bcrypt-example)
 		- [Scrypt](#scrypt-example)
+		- [SHA256Digest/SHA512Digest](#hash-example)
 	- [Encryption](#encryption)
 	- [Bcrypt](#bcrypt)
 	- [Scrypt](#scrypt)
+	- [Hash Digests](#hash-digests)
 - [About ECB, CBC, and the Vector](#about-ecb-etc)
 - [About Padding](#about-padding)
 	- [NullsOnly](#nullsonly)
@@ -148,6 +150,22 @@ hash = EncodeHex( _
 // AF7525522F12B36C18B4B712D138B71149CC174762B1108014EE443D1DBBB74D
 ```
 
+#### <a name='hash-example'></a>SHA256Digest/SHA512Digest
+
+```
+dim d as new SHA256Digest_MTC // or SHA512Digest_MTC
+dim hash as string
+
+d.Process( "abc" )
+hash = d.Value     // same as Crypto.SHA256( "abc" )
+d.Process( "def" )
+hash = d.Value     // same as Crypto.SHA256( "abcdef" )
+
+d.Reset
+d.Process( "123" )
+hash = d.Value     // same as Crypto.SHA256( "123" )
+```
+
 ### Encryption
 
 The encryption objects are based on the superclass `M_Crypto.Encrypter` and offer the following common methods and properties:
@@ -212,11 +230,17 @@ You can use `M_Crypto.GetEncrypter` to get an Encrypter by code. For example, "b
 
 ### Bcrypt
 
-Bcrypt uses Blowfish to create a hash. The more rounds you specify, the longer it takes. You can either create your own salt according to the Bcrypt standard or let the module do it for you. See the example above in Examples.
+Bcrypt uses Blowfish to create a hash. The more rounds you specify, the longer it takes. You can either create your own salt according to the Bcrypt standard or let the module do it for you. See the [example](#bcrypt-example) above in [Examples](#examples).
 
 ### Scrypt
 
-Scrypt is a password hashing algorithm that is generally considered "costlier" than Bcrypt and may be preferred. It takes as parameters `cost` (other implementations use `n` where `n` = 2^cost), `outputLength` in bytes, `blocks` (`r` in other implementation), and `parallelization` (`p` in other implementations). Increase the `cost`, `parallelization`, and `blocks` parameters until just before performance is no longer acceptable. The higher the values, the harder to crack the hash via brute-force.
+Scrypt is a password hashing algorithm that is generally considered "costlier" than Bcrypt and may be preferred. It takes as parameters `cost` (other implementations use `n` where `n` = 2^cost), `outputLength` in bytes, `blocks` (`r` in other implementation), and `parallelization` (`p` in other implementations). Increase the `cost`, `parallelization`, and `blocks` parameters until just before performance is no longer acceptable. The higher the values, the harder to crack the hash via brute-force. See the [example](#scrypt-example) above in [Examples](#examples).
+
+### <a name='hash-digests'></a>Hash Digests
+
+The project includes `SHA256Digest_MTC` and `SHA512Digest_MTC` classes. These will let you calculate those respective hashes a chunk at a time. Use the `Process` method to add data and check the `Value` property to get the hash at that moment. `Value` will alway be up to date with whatever data as been processed.
+
+If you want to reuse the object for a new hash, use the `Reset` method. See the [example](#hash-example) above in [Examples](#examples).
 
 ## <a name='about-ecb-etc'></a>About ECB, CBC, and the Vector
 
@@ -279,7 +303,7 @@ Blowfish CBC: Will take any key.
 
 ## Other
 
-`M_Crypto.GeenrateUUID` will create a UUI using the OS tools, if possible, or native Xojo code if note. In any case, the output conforms to standards and is cryptographically safe.
+`M_Crypto.GenerateUUID` will create a UUI using the OS tools, if possible, or native Xojo code if not. In any case, the output conforms to standards and is cryptographically secure.
 
 ## <a name='about-threads'></a>A Word About Threads
 
@@ -305,9 +329,9 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.5__ (__)
+__2.5__ (Nov. 15, 2018)
 
-- Added `SHA25Digest_MTC` and `SHA512Digest_MTC` classes.
+- Added `SHA256Digest_MTC` and `SHA512Digest_MTC` classes.
 - Added "--debug-args" switch to CLI.
 - Added BcryptTimimg unit test.
 
