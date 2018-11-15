@@ -66,6 +66,37 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub DigestSuperLargeTest()
+		  dim s as string = "Hello "
+		  while s.LenB <= 10000000
+		    s = s + s
+		  wend
+		  
+		  dim chunkSize as integer = 128 * 8 * 1000
+		  
+		  Assert.Message "Data length is " + format( s.LenB, "#,0" ).ToText + " bytes"
+		  Assert.Message "ChunkSize is " + format( chunkSize, "#,0" ).ToText + " bytes"
+		  
+		  dim d as new SHA256Digest_MTC
+		  
+		  StartTestTimer "mine"
+		  
+		  for i as integer = 1 to s.LenB step chunkSize
+		    d.Process s.MidB( i, chunkSize )
+		  next
+		  dim actual as string = d.Value
+		  
+		  LogTestTimer "mine"
+		  
+		  StartTestTimer "native"
+		  dim expected as string = Crypto.SHA256( s )
+		  LogTestTimer "native"
+		  
+		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ResetTest()
 		  dim d as new SHA256Digest_MTC
 		  
