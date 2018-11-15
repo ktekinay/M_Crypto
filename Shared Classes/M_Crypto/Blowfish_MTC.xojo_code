@@ -308,7 +308,7 @@ Implements BcryptInterface
 		  for i as integer = 1 to 16 step 2
 		    j = xl
 		    
-		    a = ( j \ kShiftRight3 ) and kFF
+		    a = ( j \ kShiftRight3 )
 		    b = ( j \ kShiftRight2 ) and kFF
 		    c = ( j \ kShiftRight1 ) and kFF
 		    d = j and kFF
@@ -321,7 +321,7 @@ Implements BcryptInterface
 		    
 		    j = xr
 		    
-		    a = ( j \ kShiftRight3 ) and kFF
+		    a = ( j \ kShiftRight3 ) 
 		    b = ( j \ kShiftRight2 ) and kFF
 		    c = ( j \ kShiftRight1 ) and kFF
 		    d = j and kFF
@@ -1023,7 +1023,7 @@ Implements BcryptInterface
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.5", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
 	#tag EndConstant
 
 

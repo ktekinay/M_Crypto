@@ -6,21 +6,27 @@ Inherits TestGroup
 		  dim key as string = "password"
 		  dim salt as string = kSalt
 		  
+		  dim sw as new Stopwatch_MTC
+		  sw.Start
 		  dim phpHash as string = M_PHP.Bcrypt( key, salt )
+		  sw.Stop
 		  
 		  if PHPHash = "" then
 		    Assert.Message "Unavailable on this platform"
 		    return
 		  end if
 		  
-		  dim sw as new Stopwatch_MTC
+		  // See if we can compare PHP
+		  Assert.Message "PHP: " + phpHash.ToText
+		  Assert.Message "PHP: " + sw.ElapsedMilliseconds.ToText + " ms"
+		  sw.Reset
+		  
 		  sw.Start
 		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
 		  Assert.Message "Hash: " + hash.ToText
+		  Assert.Message "Hash: " + sw.ElapsedMilliseconds.ToText + " ms"
 		  
-		  // See if we can compare PHP
-		  Assert.Message "PHP: " + phpHash.ToText
 		  
 		  Assert.AreSame phpHash, hash
 		  
