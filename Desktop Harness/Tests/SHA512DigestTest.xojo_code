@@ -48,7 +48,7 @@ Inherits TestGroup
 		  
 		  dim t as string = "h"
 		  
-		  for i as integer = 1 to 128
+		  for i as integer = 1 to 512
 		    dim expected as string = EncodeHex( Crypto.SHA512( t ) ).Lowercase
 		    
 		    if i = 64 then
