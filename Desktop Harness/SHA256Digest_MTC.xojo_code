@@ -132,7 +132,6 @@ Protected Class SHA256Digest_MTC
 		  else // Not isFinal so the data will already be a multiple 
 		    
 		    mbIn = data
-		    mbIn.LittleEndian = false
 		    
 		  end if
 		  
@@ -152,6 +151,27 @@ Protected Class SHA256Digest_MTC
 		  dim newValue as UInt32
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
+		  
+		  //
+		  // If the natural state is LittleEndian, we have
+		  // to flip the bytes around in the data
+		  //
+		  if IsLittleEndian then
+		    dim pIn as ptr = mbIn
+		    
+		    for i as integer = 0 to lastByteIndex step 4
+		      temp1 = pIn.UInt32( i )
+		      temp2 = _
+		      ( temp1 \ k24 ) or _
+		      ( ( temp1 and &h00FF0000 ) \ k8 ) or _
+		      ( ( temp1 and &h0000FF00 ) * k8 ) or _
+		      ( temp1 * k24 )
+		      if temp2 <> temp1 then
+		        pIn.UInt32( i ) = temp2
+		      end if
+		    next
+		  end if
+		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
@@ -160,36 +180,6 @@ Protected Class SHA256Digest_MTC
 		      word1 = p.UInt32( wordIndex - 60 )
 		      word9 = p.UInt32( wordIndex - 28 )
 		      word14 = p.UInt32( wordIndex - 8 )
-		      
-		      if IsLittleEndian then
-		        //
-		        // Flip the bytes
-		        // (unbelievably, this is faster than using the MemoryBlock function calls)
-		        //
-		        word0 = _
-		        ( word0 \ k24 ) or _
-		        ( ( word0 and &h00FF0000 ) \ k8 ) or _
-		        ( ( word0 and &h0000FF00 ) * k8 ) or _
-		        ( word0 * k24 )
-		        
-		        word1 = _
-		        ( word1 \ k24 ) or _
-		        ( ( word1 and &h00FF0000 ) \ k8 ) or _
-		        ( ( word1 and &h0000FF00 ) * k8 ) or _
-		        ( word1 * k24 )
-		        
-		        word9 = _
-		        ( word9 \ k24 ) or _
-		        ( ( word9 and &h00FF0000 ) \ k8 ) or _
-		        ( ( word9 and &h0000FF00 ) * k8 ) or _
-		        ( word9 * k24 )
-		        
-		        word14 = _
-		        ( word14 \ k24 ) or _
-		        ( ( word14 and &h00FF0000 ) \ k8 ) or _
-		        ( ( word14 and &h0000FF00 ) * k8 ) or _
-		        ( word14 * k24 )
-		      end if
 		      
 		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ k3 )
 		      s0 = _
@@ -204,13 +194,6 @@ Protected Class SHA256Digest_MTC
 		      xor ( word14 \ k10 )
 		      
 		      newValue = word0 + s0 + word9 + s1
-		      if IsLittleEndian then
-		        newValue = _
-		        ( newValue \ k24 ) or _
-		        ( ( newValue and &h00FF0000 ) \ k8 ) or _
-		        ( ( newValue and &h0000FF00 ) * k8 ) or _
-		        ( newValue * k24 )
-		      end if
 		      p.UInt32( wordIndex ) = newValue
 		    next
 		    
@@ -232,15 +215,7 @@ Protected Class SHA256Digest_MTC
 		      ( ( e \ k25 ) or ( e * k7 ) )
 		      
 		      ch = ( e and f ) xor ( ( not e ) and g )
-		      temp1 = p.UInt32( i * 4 )
-		      if IsLittleEndian  then
-		        temp1 = _
-		        ( temp1 \ k24 ) or _
-		        ( ( temp1 and &h00FF0000 ) \ k8 ) or _
-		        ( ( temp1 and &h0000FF00 ) * k8 ) or _
-		        ( temp1 * k24 )
-		      end if
-		      temp1 = h + s1 + ch + kPtr.UInt32( i * 4 ) + temp1
+		      temp1 = h + s1 + ch + kPtr.UInt32( i * 4 ) + p.UInt32( i * 4 )
 		      
 		      'dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
 		      s0 = _
