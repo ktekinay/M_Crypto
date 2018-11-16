@@ -154,11 +154,16 @@ Protected Class SHA256Digest_MTC
 		  dim s0, s1 as UInt32
 		  dim newValue as UInt32
 		  
+		  static lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  
 		  //
 		  // If the natural state is LittleEndian, we have
-		  // to flip the bytes around in the data
+		  // to flip the bytes around in the data so
+		  // we can use Ptr below.
+		  // 
+		  // Unbelievably, this is faster than using the
+		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
 		    dim pIn as ptr = mbIn
@@ -210,7 +215,6 @@ Protected Class SHA256Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    dim lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		    for i as integer = 0 to lastRoundIndex
 		      'dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
 		      s1 = _
