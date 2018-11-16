@@ -268,6 +268,10 @@ Protected Class SHA512Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private IsLittleEndian As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private Message As MemoryBlock
 	#tag EndProperty
 
