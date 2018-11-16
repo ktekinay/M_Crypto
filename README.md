@@ -1,6 +1,6 @@
 # M_Crypto for Xojo
 
-An encryption library for Xojo that implements Blowfish and AES encryption and Bcrypt hash module, translated from C libraries (included as Xcode projects).
+An encryption library for Xojo that implements Blowfish, AES, Bcrypt, Scrypt, SHA-256 digest, and SHA-512 digest.
 
 
 ## Table of Contents
@@ -328,6 +328,10 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.5.1__ (Nov. 16, 2018)
+
+- Optimizations to the SHA digest classes making them roughly 10x faster.
 
 __2.5__ (Nov. 15, 2018)
 
