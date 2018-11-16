@@ -15,18 +15,22 @@ Protected Class SHA512Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
-		  data = Buffer + data
-		  Buffer = ""
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
 		  
-		  dim remainder as integer = data.LenB mod kChunkBytes
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
 		  if remainder <> 0 then
 		    Buffer = data.RightB( remainder )
-		    data = data.LeftB( data.LenB - buffer.LenB )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
 		  end if
 		  
 		  if data <> "" then
 		    Process data, Registers, false
-		    CombinedLength = CombinedLength + data.LenB
+		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
 		End Sub
@@ -50,12 +54,14 @@ Protected Class SHA512Digest_MTC
 		  const k18 as UInt64 = 2 ^ 18
 		  const k19 as UInt64 = 2 ^ 19
 		  const k23 as UInt64 = 2 ^ 23
+		  const k24 as UInt64 = 2 ^ 24
 		  const k25 as UInt64 = 2 ^ 25
 		  const k28 as UInt64 = 2 ^ 28
 		  const k30 as UInt64 = 2 ^ 30
 		  const k34 as UInt64 = 2 ^ 34
 		  const k36 as UInt64 = 2 ^ 36
 		  const k39 as UInt64 = 2 ^ 39
+		  const k40 as UInt64 = 2 ^ 40
 		  const k41 as UInt64 = 2 ^ 41
 		  const k45 as UInt64 = 2 ^ 45
 		  const k46 as UInt64 = 2 ^ 46
@@ -100,18 +106,26 @@ Protected Class SHA512Digest_MTC
 		  
 		  if Message is nil then
 		    Message = new MemoryBlock( k.Size )
-		    Message.LittleEndian = false
+		    IsLittleEndian = Message.LittleEndian
 		  end if
+		  
+		  dim w as MemoryBlock = Message // Convenience
+		  dim p as ptr = Message
+		  dim lastMessageByteIndex as integer = w.Size - 1
 		  
 		  dim dataLen as integer = data.LenB
 		  dim mbIn as MemoryBlock
 		  
 		  if isFinal then
 		    
+		    //
 		    // Add one char to the length
+		    //
 		    dim padding as integer = kChunkBytes - ( ( dataLen + 1 ) mod kChunkBytes )
 		    
+		    //
 		    // Check if we have enough room for inserting the length
+		    //
 		    if padding < 16 then 
 		      padding = padding + kChunkBytes
 		    end if
@@ -136,7 +150,6 @@ Protected Class SHA512Digest_MTC
 		  else // Not isFinal so the data will already be a multiple 
 		    
 		    mbIn = data
-		    mbIn.LittleEndian = false
 		    
 		  end if
 		  
@@ -150,33 +163,65 @@ Protected Class SHA512Digest_MTC
 		  dim h7 as UInt64 = useRegisters.H7
 		  
 		  dim a, b, c, d, e, f, g, h as UInt64
+		  dim word0, word1, word9, word14 as UInt64
+		  dim temp1, temp2, maj, ch as UInt64
+		  dim s0, s1 as UInt64
+		  dim newValue as UInt64
 		  
+		  static lastRoundIndex as integer = ( k.Size \ 8 ) - 1
 		  dim lastByteIndex as integer = mbIn.Size - 1
-		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    dim w as MemoryBlock = Message // Convenience
+		  
+		  //
+		  // If the natural state is LittleEndian, we have
+		  // to flip the bytes around in the data so
+		  // we can use Ptr below.
+		  // 
+		  // Unbelievably, this is faster than using the
+		  // MemoryBlock functions to access the data.
+		  //
+		  if IsLittleEndian then
+		    dim pIn as ptr = mbIn
 		    
+		    for i as integer = 0 to lastByteIndex step 8
+		      temp1 = pIn.UInt64( i )
+		      temp2 = _
+		      ( temp1 \ k56 ) or _
+		      ( ( temp1 and &h00FF000000000000 ) \ k40 ) or _
+		      ( ( temp1 and &h0000FF0000000000 ) \ k24 ) or _
+		      ( ( temp1 and &h000000FF00000000 ) \ k8 ) or _
+		      ( ( temp1 and &h00000000FF000000 ) * k8 ) or _
+		      ( ( temp1 and &h0000000000FF0000 ) * k24 ) or _
+		      ( ( temp1 and &h000000000000FF00 ) * k40 ) or _
+		      ( temp1 * k56 )
+		      if temp2 <> temp1 then
+		        pIn.UInt64( i ) = temp2
+		      end if
+		    next
+		  end if
+		  
+		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
-		    dim lastMessageByteIndex as integer = w.Size - 1
 		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 8
-		      dim word0 as UInt64 = w.UInt64Value( wordIndex - 128 )
-		      dim word1 as UInt64 = w.UInt64Value( wordIndex - 120 )
-		      dim word9 as UInt64 = w.UInt64Value( wordIndex - 56 )
-		      dim word14 as UInt64 = w.UInt64Value( wordIndex - 16 )
+		      word0 = p.UInt64( wordIndex - 128 )
+		      word1 = p.UInt64( wordIndex - 120 )
+		      word9 = p.UInt64( wordIndex - 56 )
+		      word14 = p.UInt64( wordIndex - 16 )
 		      
 		      'dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ k7 )
-		      dim s0 as UInt64 = _
+		      s0 = _
 		      ( ( ( word1 \ k1 ) or ( word1 * k63 ) ) xor _
 		      ( ( word1 \ k8 ) or ( word1 * k56 ) ) ) _
 		      xor ( word1 \ k7 )
 		      
 		      'dim s1 as UInt64 = ( RotateRight( word14, 19 ) xor RotateRight( word14, 61 ) ) xor ( word14 \ k6 )
-		      dim s1 as UInt64 = _
+		      s1 = _
 		      ( ( ( word14 \ k19 ) or ( word14 * k45 ) ) xor _
 		      ( ( word14 \ k61 ) or ( word14 * k3 ) ) ) _
 		      xor ( word14 \ k6 )
 		      
-		      w.UInt64Value( wordIndex ) = word0 + s0 + word9 + s1
+		      newValue = word0 + s0 + word9 + s1
+		      p.UInt64( wordIndex ) = word0 + s0 + word9 + s1
 		    next
 		    
 		    a = h0 
@@ -188,24 +233,23 @@ Protected Class SHA512Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    dim lastRoundIndex as integer = ( k.Size \ 8 ) - 1
 		    for i as integer = 0 to lastRoundIndex
 		      'dim s1 as UInt64 = RotateRight( e, 14 ) xor RotateRight( e, 18 ) xor RotateRight( e, 41 )
-		      dim s1 as UInt64 = _
+		      s1 = _
 		      ( ( e \ k14 ) or ( e * k50 ) ) xor _
 		      ( ( e \ k18 ) or ( e * k46 ) ) xor _
 		      ( ( e \ k41 ) or ( e * k23 ) )
-		      dim ch as UInt64 = ( e and f ) xor ( ( not e ) and g )
-		      dim temp1 as UInt64 = h + s1 + ch + kPtr.UInt64( i * 8 ) + w.UInt64Value( i * 8 )
+		      ch = ( e and f ) xor ( ( not e ) and g )
+		      temp1 = h + s1 + ch + kPtr.UInt64( i * 8 ) + p.UInt64( i * 8 )
 		      
 		      'dim s0 as UInt64 = RotateRight( a, 28 ) xor RotateRight( a, 34 ) xor RotateRight( a, 39 )
-		      dim s0 as UInt64 = _
+		      s0 = _
 		      ( ( a \ k28 ) or ( a * k36 ) ) xor _
 		      ( ( a \ k34 ) or ( a * k30 ) ) xor _
 		      ( ( a \ k39 ) or ( a * k25 ) )
 		      
-		      dim maj as UInt64 = ( a and b ) xor ( a and c ) xor ( b and c )
-		      dim temp2 as UInt64 = s0 + maj
+		      maj = ( a and b ) xor ( a and c ) xor ( b and c )
+		      temp2 = s0 + maj
 		      
 		      h = g
 		      g = f
@@ -268,6 +312,10 @@ Protected Class SHA512Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private IsLittleEndian As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private Message As MemoryBlock
 	#tag EndProperty
 
@@ -291,7 +339,7 @@ Protected Class SHA512Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"128", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
 	#tag EndConstant
 
 

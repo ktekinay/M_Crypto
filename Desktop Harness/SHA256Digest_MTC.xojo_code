@@ -14,18 +14,22 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
-		  data = Buffer + data
-		  Buffer = ""
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
 		  
-		  dim remainder as integer = data.LenB mod kChunkBytes
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
 		  if remainder <> 0 then
 		    Buffer = data.RightB( remainder )
-		    data = data.LeftB( data.LenB - buffer.LenB )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
 		  end if
 		  
 		  if data <> "" then
 		    Process data, Registers, false
-		    CombinedLength = CombinedLength + data.LenB
+		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
 		End Sub
@@ -44,6 +48,7 @@ Protected Class SHA256Digest_MTC
 		  const k3 as UInt32 = 2 ^ 3
 		  const k6 as UInt32 = 2 ^ 6
 		  const k7 as UInt32 = 2 ^ 7
+		  const k8 as UInt32 = 2 ^ 8
 		  const k10 as UInt32 = 2 ^ 10
 		  const k11 as UInt32 = 2 ^ 11
 		  const k13 as UInt32 = 2 ^ 13
@@ -54,6 +59,7 @@ Protected Class SHA256Digest_MTC
 		  const k19 as UInt32 = 2 ^ 19
 		  const k21 as UInt32 = 2 ^ 21
 		  const k22 as UInt32 = 2 ^ 22
+		  const k24 as UInt32 = 2 ^ 24
 		  const k25 as UInt32 = 2 ^ 25
 		  const k26 as UInt32 = 2 ^ 26
 		  const k30 as UInt32 = 2 ^ 30
@@ -86,8 +92,12 @@ Protected Class SHA256Digest_MTC
 		  
 		  if Message is nil then
 		    Message = new MemoryBlock( k.Size )
-		    Message.LittleEndian = false
+		    IsLittleEndian = Message.LittleEndian
 		  end if
+		  
+		  dim w as MemoryBlock = Message // Convenience
+		  dim p as ptr = Message
+		  dim lastMessageByteIndex as integer = w.Size - 1
 		  
 		  dim dataLen as integer = data.LenB
 		  dim mbIn as MemoryBlock
@@ -126,7 +136,6 @@ Protected Class SHA256Digest_MTC
 		  else // Not isFinal so the data will already be a multiple 
 		    
 		    mbIn = data
-		    mbIn.LittleEndian = false
 		    
 		  end if
 		  
@@ -140,33 +149,61 @@ Protected Class SHA256Digest_MTC
 		  dim h7 as UInt32 = useRegisters.H7
 		  
 		  dim a, b, c, d, e, f, g, h as UInt32
+		  dim word0, word1, word9, word14 as UInt32
+		  dim temp1, temp2, maj, ch as UInt32
+		  dim s0, s1 as UInt32
+		  dim newValue as UInt32
 		  
+		  static lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		  dim lastByteIndex as integer = mbIn.Size - 1
-		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    dim w as MemoryBlock = Message // Convenience
+		  
+		  //
+		  // If the natural state is LittleEndian, we have
+		  // to flip the bytes around in the data so
+		  // we can use Ptr below.
+		  // 
+		  // Unbelievably, this is faster than using the
+		  // MemoryBlock functions to access the data.
+		  //
+		  if IsLittleEndian then
+		    dim pIn as ptr = mbIn
 		    
+		    for i as integer = 0 to lastByteIndex step 4
+		      temp1 = pIn.UInt32( i )
+		      temp2 = _
+		      ( temp1 \ k24 ) or _
+		      ( ( temp1 and &h00FF0000 ) \ k8 ) or _
+		      ( ( temp1 and &h0000FF00 ) * k8 ) or _
+		      ( temp1 * k24 )
+		      if temp2 <> temp1 then
+		        pIn.UInt32( i ) = temp2
+		      end if
+		    next
+		  end if
+		  
+		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
 		    
-		    dim lastMessageByteIndex as integer = w.Size - 1
 		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 4
-		      dim word0 as UInt32 = w.UInt32Value( wordIndex - 64 )
-		      dim word1 as UInt32 = w.UInt32Value( wordIndex - 60 )
-		      dim word9 as UInt32 = w.UInt32Value( wordIndex - 28 )
-		      dim word14 as UInt32 = w.UInt32Value( wordIndex - 8 )
+		      word0 = p.UInt32( wordIndex - 64 )
+		      word1 = p.UInt32( wordIndex - 60 )
+		      word9 = p.UInt32( wordIndex - 28 )
+		      word14 = p.UInt32( wordIndex - 8 )
 		      
 		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ k3 )
-		      dim s0 as UInt32 = _
+		      s0 = _
 		      ( ( ( word1 \ k7 ) or ( word1 * k25 ) ) xor _
 		      ( ( word1 \ k18 ) or ( word1 * k14 ) ) ) _
 		      xor ( word1 \ k3 )
 		      
 		      'dim s1 as UInt32 = ( RotateRight( word14, 17 ) xor RotateRight( word14, 19 ) ) xor ( word14 \ k10 )
-		      dim s1 as UInt32 = _
+		      s1 = _
 		      ( ( ( word14 \ k17 ) or ( word14 * k15 ) ) xor _
 		      ( ( word14 \ k19 ) or ( word14 * k13 ) ) ) _
 		      xor ( word14 \ k10 )
 		      
-		      w.UInt32Value( wordIndex ) = word0 + s0 + word9 + s1
+		      newValue = word0 + s0 + word9 + s1
+		      p.UInt32( wordIndex ) = newValue
 		    next
 		    
 		    a = h0 
@@ -178,25 +215,24 @@ Protected Class SHA256Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    dim lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		    for i as integer = 0 to lastRoundIndex
 		      'dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
-		      dim s1 as UInt32 = _
+		      s1 = _
 		      ( ( e \ k6 ) or ( e * k26 ) ) xor _
 		      ( ( e \ k11 ) or ( e * k21 ) ) xor _
 		      ( ( e \ k25 ) or ( e * k7 ) )
 		      
-		      dim ch as UInt32 = ( e and f ) xor ( ( not e ) and g )
-		      dim temp1 as UInt32 = h + s1 + ch + kPtr.UInt32( i * 4 ) + w.UInt32Value( i * 4 )
+		      ch = ( e and f ) xor ( ( not e ) and g )
+		      temp1 = h + s1 + ch + kPtr.UInt32( i * 4 ) + p.UInt32( i * 4 )
 		      
 		      'dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
-		      dim s0 as UInt32 = _
+		      s0 = _
 		      ( ( a \ k2 ) or ( a * k30 ) ) xor _
 		      ( ( a \ k13 ) or ( a * k19 ) ) xor _
 		      ( ( a \ k22 ) or ( a * k10 ) )
 		      
-		      dim maj as UInt32 = ( a and b ) xor ( a and c ) xor ( b and c )
-		      dim temp2 as UInt32 = s0 + maj
+		      maj = ( a and b ) xor ( a and c ) xor ( b and c )
+		      temp2 = s0 + maj
 		      
 		      h = g
 		      g = f
@@ -259,6 +295,10 @@ Protected Class SHA256Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private IsLittleEndian As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private Message As MemoryBlock
 	#tag EndProperty
 
@@ -282,7 +322,7 @@ Protected Class SHA256Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
 	#tag EndConstant
 
 
