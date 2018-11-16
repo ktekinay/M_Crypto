@@ -322,7 +322,7 @@ Protected Class SHA256Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
 	#tag EndConstant
 
 
