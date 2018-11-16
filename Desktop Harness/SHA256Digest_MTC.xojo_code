@@ -14,18 +14,22 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
-		  data = Buffer + data
-		  Buffer = ""
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
 		  
-		  dim remainder as integer = data.LenB mod kChunkBytes
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
 		  if remainder <> 0 then
 		    Buffer = data.RightB( remainder )
-		    data = data.LeftB( data.LenB - buffer.LenB )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
 		  end if
 		  
 		  if data <> "" then
 		    Process data, Registers, false
-		    CombinedLength = CombinedLength + data.LenB
+		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
 		End Sub
