@@ -180,18 +180,25 @@ Protected Class SHA512Digest_MTC
 		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
+		    const kMask1 as UInt64 = &h00FF000000000000
+		    const kMask2 as UInt64 = &h0000FF0000000000
+		    const kMask3 as UInt64 = &h000000FF00000000
+		    const kMask4 as UInt64 = &h00000000FF000000
+		    const kMask5 as UInt64 = &h0000000000FF0000
+		    const kMask6 as UInt64 = &h000000000000FF00
+		    
 		    dim pIn as ptr = mbIn
 		    
 		    for i as integer = 0 to lastByteIndex step 8
 		      temp1 = pIn.UInt64( i )
 		      temp2 = _
 		      ( temp1 \ k56 ) or _
-		      ( ( temp1 and &h00FF000000000000 ) \ k40 ) or _
-		      ( ( temp1 and &h0000FF0000000000 ) \ k24 ) or _
-		      ( ( temp1 and &h000000FF00000000 ) \ k8 ) or _
-		      ( ( temp1 and &h00000000FF000000 ) * k8 ) or _
-		      ( ( temp1 and &h0000000000FF0000 ) * k24 ) or _
-		      ( ( temp1 and &h000000000000FF00 ) * k40 ) or _
+		      ( ( temp1 and kMask1 ) \ k40 ) or _
+		      ( ( temp1 and kMask2 ) \ k24 ) or _
+		      ( ( temp1 and kMask3 ) \ k8 ) or _
+		      ( ( temp1 and kMask4 ) * k8 ) or _
+		      ( ( temp1 and kMask5 ) * k24 ) or _
+		      ( ( temp1 and kMask6 ) * k40 ) or _
 		      ( temp1 * k56 )
 		      if temp2 <> temp1 then
 		        pIn.UInt64( i ) = temp2
