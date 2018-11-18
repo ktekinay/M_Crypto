@@ -48,7 +48,6 @@ Protected Class SHA256Digest_MTC
 		  const k3 as UInt32 = 2 ^ 3
 		  const k6 as UInt32 = 2 ^ 6
 		  const k7 as UInt32 = 2 ^ 7
-		  const k8 as UInt32 = 2 ^ 8
 		  const k10 as UInt32 = 2 ^ 10
 		  const k11 as UInt32 = 2 ^ 11
 		  const k13 as UInt32 = 2 ^ 13
@@ -59,7 +58,6 @@ Protected Class SHA256Digest_MTC
 		  const k19 as UInt32 = 2 ^ 19
 		  const k21 as UInt32 = 2 ^ 21
 		  const k22 as UInt32 = 2 ^ 22
-		  const k24 as UInt32 = 2 ^ 24
 		  const k25 as UInt32 = 2 ^ 25
 		  const k26 as UInt32 = 2 ^ 26
 		  const k30 as UInt32 = 2 ^ 30
@@ -166,17 +164,29 @@ Protected Class SHA256Digest_MTC
 		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
+		    //
+		    // We'll do this two words at a time
+		    //
+		    const k8_64 as UInt64 = 2 ^ 8
+		    const k24_64 as UInt64 = 2 ^ 24
+		    
 		    dim pIn as ptr = mbIn
 		    
-		    for i as integer = 0 to lastByteIndex step 4
-		      temp1 = pIn.UInt32( i )
-		      temp2 = _
-		      ( temp1 \ k24 ) or _
-		      ( ( temp1 and &h00FF0000 ) \ k8 ) or _
-		      ( ( temp1 and &h0000FF00 ) * k8 ) or _
-		      ( temp1 * k24 )
-		      if temp2 <> temp1 then
-		        pIn.UInt32( i ) = temp2
+		    for i as integer = 0 to lastByteIndex step 8
+		      dim t1 as UInt64 = pIn.UInt64( i )
+		      dim t2 as UInt64 = _
+		      _ // Word 1
+		      ( ( t1 and &hFF00000000000000 ) \ k24_64 ) or _
+		      ( ( t1 and &h00FF000000000000 ) \ k8_64 ) or _
+		      ( ( t1 and &h0000FF0000000000 ) * k8_64 ) or _
+		      ( ( t1 and &h000000FF00000000 ) * k24_64 ) or _
+		      _ // Word 2
+		      ( ( t1 and &h00000000FF000000 ) \ k24_64 ) or _
+		      ( ( t1 and &h0000000000FF0000 ) \ k8_64 ) or _
+		      ( ( t1 and &h000000000000FF00 ) * k8_64 ) or _
+		      ( ( t1 and &h00000000000000FF ) * k24_64 )
+		      if t1 <> t2 then
+		        pIn.UInt64( i ) = t2
 		      end if
 		    next
 		  end if
