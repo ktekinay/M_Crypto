@@ -48,7 +48,6 @@ Protected Class SHA256Digest_MTC
 		  const k3 as UInt32 = 2 ^ 3
 		  const k6 as UInt32 = 2 ^ 6
 		  const k7 as UInt32 = 2 ^ 7
-		  const k8 as UInt32 = 2 ^ 8
 		  const k10 as UInt32 = 2 ^ 10
 		  const k11 as UInt32 = 2 ^ 11
 		  const k13 as UInt32 = 2 ^ 13
@@ -59,7 +58,6 @@ Protected Class SHA256Digest_MTC
 		  const k19 as UInt32 = 2 ^ 19
 		  const k21 as UInt32 = 2 ^ 21
 		  const k22 as UInt32 = 2 ^ 22
-		  const k24 as UInt32 = 2 ^ 24
 		  const k25 as UInt32 = 2 ^ 25
 		  const k26 as UInt32 = 2 ^ 26
 		  const k30 as UInt32 = 2 ^ 30
@@ -166,20 +164,38 @@ Protected Class SHA256Digest_MTC
 		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
-		    const kMask1 as UInt32 = &h00FF0000
-		    const kMask2 as UInt32 = &h0000FF00
+		    //
+		    // We'll do this two words at a time
+		    //
+		    const k8_64 as UInt64 = 2 ^ 8
+		    const k24_64 as UInt64 = 2 ^ 24
 		    
 		    dim pIn as ptr = mbIn
 		    
-		    for i as integer = 0 to lastByteIndex step 4
-		      temp1 = pIn.UInt32( i )
-		      temp2 = _
-		      ( temp1 \ k24 ) or _
-		      ( ( temp1 and kMask1 ) \ k8 ) or _
-		      ( ( temp1 and kMask2 ) * k8 ) or _
-		      ( temp1 * k24 )
-		      if temp2 <> temp1 then
-		        pIn.UInt32( i ) = temp2
+		    for i as integer = 0 to lastByteIndex step 8
+		      const kMask0 as UInt64 = &hFF00000000000000
+		      const kMask1 as UInt64 = &h00FF000000000000
+		      const kMask2 as UInt64 = &h0000FF0000000000
+		      const kMask3 as UInt64 = &h000000FF00000000
+		      const kMask4 as UInt64 = &h00000000FF000000
+		      const kMask5 as UInt64 = &h0000000000FF0000
+		      const kMask6 as UInt64 = &h000000000000FF00
+		      const kMask7 as UInt64 = &h00000000000000FF
+		      
+		      dim t1 as UInt64 = pIn.UInt64( i )
+		      dim t2 as UInt64 = _
+		      _ // Word 1
+		      ( ( t1 and kMask0 ) \ k24_64 ) or _
+		      ( ( t1 and kMask1 ) \ k8_64 ) or _
+		      ( ( t1 and kMask2 ) * k8_64 ) or _
+		      ( ( t1 and kMask3 ) * k24_64 ) or _
+		      _ // Word 2
+		      ( ( t1 and kMask4 ) \ k24_64 ) or _
+		      ( ( t1 and kMask5 ) \ k8_64 ) or _
+		      ( ( t1 and kMask6 ) * k8_64 ) or _
+		      ( ( t1 and kMask7 ) * k24_64 )
+		      if t1 <> t2 then
+		        pIn.UInt64( i ) = t2
 		      end if
 		    next
 		  end if
