@@ -329,6 +329,10 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.5.2__ (______, 2018)
+
+- Digest optimizations.
+
 __2.5.1__ (Nov. 16, 2018)
 
 - Optimizations to the SHA digest classes making them roughly 10x faster.
