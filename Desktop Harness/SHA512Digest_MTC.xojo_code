@@ -49,31 +49,8 @@ Protected Class SHA512Digest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Process(data As String)
-		  if Buffer <> "" then
-		    data = Buffer + data
-		    Buffer = ""
-		  end if
-		  
-		  dim dataLen as integer = data.LenB
-		  dim remainder as integer = dataLen mod kChunkBytes
-		  if remainder <> 0 then
-		    Buffer = data.RightB( remainder )
-		    dataLen = dataLen - remainder
-		    data = data.LeftB( dataLen )
-		  end if
-		  
-		  if data <> "" then
-		    Process data, Registers, false
-		    CombinedLength = CombinedLength + dataLen
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
-		Private Sub Process(data As String, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
+		Private Sub Process(mbIn As MemoryBlock, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
 		  #if not DebugBuild then
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -114,8 +91,7 @@ Protected Class SHA512Digest_MTC
 		  
 		  dim pMessage as ptr = message
 		  
-		  dim dataLen as integer = data.LenB
-		  dim mbIn as MemoryBlock
+		  dim dataLen as integer = mbIn.Size
 		  
 		  if isFinal then
 		    
@@ -131,7 +107,7 @@ Protected Class SHA512Digest_MTC
 		      padding = padding + kChunkBytes
 		    end if
 		    
-		    mbIn = new MemoryBlock( dataLen + padding + 1 )
+		    mbIn.Size = dataLen + padding + 1
 		    mbIn.LittleEndian = false
 		    
 		    //
@@ -143,14 +119,6 @@ Protected Class SHA512Digest_MTC
 		    // Copy length of data to the last 8 bytes since we can't really do 16, as the spec requires
 		    //
 		    mbIn.UInt64Value( mbIn.Size - 8 ) = ( CombinedLength + dataLen ) * 8 // In bits
-		    
-		    if dataLen <> 0 then
-		      mbIn.StringValue( 0, dataLen ) = data
-		    end if
-		    
-		  else // Not isFinal so the data will already be a multiple 
-		    
-		    mbIn = data
 		    
 		  end if
 		  
@@ -292,6 +260,29 @@ Protected Class SHA512Digest_MTC
 		  useRegisters.H6 = h6
 		  useRegisters.H7 = h7
 		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Process(data As String)
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
+		  
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
+		  if remainder <> 0 then
+		    Buffer = data.RightB( remainder )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
+		  end if
+		  
+		  if data <> "" then
+		    Process data, Registers, false
+		    CombinedLength = CombinedLength + dataLen
+		  end if
 		  
 		End Sub
 	#tag EndMethod
