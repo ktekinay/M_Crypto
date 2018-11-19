@@ -99,7 +99,9 @@ Inherits TestGroup
 		  dim nativeHash as string
 		  
 		  sw.Start
+		  StartProfiling
 		  nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
+		  StopProfiling
 		  sw.Stop
 		  
 		  Assert.Message "Bcrypt_MTC (once) : " + sw.ElapsedMilliseconds.ToText + " ms"

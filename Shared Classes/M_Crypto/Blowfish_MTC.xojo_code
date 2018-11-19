@@ -62,12 +62,10 @@ Implements BcryptInterface
 	#tag Event
 		Sub KeyChanged(key As String)
 		  InitKeyValues
-		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  streamBuffer.LittleEndian = false
 		  
 		  dim temp as MemoryBlock = key
 		  dim keyMB as new Xojo.Core.MutableMemoryBlock( temp, temp.Size )
-		  Expand0State keyMB, streamBuffer, streamBuffer.Data
+		  Expand0State keyMB
 		End Sub
 	#tag EndEvent
 
@@ -447,7 +445,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(key As Xojo.Core.MutableMemoryBlock, streamBuffer As Xojo.Core.MutableMemoryBlock, streamBufferPtr As Ptr)
+		Private Sub Expand0State(key As Xojo.Core.MutableMemoryBlock)
 		  if key.Size = 0 then
 		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		  end if
@@ -468,8 +466,61 @@ Implements BcryptInterface
 		  dim mySPtr as ptr = SPtr
 		  
 		  const kLastIndex as integer = BLF_N + 1
+		  const k3 as UInt32 = 2 ^ 24
+		  const k2 as UInt32 = 2 ^ 16
+		  const k1 as UInt32 = 2 ^ 8
+		  
+		  const kMask1 as UInt32 = &h00FF0000
+		  const kMask2 as UInt32 = &h0000FF00
+		  
+		  dim keyPtr as ptr = key.Data
+		  dim keySize as integer = key.Size
+		  dim within4 as integer = keySize - 3
+		  
 		  for i = 0 to kLastIndex
-		    temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		    'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		    
+		    if j < within4 then
+		      temp = keyPtr.UInt32( j )
+		      j = j + 4
+		      
+		      if IsLittleEndian then
+		        //
+		        // Swap the bytes
+		        //
+		        temp = _
+		        ( temp \ k3 ) or _
+		        ( ( temp and kMask1 ) \ k1 ) or _
+		        ( ( temp and kMask2 ) * k1 ) or _
+		        ( temp * k3 )
+		        
+		      end if
+		      
+		    else
+		      if j >= keySize then
+		        j = 0
+		      end if
+		      dim b0 as UInt32 = keyPtr.Byte( j )
+		      j = j + 1
+		      if j >= keySize then
+		        j = 0
+		      end if
+		      dim b1 as UInt32 = keyPtr.Byte( j )
+		      j = j + 1
+		      if j >= keySize then
+		        j = 0
+		      end if
+		      dim b2 as UInt32 = keyPtr.Byte( j )
+		      j = j + 1
+		      if j >= keySize then
+		        j = 0
+		      end if
+		      dim b3 as UInt32 = keyPtr.Byte( j )
+		      j = j + 1
+		      
+		      temp = ( b0 * k3 ) or ( b1 * k2 ) or ( b2 * k1 ) or b3
+		    end if
+		    
 		    arrIndex = i * 4
 		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) Xor temp
 		  next i
@@ -517,7 +568,6 @@ Implements BcryptInterface
 		  dim x0 as UInt32
 		  dim x1 as UInt32
 		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  streamBuffer.LittleEndian = false
 		  dim streamBufferPtr as ptr = streamBuffer.Data
 		  
 		  const kLastIndex as Integer = BLF_N + 1
@@ -562,6 +612,8 @@ Implements BcryptInterface
 		  PPtr = P.Data
 		  S = new Xojo.Core.MutableMemoryBlock( 4 * 256 * 4 )
 		  SPtr = S.Data
+		  
+		  IsLittleEndian = P.LittleEndian
 		  
 		  dim x as integer
 		  for i as integer = 0 to 3
@@ -901,6 +953,7 @@ Implements BcryptInterface
 		  end if
 		  
 		  data.LittleEndian = false
+		  buffer.LittleEndian = false
 		  
 		  if dataSize >= 4 and j <= ( dataSize - 4 ) then
 		    
@@ -1002,6 +1055,10 @@ Implements BcryptInterface
 		#tag EndGetter
 		Private BLF_MAXKEYLEN As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private IsLittleEndian As Boolean
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private P As Xojo.Core.MutableMemoryBlock

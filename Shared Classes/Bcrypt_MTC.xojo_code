@@ -109,9 +109,6 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  streamBuffer.LittleEndian = false
-		  dim streamBufferPtr as ptr = streamBuffer.Data
 		  dim keyTemp as MemoryBlock = key
 		  dim keyMB as new Xojo.Core.MutableMemoryBlock( keyTemp, keyTemp.Size )
 		  
@@ -121,8 +118,8 @@ Protected Module Bcrypt_MTC
 		  '#pragma warning "REMOVE THIS!!"
 		  'lastRound = 99
 		  for k as Integer = 0 to lastRound
-		    state.Expand0State( keyMB, streamBuffer, streamBufferPtr )
-		    state.Expand0State( csalt, streamBuffer, streamBufferPtr )
+		    state.Expand0State( keyMB )
+		    state.Expand0State( csalt )
 		    
 		    #if DebugBuild then
 		      if k = lastRound then
