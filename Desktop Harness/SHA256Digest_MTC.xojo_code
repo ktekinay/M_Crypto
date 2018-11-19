@@ -12,10 +12,6 @@ Protected Class SHA256Digest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag ExternalMethod, Flags = &h21
-		Private Declare Sub memcpy Lib "system" (dest As Ptr, source As Ptr, size As Integer)
-	#tag EndExternalMethod
-
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
 		  if Buffer <> "" then
@@ -141,6 +137,8 @@ Protected Class SHA256Digest_MTC
 		    
 		  end if
 		  
+		  dim pIn as ptr = mbIn
+		  
 		  dim h0 as UInt32 = useRegisters.H0
 		  dim h1 as UInt32 = useRegisters.H1
 		  dim h2 as UInt32 = useRegisters.H2
@@ -174,8 +172,6 @@ Protected Class SHA256Digest_MTC
 		    const k8_64 as UInt64 = 2 ^ 8
 		    const k24_64 as UInt64 = 2 ^ 24
 		    
-		    dim pIn as ptr = mbIn
-		    
 		    for i as integer = 0 to lastByteIndex step 8
 		      const kMask0 as UInt64 = &hFF00000000000000
 		      const kMask1 as UInt64 = &h00FF000000000000
@@ -205,13 +201,14 @@ Protected Class SHA256Digest_MTC
 		  end if
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    #if TargetMacOS then
-		      dim pIn as ptr = mbIn
-		      pIn = ptr( integer( pIn ) + chunkIndex )
-		      memcpy p, pIn, kChunkBytes
-		    #else
-		      w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
-		    #endif
+		    //
+		    // Copy the chunk to the Message (faster than StringValue)
+		    //
+		    dim copyIndex as integer = 0
+		    while copyIndex < kChunkBytes
+		      p.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      copyIndex = copyIndex + 8
+		    wend
 		    
 		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 4
 		      word0 = p.UInt32( wordIndex - 64 )
