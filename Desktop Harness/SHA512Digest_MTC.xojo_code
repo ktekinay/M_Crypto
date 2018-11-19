@@ -191,7 +191,7 @@ Protected Class SHA512Digest_MTC
 		    
 		    for i as integer = 0 to lastByteIndex step 8
 		      temp1 = pIn.UInt64( i )
-		      temp2 = _
+		      pIn.UInt64( i ) = _
 		      ( temp1 \ k56 ) or _
 		      ( ( temp1 and kMask1 ) \ k40 ) or _
 		      ( ( temp1 and kMask2 ) \ k24 ) or _
@@ -200,9 +200,6 @@ Protected Class SHA512Digest_MTC
 		      ( ( temp1 and kMask5 ) * k24 ) or _
 		      ( ( temp1 and kMask6 ) * k40 ) or _
 		      ( temp1 * k56 )
-		      if temp2 <> temp1 then
-		        pIn.UInt64( i ) = temp2
-		      end if
 		    next
 		  end if
 		  

@@ -136,6 +136,28 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub SuperLargeTest()
+		  dim s as string = "Hello "
+		  while s.LenB <= 10000000
+		    s = s + s
+		  wend
+		  
+		  StartTestTimer "native"
+		  dim expected as string = Crypto.SHA256( s )
+		  LogTestTimer "native"
+		  
+		  dim d as new SHA256Digest_MTC
+		  
+		  StartTestTimer "mine"
+		  d.Process s
+		  dim actual as string = d.Value
+		  LogTestTimer "mine"
+		  
+		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty

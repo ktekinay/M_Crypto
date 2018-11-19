@@ -172,18 +172,20 @@ Protected Class SHA256Digest_MTC
 		    const k8_64 as UInt64 = 2 ^ 8
 		    const k24_64 as UInt64 = 2 ^ 24
 		    
+		    const kMask0 as UInt64 = &hFF00000000000000
+		    const kMask1 as UInt64 = &h00FF000000000000
+		    const kMask2 as UInt64 = &h0000FF0000000000
+		    const kMask3 as UInt64 = &h000000FF00000000
+		    const kMask4 as UInt64 = &h00000000FF000000
+		    const kMask5 as UInt64 = &h0000000000FF0000
+		    const kMask6 as UInt64 = &h000000000000FF00
+		    const kMask7 as UInt64 = &h00000000000000FF
+		    
+		    dim t1 as UInt64
+		    
 		    for i as integer = 0 to lastByteIndex step 8
-		      const kMask0 as UInt64 = &hFF00000000000000
-		      const kMask1 as UInt64 = &h00FF000000000000
-		      const kMask2 as UInt64 = &h0000FF0000000000
-		      const kMask3 as UInt64 = &h000000FF00000000
-		      const kMask4 as UInt64 = &h00000000FF000000
-		      const kMask5 as UInt64 = &h0000000000FF0000
-		      const kMask6 as UInt64 = &h000000000000FF00
-		      const kMask7 as UInt64 = &h00000000000000FF
-		      
-		      dim t1 as UInt64 = pIn.UInt64( i )
-		      dim t2 as UInt64 = _
+		      t1 = pIn.UInt64( i )
+		      pIn.UInt64( i ) = _
 		      _ // Word 1
 		      ( ( t1 and kMask0 ) \ k24_64 ) or _
 		      ( ( t1 and kMask1 ) \ k8_64 ) or _
@@ -194,9 +196,6 @@ Protected Class SHA256Digest_MTC
 		      ( ( t1 and kMask5 ) \ k8_64 ) or _
 		      ( ( t1 and kMask6 ) * k8_64 ) or _
 		      ( ( t1 and kMask7 ) * k24_64 )
-		      if t1 <> t2 then
-		        pIn.UInt64( i ) = t2
-		      end if
 		    next
 		  end if
 		  
