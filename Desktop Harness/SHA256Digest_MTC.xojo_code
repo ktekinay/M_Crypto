@@ -12,6 +12,10 @@ Protected Class SHA256Digest_MTC
 		End Sub
 	#tag EndMethod
 
+	#tag ExternalMethod, Flags = &h21
+		Private Declare Sub memcpy Lib "system" (dest As Ptr, source As Ptr, size As Integer)
+	#tag EndExternalMethod
+
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
 		  if Buffer <> "" then
@@ -201,7 +205,13 @@ Protected Class SHA256Digest_MTC
 		  end if
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
+		    #if TargetMacOS then
+		      dim pIn as ptr = mbIn
+		      pIn = ptr( integer( pIn ) + chunkIndex )
+		      memcpy p, pIn, kChunkBytes
+		    #else
+		      w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
+		    #endif
 		    
 		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 4
 		      word0 = p.UInt32( wordIndex - 64 )
