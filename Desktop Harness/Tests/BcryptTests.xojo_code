@@ -67,12 +67,12 @@ Inherits TestGroup
 		  dim sw as new Stopwatch_MTC
 		  sw.Start
 		  
-		  dim isValid as boolean = Bcrypt_MTC.Verify("test123", hash)
+		  dim isValid as boolean = Bcrypt_MTC.Verify( "test123", hash )
 		  
 		  sw.Stop
 		  
 		  Assert.IsTrue isValid
-		  Assert.Message "Verification of 12 rounds took " + sw.ElapsedSeconds.ToText( Xojo.Core.Locale.Current, "###,0.0##" ) + " s"
+		  Assert.Message "Verification of 12 rounds took " + sw.ElapsedSeconds.ToText( Xojo.Core.Locale.Current, "###,###,###,0.0##" ) + " s"
 		  
 		End Sub
 	#tag EndMethod
