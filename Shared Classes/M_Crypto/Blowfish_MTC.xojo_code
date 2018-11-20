@@ -466,21 +466,61 @@ Implements BcryptInterface
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
 		  
+		  //
+		  // Create the stream keys
+		  //
+		  for keyIndex as integer = 0 to keys.Ubound
+		    dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
+		    dim keySize as integer = key.Size
+		    
+		    if keySize = 0 then
+		      RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
+		    end if
+		    WasKeySet = true
+		    
+		    dim streamKey as Xojo.Core.MutableMemoryBlock
+		    dim streamKeySize as integer = keySize
+		    if ( keySize mod 4 ) = 0 then
+		      streamKey = new Xojo.Core.MutableMemoryBlock( key )
+		    else
+		      streamKeySize = streamKeySize * 4
+		      
+		      streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
+		      
+		      streamKey.Left( keySize ) = key
+		      streamKey.Mid( keySize, keySize ) = key
+		      streamKey.Mid( keySize + keySize, keySize ) = key
+		      streamKey.Right( keySize ) = key
+		    end if
+		    
+		    if IsLittleEndian then
+		      //
+		      // Swap the bytes
+		      //
+		      dim streamKeyPtr as ptr = streamKey.Data
+		      dim swapIndex as integer
+		      while swapIndex < streamKeySize
+		        dim temp as UInt32 = streamKeyPtr.UInt32( swapIndex )
+		        streamKeyPtr.UInt32( swapIndex ) = _
+		        ( temp \ kShift3 ) or _
+		        ( ( temp and kMask1 ) \ kShift1 ) or _
+		        ( ( temp and kMask2 ) * kShift1 ) or _
+		        ( temp * kShift3 )
+		        
+		        swapIndex = swapIndex + 4
+		      wend
+		    end if
+		    
+		    keys( keyIndex ) = streamKey
+		  next
+		  
 		  for rep as integer = 1 to repetitions
 		    
 		    for keyIndex as integer = 0 to keys.Ubound
 		      
 		      dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
-		      
-		      if key.Size = 0 then
-		        RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
-		      end if
-		      WasKeySet = true
-		      
 		      dim keyPtr as ptr = key.Data
 		      dim keySize as integer = key.Size
-		      dim within4 as integer = keySize - 4
-		      dim within2 as integer = keySize - 2
 		      
 		      dim j as integer
 		      dim i, k, arrIndex, arrIndexMajor as integer
@@ -490,60 +530,13 @@ Implements BcryptInterface
 		      for i = 0 to kLastIndex
 		        'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		        
-		        if j <= within4 then
-		          temp = keyPtr.UInt32( j )
-		          j = j + 4
-		          
-		          if IsLittleEndian then
-		            //
-		            // Swap the bytes
-		            //
-		            temp = _
-		            ( temp \ kShift3 ) or _
-		            ( ( temp and kMask1 ) \ kShift1 ) or _
-		            ( ( temp and kMask2 ) * kShift1 ) or _
-		            ( temp * kShift3 )
-		          end if
-		          
-		        elseif j = within2 and keySize >= 2 then
-		          temp = keyPtr.UInt16( j )
-		          temp = ( temp * kShift2 ) or keyPtr.UInt16( 0 )
-		          j = 2
-		          
-		          if IsLittleEndian then
-		            //
-		            // Swap the bytes
-		            //
-		            temp = _
-		            ( ( temp and kMask0 ) \ kShift1 ) or _
-		            ( ( temp and kMask1 ) * kShift1 ) or _
-		            ( ( temp and kMask2 ) \ kShift1 ) or _
-		            ( ( temp and kMask3 ) * kShift1 )
-		          end if
-		          
-		        else
-		          if j >= keySize then
-		            j = 0
-		          end if
-		          temp = keyPtr.Byte( j ) * kShift3
-		          j = j + 1
-		          if j >= keySize then
-		            j = 0
-		          end if
-		          temp = temp or ( keyPtr.Byte( j ) * kShift2 )
-		          j = j + 1
-		          if j >= keySize then
-		            j = 0
-		          end if
-		          temp = temp or ( keyPtr.Byte( j ) * kShift1 )
-		          j = j + 1
-		          if j >= keySize then
-		            j = 0
-		          end if
-		          temp = temp or keyPtr.Byte( j )
-		          j = j + 1
-		          
+		        if j = keySize then
+		          j = 0
 		        end if
+		        
+		        temp = keyPtr.UInt32( j )
+		        j = j + 4
+		        
 		        
 		        arrIndex = i * 4
 		        myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) xor temp
@@ -655,10 +648,10 @@ Implements BcryptInterface
 		          i = i // A place to break
 		        #endif
 		      next i
-		      
 		    next keyIndex
 		    
 		  next rep
+		  
 		End Sub
 	#tag EndMethod
 
@@ -674,25 +667,122 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  const kShift3 as UInt32 = 256 ^ 3
+		  const kShift2 as UInt32 = 256 ^ 2
+		  const kShift1 as UInt32 = 256 ^ 1
+		  
+		  const kMask0 as UInt32 = &hFF000000
+		  const kMask1 as UInt32 = &h00FF0000
+		  const kMask2 as UInt32 = &h0000FF00
+		  const kMask3 as UInt32 = &h000000FF
+		  
 		  dim j as Integer
 		  dim i, k, arrIndexMajor, arrIndex as Integer
 		  dim temp as UInt32
 		  dim x0 as UInt32
 		  dim x1 as UInt32
+		  
+		  //
+		  // Create the streams
+		  //
+		  dim streamData as Xojo.Core.MutableMemoryBlock
+		  dim dataSize as integer = data.Size
+		  dim streamDataSize as integer = dataSize
+		  
+		  if ( streamDataSize mod 4 ) = 0 then
+		    streamData = new Xojo.Core.MutableMemoryBlock( data )
+		  else
+		    streamDataSize = dataSize * 4
+		    streamData = new Xojo.Core.MutableMemoryBlock( streamDataSize )
+		    streamData.Left( dataSize ) = data
+		    streamData.Mid( dataSize, dataSize ) = data
+		    streamData.Mid( dataSize + dataSize, dataSize ) = data
+		    streamData.Right( dataSize ) = data
+		  end if
+		  
+		  dim streamDataPtr as ptr = streamData.Data
+		  
+		  if IsLittleEndian then
+		    dim copyIndex as integer
+		    while copyIndex < streamDataSize
+		      temp = streamDataPtr.UInt32( copyIndex )
+		      streamDataPtr.UInt32( copyIndex ) = _
+		      ( temp \ kShift3 ) or _
+		      ( ( temp and kMask1 ) \ kShift1 ) or _
+		      ( ( temp and kMask2 ) * kShift1 ) or _
+		      ( temp * kShift3 )
+		      
+		      copyIndex = copyIndex + 4
+		    wend
+		  end if
+		  
+		  'dim streamKey as Xojo.Core.MutableMemoryBlock
+		  'dim keySize as integer = key.Size
+		  'dim streamKeySize as integer = keySize
+		  '
+		  'if ( streamKeySize mod 4 ) = 0 then
+		  'streamKey = new Xojo.Core.MutableMemoryBlock( key )
+		  'else
+		  'streamKeySize = keySize * 4
+		  'streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
+		  'streamKey.Left( keySize ) = key
+		  'streamKey.Mid( keySize, keySize ) = key
+		  'streamKey.Mid( keySize + keySize, keySize ) = key
+		  'streamKey.Right( keySize ) = key
+		  'end if
+		  '
+		  'dim streamKeyPtr as ptr = streamKey.Data
+		  '
+		  'if IsLittleEndian then
+		  'dim copyIndex as integer
+		  'while copyIndex < streamKeySize
+		  'temp = streamKeyPtr.UInt32( copyIndex )
+		  'streamKeyPtr.UInt32( copyIndex ) = _
+		  '( temp \ kShift3 ) or _
+		  '( ( temp and kMask1 ) \ kShift1 ) or _
+		  '( ( temp and kMask2 ) * kShift1 ) or _
+		  '( temp * kShift3 )
+		  '
+		  'copyIndex = copyIndex + 4
+		  'wend
+		  'end if
+		  
 		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
 		  dim streamBufferPtr as ptr = streamBuffer.Data
 		  
 		  const kLastIndex as Integer = BLF_N + 1
+		  
+		  j = 0
 		  for i = 0 to kLastIndex
+		    'if j = streamKeySize then
+		    'j = 0
+		    'end if
+		    'temp = streamKeyPtr.UInt32( j )
+		    'j = j + 4
+		    
 		    temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		    
 		    arrIndex = i * 4
 		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
 		  next i
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
-		    x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
-		    x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		    'x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		    'x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		    
+		    if j = streamDataSize then
+		      j = 0
+		    end if
+		    x0 = x0 xor streamDataPtr.UInt32( j )
+		    j = j + 4
+		    
+		    if j = streamDataSize then
+		      j = 0
+		    end if
+		    x1 = x1 xor streamDataPtr.UInt32( j )
+		    j = j + 4
+		    
 		    
 		    Encipher( x0, x1 )
 		    
@@ -704,8 +794,21 @@ Implements BcryptInterface
 		  for i = 0 to 3
 		    arrIndexMajor = i * 256
 		    for k = 0 to 255 step 2
-		      x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
-		      x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		      'x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		      'x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		      
+		      if j = streamDataSize then
+		        j = 0
+		      end if
+		      x0 = x0 xor streamDataPtr.UInt32( j )
+		      j = j + 4
+		      
+		      if j = streamDataSize then
+		        j = 0
+		      end if
+		      x1 = x1 xor streamDataPtr.UInt32( j )
+		      j = j + 4
+		      
 		      
 		      Encipher( x0, x1 )
 		      
