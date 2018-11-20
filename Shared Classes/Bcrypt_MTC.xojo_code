@@ -114,19 +114,7 @@ Protected Module Bcrypt_MTC
 		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 		  state.ExpandState( csalt, keyMB )
-		  dim lastRound as UInt32 = rounds - 1
-		  '#pragma warning "REMOVE THIS!!"
-		  'lastRound = 99
-		  for k as Integer = 0 to lastRound
-		    state.Expand0State( keyMB )
-		    state.Expand0State( csalt )
-		    
-		    #if DebugBuild then
-		      if k = lastRound then
-		        k = k // A place to break
-		      end if
-		    #endif
-		  next k
+		  state.Expand0State rounds, keyMB, csalt
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
 		  cdata.Left( cdata.Size ) = precomputedCiphertext.Left( cdata.Size ) // Same every time, no need to recompute

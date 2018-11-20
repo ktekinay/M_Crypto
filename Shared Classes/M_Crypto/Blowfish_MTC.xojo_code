@@ -65,7 +65,7 @@ Implements BcryptInterface
 		  
 		  dim temp as MemoryBlock = key
 		  dim keyMB as new Xojo.Core.MutableMemoryBlock( temp, temp.Size )
-		  Expand0State keyMB
+		  Expand0State 1, keyMB
 		End Sub
 	#tag EndEvent
 
@@ -445,12 +445,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(key As Xojo.Core.MutableMemoryBlock)
-		  if key.Size = 0 then
-		    RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
-		  end if
-		  WasKeySet = true
-		  
+		Private Sub Expand0State(repetitions As Integer, ParamArray keys() As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -459,196 +454,211 @@ Implements BcryptInterface
 		  #endif
 		  
 		  const kLastIndex as integer = BLF_N + 1
-		  const k3 as UInt32 = 256 ^ 3
-		  const k2 as UInt32 = 256 ^ 2
-		  const k1 as UInt32 = 256 ^ 1
+		  const kShift3 as UInt32 = 256 ^ 3
+		  const kShift2 as UInt32 = 256 ^ 2
+		  const kShift1 as UInt32 = 256 ^ 1
 		  
 		  const kMask0 as UInt32 = &hFF000000
 		  const kMask1 as UInt32 = &h00FF0000
 		  const kMask2 as UInt32 = &h0000FF00
 		  const kMask3 as UInt32 = &h000000FF
 		  
-		  dim j as integer
-		  dim i, k, arrIndex, arrIndexMajor as integer
-		  dim temp as UInt32
-		  dim d0, d1 as UInt32
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
 		  
-		  dim keyPtr as ptr = key.Data
-		  dim keySize as integer = key.Size
-		  dim within4 as integer = keySize - 4
-		  dim within2 as integer = keySize - 2
-		  
-		  for i = 0 to kLastIndex
-		    'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		  for rep as integer = 1 to repetitions
 		    
-		    if j <= within4 then
-		      temp = keyPtr.UInt32( j )
-		      j = j + 4
+		    for keyIndex as integer = 0 to keys.Ubound
 		      
-		      if IsLittleEndian then
-		        //
-		        // Swap the bytes
-		        //
-		        temp = _
-		        ( temp \ k3 ) or _
-		        ( ( temp and kMask1 ) \ k1 ) or _
-		        ( ( temp and kMask2 ) * k1 ) or _
-		        ( temp * k3 )
+		      dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
+		      
+		      if key.Size = 0 then
+		        RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		      end if
+		      WasKeySet = true
 		      
-		    elseif j = within2 and keySize >= 2 then
-		      temp = keyPtr.UInt16( j )
-		      temp = ( temp * k2 ) or keyPtr.UInt16( 0 )
-		      j = 2
+		      dim keyPtr as ptr = key.Data
+		      dim keySize as integer = key.Size
+		      dim within4 as integer = keySize - 4
+		      dim within2 as integer = keySize - 2
 		      
-		      if IsLittleEndian then
-		        //
-		        // Swap the bytes
-		        //
-		        temp = _
-		        ( ( temp and kMask0 ) \ k1 ) or _
-		        ( ( temp and kMask1 ) * k1 ) or _
-		        ( ( temp and kMask2 ) \ k1 ) or _
-		        ( ( temp and kMask3 ) * k1 )
-		      end if
+		      dim j as integer
+		      dim i, k, arrIndex, arrIndexMajor as integer
+		      dim temp as UInt32
+		      dim d0, d1 as UInt32
 		      
-		    else
-		      if j >= keySize then
-		        j = 0
-		      end if
-		      temp = keyPtr.Byte( j ) * k3
-		      j = j + 1
-		      if j >= keySize then
-		        j = 0
-		      end if
-		      temp = temp or ( keyPtr.Byte( j ) * k2 )
-		      j = j + 1
-		      if j >= keySize then
-		        j = 0
-		      end if
-		      temp = temp or ( keyPtr.Byte( j ) * k1 )
-		      j = j + 1
-		      if j >= keySize then
-		        j = 0
-		      end if
-		      temp = temp or keyPtr.Byte( j )
-		      j = j + 1
-		      
-		    end if
-		    
-		    arrIndex = i * 4
-		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) xor temp
-		  next i
-		  
-		  dim a, b, c, d as integer // Used as indexes
-		  dim inner as integer
-		  dim xl as UInt32 
-		  dim xr as UInt32 
-		  dim j1 as UInt32
-		  
-		  j = 0
-		  for i = 0 to kLastIndex step 2
-		    'self.Encipher( d0, d1 )
-		    
-		    xl = d0
-		    xr = d1
-		    
-		    xl = xl xor myPPtr.UInt32( 0 )
-		    
-		    for inner = 1 to 16 step 2
-		      j1 = xl
-		      
-		      a = ( j1 \ k3 )
-		      b = ( j1 \ k2 ) and kMask3
-		      c = ( j1 \ k1 ) and kMask3
-		      d = j1 and kMask3
-		      
-		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		      + mySPtr.UInt32( ( 768 + d ) * 4 )
-		      
-		      xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
-		      
-		      j1 = xr
-		      
-		      a = ( j1 \ k3 ) 
-		      b = ( j1 \ k2 ) and kMask3
-		      c = ( j1 \ k1 ) and kMask3
-		      d = j1 and kMask3
-		      
-		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		      + mySPtr.UInt32( ( 768 + d ) * 4 )
-		      
-		      xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
-		    next inner
-		    
-		    xr = xr xor myPPtr.UInt32( 17 * 4 )
-		    
-		    d0 = xr
-		    d1 = xl
-		    
-		    
-		    arrIndex = i * 4
-		    myPPtr.UInt32( arrIndex ) = d0
-		    myPPtr.Uint32( arrIndex + 4 ) = d1
-		  next i
-		  
-		  for i = 0 to 3
-		    arrIndexMajor = i * 256
-		    for k = 0 to 255 step 2
-		      'self.Encipher( d0, d1 )
-		      
-		      xl = d0
-		      xr = d1
-		      
-		      xl = xl xor myPPtr.UInt32( 0 )
-		      
-		      for inner = 1 to 16 step 2
-		        j1 = xl
+		      for i = 0 to kLastIndex
+		        'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		        
-		        a = ( j1 \ k3 )
-		        b = ( j1 \ k2 ) and kMask3
-		        c = ( j1 \ k1 ) and kMask3
-		        d = j1 and kMask3
+		        if j <= within4 then
+		          temp = keyPtr.UInt32( j )
+		          j = j + 4
+		          
+		          if IsLittleEndian then
+		            //
+		            // Swap the bytes
+		            //
+		            temp = _
+		            ( temp \ kShift3 ) or _
+		            ( ( temp and kMask1 ) \ kShift1 ) or _
+		            ( ( temp and kMask2 ) * kShift1 ) or _
+		            ( temp * kShift3 )
+		          end if
+		          
+		        elseif j = within2 and keySize >= 2 then
+		          temp = keyPtr.UInt16( j )
+		          temp = ( temp * kShift2 ) or keyPtr.UInt16( 0 )
+		          j = 2
+		          
+		          if IsLittleEndian then
+		            //
+		            // Swap the bytes
+		            //
+		            temp = _
+		            ( ( temp and kMask0 ) \ kShift1 ) or _
+		            ( ( temp and kMask1 ) * kShift1 ) or _
+		            ( ( temp and kMask2 ) \ kShift1 ) or _
+		            ( ( temp and kMask3 ) * kShift1 )
+		          end if
+		          
+		        else
+		          if j >= keySize then
+		            j = 0
+		          end if
+		          temp = keyPtr.Byte( j ) * kShift3
+		          j = j + 1
+		          if j >= keySize then
+		            j = 0
+		          end if
+		          temp = temp or ( keyPtr.Byte( j ) * kShift2 )
+		          j = j + 1
+		          if j >= keySize then
+		            j = 0
+		          end if
+		          temp = temp or ( keyPtr.Byte( j ) * kShift1 )
+		          j = j + 1
+		          if j >= keySize then
+		            j = 0
+		          end if
+		          temp = temp or keyPtr.Byte( j )
+		          j = j + 1
+		          
+		        end if
 		        
-		        j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		        xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		        + mySPtr.UInt32( ( 768 + d ) * 4 )
-		        
-		        xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
-		        
-		        j1 = xr
-		        
-		        a = ( j1 \ k3 ) 
-		        b = ( j1 \ k2 ) and kMask3
-		        c = ( j1 \ k1 ) and kMask3
-		        d = j1 and kMask3
-		        
-		        j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		        xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		        + mySPtr.UInt32( ( 768 + d ) * 4 )
-		        
-		        xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
-		      next inner
+		        arrIndex = i * 4
+		        myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) xor temp
+		      next i
 		      
-		      xr = xr xor myPPtr.UInt32( 17 * 4 )
+		      dim a, b, c, d as integer // Used as indexes
+		      dim inner as integer
+		      dim xl as UInt32 
+		      dim xr as UInt32 
+		      dim j1 as UInt32
 		      
-		      d0 = xr
-		      d1 = xl
+		      j = 0
+		      for i = 0 to kLastIndex step 2
+		        'self.Encipher( d0, d1 )
+		        
+		        xl = d0
+		        xr = d1
+		        
+		        xl = xl xor myPPtr.UInt32( 0 )
+		        
+		        for inner = 1 to 16 step 2
+		          j1 = xl
+		          
+		          a = ( j1 \ kShift3 )
+		          b = ( j1 \ kShift2 ) and kMask3
+		          c = ( j1 \ kShift1 ) and kMask3
+		          d = j1 and kMask3
+		          
+		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          
+		          xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		          
+		          j1 = xr
+		          
+		          a = ( j1 \ kShift3 ) 
+		          b = ( j1 \ kShift2 ) and kMask3
+		          c = ( j1 \ kShift1 ) and kMask3
+		          d = j1 and kMask3
+		          
+		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          
+		          xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
+		        next inner
+		        
+		        xr = xr xor myPPtr.UInt32( 17 * 4 )
+		        
+		        d0 = xr
+		        d1 = xl
+		        
+		        
+		        arrIndex = i * 4
+		        myPPtr.UInt32( arrIndex ) = d0
+		        myPPtr.Uint32( arrIndex + 4 ) = d1
+		      next i
 		      
+		      for i = 0 to 3
+		        arrIndexMajor = i * 256
+		        for k = 0 to 255 step 2
+		          'self.Encipher( d0, d1 )
+		          
+		          xl = d0
+		          xr = d1
+		          
+		          xl = xl xor myPPtr.UInt32( 0 )
+		          
+		          for inner = 1 to 16 step 2
+		            j1 = xl
+		            
+		            a = ( j1 \ kShift3 )
+		            b = ( j1 \ kShift2 ) and kMask3
+		            c = ( j1 \ kShift1 ) and kMask3
+		            d = j1 and kMask3
+		            
+		            j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		            xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		            + mySPtr.UInt32( ( 768 + d ) * 4 )
+		            
+		            xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		            
+		            j1 = xr
+		            
+		            a = ( j1 \ kShift3 ) 
+		            b = ( j1 \ kShift2 ) and kMask3
+		            c = ( j1 \ kShift1 ) and kMask3
+		            d = j1 and kMask3
+		            
+		            j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		            xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		            + mySPtr.UInt32( ( 768 + d ) * 4 )
+		            
+		            xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
+		          next inner
+		          
+		          xr = xr xor myPPtr.UInt32( 17 * 4 )
+		          
+		          d0 = xr
+		          d1 = xl
+		          
+		          
+		          arrIndex = ( arrIndexMajor + k ) * 4
+		          mySPtr.UInt32( arrIndex ) = d0
+		          mySPtr.UInt32( arrIndex + 4 ) = d1
+		        next k
+		        #if DebugBuild then
+		          i = i // A place to break
+		        #endif
+		      next i
 		      
-		      arrIndex = ( arrIndexMajor + k ) * 4
-		      mySPtr.UInt32( arrIndex ) = d0
-		      mySPtr.UInt32( arrIndex + 4 ) = d1
-		    next k
-		    #if DebugBuild then
-		      i = i // A place to break
-		    #endif
-		  next i
-		  
+		    next keyIndex
+		    
+		  next rep
 		End Sub
 	#tag EndMethod
 
