@@ -348,16 +348,78 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  const kShift3 as UInt32 = 256 ^ 3
+		  const kShift2 as UInt32 = 256 ^ 2
+		  const kShift1 as UInt32 = 256 ^ 1
+		  
+		  const kMask1 as UInt32 = &h00FF0000
+		  const kMask2 as UInt32 = &h0000FF00
+		  const kMask3 as UInt32 = &h000000FF
+		  
 		  dim dataPtr as Ptr = data.Data
 		  dim blocks as integer = data.Size \ 8
 		  dim byteIndex as integer
 		  dim x0 as UInt32
 		  dim x1 as UInt32
 		  
+		  dim a, b, c, d as integer // Used as indexes
+		  dim inner as integer
+		  dim xl as UInt32 
+		  dim xr as UInt32 
+		  dim j1 as UInt32
+		  
+		  dim myPPtr as ptr = PPtr
+		  dim mySPtr as ptr = SPtr
+		  
 		  for thisBlock as integer = 1 to blocks
 		    x0 = dataPtr.UInt32( byteIndex )
 		    x1 = dataPtr.UInt32( byteIndex + 4 )
-		    Encipher( x0, x1 )
+		    
+		    //
+		    // Encipher is inlined here since this sub
+		    // is used by bcrypt
+		    //
+		    'Encipher( x0, x1 )
+		    
+		    xl = x0
+		    xr = x1
+		    
+		    xl = xl xor myPPtr.UInt32( 0 )
+		    
+		    for inner = 1 to 16 step 2
+		      j1 = xl
+		      
+		      a = ( j1 \ kShift3 )
+		      b = ( j1 \ kShift2 ) and kMask3
+		      c = ( j1 \ kShift1 ) and kMask3
+		      d = j1 and kMask3
+		      
+		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		      + mySPtr.UInt32( ( 768 + d ) * 4 )
+		      
+		      xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		      
+		      j1 = xr
+		      
+		      a = ( j1 \ kShift3 ) 
+		      b = ( j1 \ kShift2 ) and kMask3
+		      c = ( j1 \ kShift1 ) and kMask3
+		      d = j1 and kMask3
+		      
+		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		      + mySPtr.UInt32( ( 768 + d ) * 4 )
+		      
+		      xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
+		    next inner
+		    
+		    xr = xr xor myPPtr.UInt32( 17 * 4 )
+		    
+		    x0 = xr
+		    x1 = xl
+		    
+		    
 		    dataPtr.UInt32( byteIndex ) = x0
 		    dataPtr.UInt32( byteIndex + 4 ) = x1
 		    
@@ -481,7 +543,8 @@ Implements BcryptInterface
 		    dim streamKey as Xojo.Core.MutableMemoryBlock
 		    dim streamKeySize as integer = keySize
 		    if ( keySize mod 4 ) = 0 then
-		      streamKey = new Xojo.Core.MutableMemoryBlock( key )
+		      streamKey = new Xojo.Core.MutableMemoryBlock( keySize )
+		      streamKey.Left( keySize ) = key
 		    else
 		      streamKeySize = streamKeySize * 4
 		      
@@ -682,6 +745,9 @@ Implements BcryptInterface
 		  dim x0 as UInt32
 		  dim x1 as UInt32
 		  
+		  dim myPPtr as ptr = PPtr
+		  dim mySPtr as ptr = SPtr
+		  
 		  //
 		  // Create the streams
 		  //
@@ -716,55 +782,63 @@ Implements BcryptInterface
 		    wend
 		  end if
 		  
-		  'dim streamKey as Xojo.Core.MutableMemoryBlock
-		  'dim keySize as integer = key.Size
-		  'dim streamKeySize as integer = keySize
-		  '
-		  'if ( streamKeySize mod 4 ) = 0 then
-		  'streamKey = new Xojo.Core.MutableMemoryBlock( key )
-		  'else
-		  'streamKeySize = keySize * 4
-		  'streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
-		  'streamKey.Left( keySize ) = key
-		  'streamKey.Mid( keySize, keySize ) = key
-		  'streamKey.Mid( keySize + keySize, keySize ) = key
-		  'streamKey.Right( keySize ) = key
-		  'end if
-		  '
-		  'dim streamKeyPtr as ptr = streamKey.Data
-		  '
-		  'if IsLittleEndian then
-		  'dim copyIndex as integer
-		  'while copyIndex < streamKeySize
-		  'temp = streamKeyPtr.UInt32( copyIndex )
-		  'streamKeyPtr.UInt32( copyIndex ) = _
-		  '( temp \ kShift3 ) or _
-		  '( ( temp and kMask1 ) \ kShift1 ) or _
-		  '( ( temp and kMask2 ) * kShift1 ) or _
-		  '( temp * kShift3 )
-		  '
-		  'copyIndex = copyIndex + 4
-		  'wend
-		  'end if
+		  dim streamKey as Xojo.Core.MutableMemoryBlock
+		  dim keySize as integer = key.Size
+		  dim streamKeySize as integer = keySize
 		  
-		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  dim streamBufferPtr as ptr = streamBuffer.Data
+		  if ( streamKeySize mod 4 ) = 0 then
+		    streamKey = new Xojo.Core.MutableMemoryBlock( keySize )
+		    streamKey.Left( keySize ) = key
+		  else
+		    streamKeySize = keySize * 4
+		    streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
+		    streamKey.Left( keySize ) = key
+		    streamKey.Mid( keySize, keySize ) = key
+		    streamKey.Mid( keySize + keySize, keySize ) = key
+		    streamKey.Right( keySize ) = key
+		  end if
+		  
+		  dim streamKeyPtr as ptr = streamKey.Data
+		  
+		  if IsLittleEndian then
+		    dim copyIndex as integer
+		    while copyIndex < streamKeySize
+		      temp = streamKeyPtr.UInt32( copyIndex )
+		      streamKeyPtr.UInt32( copyIndex ) = _
+		      ( temp \ kShift3 ) or _
+		      ( ( temp and kMask1 ) \ kShift1 ) or _
+		      ( ( temp and kMask2 ) * kShift1 ) or _
+		      ( temp * kShift3 )
+		      
+		      copyIndex = copyIndex + 4
+		    wend
+		  end if
+		  
+		  'dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
+		  'dim streamBufferPtr as ptr = streamBuffer.Data
 		  
 		  const kLastIndex as Integer = BLF_N + 1
 		  
 		  j = 0
 		  for i = 0 to kLastIndex
-		    'if j = streamKeySize then
-		    'j = 0
-		    'end if
-		    'temp = streamKeyPtr.UInt32( j )
-		    'j = j + 4
+		    'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		    
-		    temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		    if j = streamKeySize then
+		      j = 0
+		    end if
+		    temp = streamKeyPtr.UInt32( j )
+		    j = j + 4
+		    
 		    
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = self.PPtr.UInt32( arrIndex ) Xor temp
+		    myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) Xor temp
 		  next i
+		  
+		  dim a, b, c, d as integer // Used as indexes
+		  dim inner as integer
+		  dim xl as UInt32 
+		  dim xr as UInt32 
+		  dim j1 as UInt32
 		  
 		  j = 0
 		  for i = 0 to kLastIndex step 2
@@ -784,11 +858,50 @@ Implements BcryptInterface
 		    j = j + 4
 		    
 		    
-		    Encipher( x0, x1 )
+		    'Encipher( x0, x1 )
+		    
+		    xl = x0
+		    xr = x1
+		    
+		    xl = xl xor myPPtr.UInt32( 0 )
+		    
+		    for inner = 1 to 16 step 2
+		      j1 = xl
+		      
+		      a = ( j1 \ kShift3 )
+		      b = ( j1 \ kShift2 ) and kMask3
+		      c = ( j1 \ kShift1 ) and kMask3
+		      d = j1 and kMask3
+		      
+		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		      + mySPtr.UInt32( ( 768 + d ) * 4 )
+		      
+		      xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		      
+		      j1 = xr
+		      
+		      a = ( j1 \ kShift3 ) 
+		      b = ( j1 \ kShift2 ) and kMask3
+		      c = ( j1 \ kShift1 ) and kMask3
+		      d = j1 and kMask3
+		      
+		      j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		      + mySPtr.UInt32( ( 768 + d ) * 4 )
+		      
+		      xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
+		    next inner
+		    
+		    xr = xr xor myPPtr.UInt32( 17 * 4 )
+		    
+		    x0 = xr
+		    x1 = xl
+		    
 		    
 		    arrIndex = i * 4
-		    self.PPtr.UInt32( arrIndex ) = x0
-		    self.PPtr.UInt32( arrIndex + 4 ) = x1
+		    myPPtr.UInt32( arrIndex ) = x0
+		    myPPtr.UInt32( arrIndex + 4 ) = x1
 		  next i
 		  
 		  for i = 0 to 3
@@ -810,11 +923,50 @@ Implements BcryptInterface
 		      j = j + 4
 		      
 		      
-		      Encipher( x0, x1 )
+		      'Encipher( x0, x1 )
+		      
+		      xl = x0
+		      xr = x1
+		      
+		      xl = xl xor myPPtr.UInt32( 0 )
+		      
+		      for inner = 1 to 16 step 2
+		        j1 = xl
+		        
+		        a = ( j1 \ kShift3 )
+		        b = ( j1 \ kShift2 ) and kMask3
+		        c = ( j1 \ kShift1 ) and kMask3
+		        d = j1 and kMask3
+		        
+		        j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		        xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		        + mySPtr.UInt32( ( 768 + d ) * 4 )
+		        
+		        xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		        
+		        j1 = xr
+		        
+		        a = ( j1 \ kShift3 ) 
+		        b = ( j1 \ kShift2 ) and kMask3
+		        c = ( j1 \ kShift1 ) and kMask3
+		        d = j1 and kMask3
+		        
+		        j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		        xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		        + mySPtr.UInt32( ( 768 + d ) * 4 )
+		        
+		        xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
+		      next inner
+		      
+		      xr = xr xor myPPtr.UInt32( 17 * 4 )
+		      
+		      x0 = xr
+		      x1 = xl
+		      
 		      
 		      arrIndex = ( arrIndexMajor + k ) * 4
-		      self.SPtr.UInt32( arrIndex ) = x0
-		      self.SPtr.Uint32( arrIndex + 4 ) = x1
+		      mySPtr.UInt32( arrIndex ) = x0
+		      mySPtr.Uint32( arrIndex + 4 ) = x1
 		    next k
 		  next i
 		  
@@ -830,37 +982,62 @@ Implements BcryptInterface
 		  
 		  IsLittleEndian = P.LittleEndian
 		  
-		  dim x as integer
-		  for i as integer = 0 to 3
-		    dim arr() as UInt32
-		    select case i
-		    case 0
-		      arr = S0
-		    case 1
-		      arr = S1
-		    case 2
-		      arr = S2
-		    case 3
-		      arr = S3
-		    end
+		  static defaultS as Xojo.Core.MutableMemoryBlock
+		  
+		  if defaultS is nil then
 		    
-		    for i1 as Integer = 0 to arr.Ubound
-		      SPtr.UInt32( x ) = arr( i1 )
-		      x = x + 4
-		    next i1
-		  next i
+		    dim x as integer
+		    for i as integer = 0 to 3
+		      dim arr() as UInt32
+		      select case i
+		      case 0
+		        arr = S0
+		      case 1
+		        arr = S1
+		      case 2
+		        arr = S2
+		      case 3
+		        arr = S3
+		      end
+		      
+		      for i1 as Integer = 0 to arr.Ubound
+		        SPtr.UInt32( x ) = arr( i1 )
+		        x = x + 4
+		      next i1
+		    next i
+		    
+		    defaultS = new Xojo.Core.MutableMemoryBlock( S.Size )
+		    defaultS.Left( S.Size ) = S
+		    
+		  else
+		    S.Left( S.Size ) = defaultS
+		    
+		  end if
 		  
-		  dim vals() as UInt32 = UInt32Array( _
-		  &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
-		  &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
-		  &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
-		  &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
-		  &h9216d5d9, &h8979fb1b _
-		  )
+		  static defaultP as Xojo.Core.MutableMemoryBlock
 		  
-		  for i as integer = 0 to vals.Ubound
-		    PPtr.UInt32( i * 4 ) = vals( i )
-		  next i
+		  if defaultP is nil then
+		    
+		    dim vals() as UInt32 = UInt32Array( _
+		    &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
+		    &ha4093822, &h299f31d0, &h082efa98, &hec4e6c89, _
+		    &h452821e6, &h38d01377, &hbe5466cf, &h34e90c6c, _
+		    &hc0ac29b7, &hc97c50dd, &h3f84d5b5, &hb5470917, _
+		    &h9216d5d9, &h8979fb1b _
+		    )
+		    
+		    for i as integer = 0 to vals.Ubound
+		      PPtr.UInt32( i * 4 ) = vals( i )
+		    next i
+		    
+		    defaultP = new Xojo.Core.MutableMemoryBlock( P.Size )
+		    defaultP.Left( P.Size ) = P
+		    
+		  else
+		    P.Left( P.Size ) = defaultP
+		    
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
