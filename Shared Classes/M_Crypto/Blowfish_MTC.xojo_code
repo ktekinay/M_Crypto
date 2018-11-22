@@ -586,7 +586,7 @@ Implements BcryptInterface
 		      dim keySize as integer = key.Size
 		      
 		      dim j as integer
-		      dim i, k, arrIndex, arrIndexMajor as integer
+		      dim i, k as integer, arrIndex as integer
 		      dim temp as UInt32
 		      dim d0, d1 as UInt32
 		      
@@ -612,6 +612,7 @@ Implements BcryptInterface
 		      dim j1 as UInt32
 		      
 		      j = 0
+		      arrIndex = 0
 		      for i = 0 to kLastIndex step 2
 		        'self.Encipher( d0, d1 )
 		        
@@ -653,14 +654,14 @@ Implements BcryptInterface
 		        d0 = xr
 		        d1 = xl
 		        
-		        
-		        arrIndex = i * 4
 		        myPPtr.UInt32( arrIndex ) = d0
-		        myPPtr.Uint32( arrIndex + 4 ) = d1
+		        arrIndex = arrIndex + 4
+		        myPPtr.UInt32( arrIndex ) = d1
+		        arrIndex = arrIndex + 4
 		      next i
 		      
+		      arrIndex = 0
 		      for i = 0 to 3
-		        arrIndexMajor = i * 256
 		        for k = 0 to 255 step 2
 		          'self.Encipher( d0, d1 )
 		          
@@ -703,10 +704,12 @@ Implements BcryptInterface
 		          d1 = xl
 		          
 		          
-		          arrIndex = ( arrIndexMajor + k ) * 4
 		          mySPtr.UInt32( arrIndex ) = d0
-		          mySPtr.UInt32( arrIndex + 4 ) = d1
+		          arrIndex = arrIndex + 4
+		          mySPtr.UInt32( arrIndex ) = d1
+		          arrIndex = arrIndex + 4
 		        next k
+		        
 		        #if DebugBuild then
 		          i = i // A place to break
 		        #endif
