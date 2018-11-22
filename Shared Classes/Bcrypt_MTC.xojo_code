@@ -124,11 +124,37 @@ Protected Module Bcrypt_MTC
 		    state.Encrypt( cdata )
 		  next k
 		  
-		  cipherText.LittleEndian = false // Make sure the bytes are copied in the right order
-		  cdata.LittleEndian = not ciphertext.LittleEndian // Will copy the bytes in reverse order
-		  for i as Integer = 0 to lastBlock
+		  //
+		  // Copy the bytes from cdata to cipherText in reverse order
+		  //
+		  const kMask0 as UInt64 = &hFF00000000000000
+		  const kMask1 as UInt64 = &h00FF000000000000
+		  const kMask2 as UInt64 = &h0000FF0000000000
+		  const kMask3 as UInt64 = &h000000FF00000000
+		  const kMask4 as UInt64 = &h00000000FF000000
+		  const kMask5 as UInt64 = &h0000000000FF0000
+		  const kMask6 as UInt64 = &h000000000000FF00
+		  const kMask7 as UInt64 = &h00000000000000FF
+		  const kShift1 as UInt64 = 256 ^ 1
+		  const kShift3 as UInt64 = 256 ^ 3
+		  
+		  dim temp as UInt64
+		  dim cdataPtr as ptr = cdata.Data
+		  dim cipherTextPtr as ptr = cipherText.Data
+		  for i as Integer = 0 to lastBlock step 2
 		    dim dataIndex as Integer = i * 4
-		    ciphertext.UInt32Value( dataIndex ) = cdata.UInt32Value( dataIndex )
+		    temp = cdataPtr.UInt64( dataIndex )
+		    cipherTextPtr.UInt64( dataIndex ) = _
+		    _ // Word 1
+		    ( ( temp and kMask0 ) \ kShift3 ) or _
+		    ( ( temp and kMask1 ) \ kShift1 ) or _
+		    ( ( temp and kMask2 ) * kShift1 ) or _
+		    ( ( temp and kMask3 ) * kShift3 ) or _
+		    _ // Word 2
+		    ( ( temp and kMask4 ) \ kShift3 ) or _
+		    ( ( temp and kMask5 ) \ kShift1 ) or _
+		    ( ( temp and kMask6 ) * kShift1 ) or _
+		    ( ( temp and kMask7 ) * kShift3 )
 		  next i
 		  
 		  r = "$" + BCRYPT_VERSION + ChrB( minor ) + "$" + format( logr, "00" ) + "$"
