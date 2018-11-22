@@ -590,6 +590,7 @@ Implements BcryptInterface
 		      dim temp as UInt32
 		      dim d0, d1 as UInt32
 		      
+		      arrIndex = 0
 		      for i = 0 to kLastIndex
 		        'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		        
@@ -601,8 +602,8 @@ Implements BcryptInterface
 		        j = j + 4
 		        
 		        
-		        arrIndex = i * 4
 		        myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) xor temp
+		        arrIndex = arrIndex + 4
 		      next i
 		      
 		      dim a, b, c, d as integer // Used as indexes
@@ -660,6 +661,7 @@ Implements BcryptInterface
 		        arrIndex = arrIndex + 4
 		      next i
 		      
+		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
 		      arrIndex = 0
 		      for i = 0 to 3
 		        for k = 0 to 255 step 2
@@ -668,7 +670,7 @@ Implements BcryptInterface
 		          xl = d0
 		          xr = d1
 		          
-		          xl = xl xor myPPtr.UInt32( 0 )
+		          xl = xl xor firstPPtr
 		          
 		          for inner = 1 to 16 step 2
 		            j1 = xl
