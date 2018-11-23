@@ -516,6 +516,7 @@ Implements BcryptInterface
 		  #endif
 		  
 		  const kLastIndex as integer = BLF_N + 1
+		  
 		  const kShift3 as UInt32 = 256 ^ 3
 		  const kShift2 as UInt32 = 256 ^ 2
 		  const kShift1 as UInt32 = 256 ^ 1
@@ -540,20 +541,21 @@ Implements BcryptInterface
 		    end if
 		    WasKeySet = true
 		    
+		    const kByteMultiplier as integer = 8
+		    
 		    dim streamKey as Xojo.Core.MutableMemoryBlock
 		    dim streamKeySize as integer = keySize
-		    if ( keySize mod 4 ) = 0 then
+		    if ( keySize mod kByteMultiplier ) = 0 then
 		      streamKey = new Xojo.Core.MutableMemoryBlock( keySize )
 		      streamKey.Left( keySize ) = key
 		    else
-		      streamKeySize = streamKeySize * 4
+		      streamKeySize = streamKeySize * kByteMultiplier
 		      
 		      streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
-		      
-		      streamKey.Left( keySize ) = key
-		      streamKey.Mid( keySize, keySize ) = key
-		      streamKey.Mid( keySize + keySize, keySize ) = key
-		      streamKey.Right( keySize ) = key
+		      dim lastByte as integer = streamKeySize - 1
+		      for thisByte as integer = 0 to lastByte step keySize
+		        streamKey.Mid( thisByte, keySize ) = key
+		      next
 		    end if
 		    
 		    if IsLittleEndian then
@@ -581,29 +583,29 @@ Implements BcryptInterface
 		    
 		    for keyIndex as integer = 0 to keys.Ubound
 		      
+		      const kWordSize as integer = 8
+		      
 		      dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
 		      dim keyPtr as ptr = key.Data
 		      dim keySize as integer = key.Size
 		      
 		      dim j as integer
 		      dim i, k as integer, arrIndex as integer
-		      dim temp as UInt32
 		      dim d0, d1 as UInt32
 		      
 		      arrIndex = 0
-		      for i = 0 to kLastIndex
+		      dim barrier as integer = keySize - kWordSize
+		      for i = 0 to kLastIndex step 2 // Two words at a time
 		        'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
 		        
-		        if j = keySize then
+		        myPPtr.UInt64( arrIndex ) = myPPtr.UInt64( arrIndex ) xor keyPtr.UInt64( j )
+		        if j = barrier then
 		          j = 0
+		        else
+		          j = j + kWordSize
 		        end if
 		        
-		        temp = keyPtr.UInt32( j )
-		        j = j + 4
-		        
-		        
-		        myPPtr.UInt32( arrIndex ) = myPPtr.UInt32( arrIndex ) xor temp
-		        arrIndex = arrIndex + 4
+		        arrIndex = arrIndex + kWordSize
 		      next i
 		      
 		      dim a, b, c, d as integer // Used as indexes
