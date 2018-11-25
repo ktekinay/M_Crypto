@@ -72,16 +72,24 @@ Inherits TestGroup
 		    #pragma StackOverflowChecking false
 		  #endif
 		  
-		  dim kRounds as integer = 20
-		  dim kCost as integer = 12
-		  dim kPassword as string = "password"
+		  const kPassword as string = "password"
+		  const kRounds as integer = 20
+		  const kCost as integer = 12
+		  
+		  dim pwArr() as string
+		  pwArr.Append kPassword + kPassword + kPassword
+		  for i as integer = 3 to kRounds
+		    pwArr.Append kPassword + pwArr( 0 ).Left( i )
+		  next
+		  pwArr.Append kPassword
+		  Assert.AreEqual kRounds, CType( pwArr.Ubound, integer ) + 1, "Password array count does not match"
 		  
 		  Assert.Message "Rounds: " + kRounds.ToText + ", Cost: " + kCost.ToText
 		  
 		  dim phpScript as string = kBcryptTimingScript
 		  phpScript = phpScript.Replace( "%rounds%", str( kRounds ) )
 		  phpScript = phpScript.Replace( "%cost%", str( kCost ) )
-		  phpScript = phpScript.Replace( "%password%", kPassword )
+		  phpScript = phpScript.Replace( "%pw_list%", "'" + join( pwArr, "', '" ) + "'" )
 		  
 		  System.DebugLog phpScript
 		  
@@ -90,11 +98,18 @@ Inherits TestGroup
 		  dim phpHash as string = M_PHP.Execute( phpScript )
 		  sw.Stop
 		  
+		  phpHash = ReplaceLineEndings( phpHash, EndOfLine )
+		  dim phpHashes() as string = split( phpHash, EndOfLine )
+		  Assert.AreEqual pwArr.Ubound, phpHashes.Ubound, "PHP hash list does not match pwArr"
+		  
 		  dim avgMs as double = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  sw.Reset
 		  
 		  Assert.Message "PHP: " + avgMs.ToText + " ms per round"
-		  Assert.IsTrue Bcrypt_MTC.Verify( kPassword, phpHash )
+		  
+		  for i as integer = 0 to phpHashes.Ubound
+		    Assert.IsTrue BCrypt_MTC.Verify( pwArr( i ), phpHashes( i ) ), "Verifying PHP hash on " + pwArr( i ).ToText
+		  next
 		  
 		  dim nativeHash as string
 		  
@@ -107,9 +122,10 @@ Inherits TestGroup
 		  Assert.Message "Bcrypt_MTC (once) : " + sw.ElapsedMilliseconds.ToText + " ms"
 		  sw.Reset
 		  
-		  for i as integer = 1 to kRounds
+		  for i as integer = 0 to pwArr.UBound
+		    dim pw as string = pwArr( i )
 		    sw.Start
-		    nativeHash = Bcrypt_MTC.Hash( kPassword, kCost )
+		    nativeHash = Bcrypt_MTC.Hash( pw, kCost )
 		    sw.Stop
 		  next
 		  
@@ -117,6 +133,8 @@ Inherits TestGroup
 		  
 		  Assert.Message "Bcrypt_MTC: " + avgMs.ToText + " ms per round"
 		  Assert.IsTrue PHPVerify( kPassword, nativeHash )
+		  
+		  Assert.Message "Calculated on: " + &u0A + join( pwArr, EndOfLine ).ToText
 		  
 		End Sub
 	#tag EndMethod
@@ -350,7 +368,7 @@ Inherits TestGroup
 	#tag EndMethod
 
 
-	#tag Constant, Name = kBcryptTimingScript, Type = String, Dynamic = False, Default = \"$options \x3D [ \'cost\' \x3D> %cost% ];\nfor ( $i  \x3D 0 ; $i < %rounds% ; $i++ ) {\n  $hash \x3D password_hash ( \'%password%\'\x2C PASSWORD_BCRYPT\x2C $options );\n};\necho $hash;\n", Scope = Private
+	#tag Constant, Name = kBcryptTimingScript, Type = String, Dynamic = False, Default = \"$options \x3D [ \'cost\' \x3D> %cost% ];\n$pwlist \x3D [%pw_list%];\n$hash \x3D [];\nforeach ($pwlist as $pw) {\n  $hash[] \x3D password_hash ( $pw\x2C PASSWORD_BCRYPT\x2C $options );\n};\necho implode(\"\\n\"\x2C $hash);\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kJavaScriptDecryptECB, Type = String, Dynamic = False, Default = \"var crypto \x3D require(\'crypto\');\nvar key \x3D \'%key%\';\nvar data \x3D \'%data%\';\nvar decipher \x3D crypto.createDecipher(\'bf-ecb\'\x2C key);\n\nvar dec \x3D decipher.update(data\x2C \'hex\'\x2C \'utf8\');\ndec +\x3D decipher.final(\'utf8\');\n\nconsole.log(dec);\n", Scope = Private
