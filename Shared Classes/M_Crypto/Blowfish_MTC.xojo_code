@@ -526,14 +526,25 @@ Implements BcryptInterface
 		  const kMask2 as UInt32 = &h0000FF00
 		  const kMask3 as UInt32 = &h000000FF
 		  
+		  const kSLastByte as integer = 4095
+		  
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
+		  dim isLittleEndian as boolean = self.IsLittleEndian
 		  
 		  //
 		  // Create the stream keys
 		  //
 		  const kStreamWordSize as integer = 8
 		  
+		  #if kDebug then
+		    dim startMs, elapsedMs as Double
+		    dim logPrefix as string = CurrentMethodName + ": "
+		  #endif
+		  
+		  #if kDebug then
+		    startMs = Microseconds
+		  #endif
 		  for keyIndex as integer = 0 to keys.Ubound
 		    dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
 		    dim keySize as integer = key.Size
@@ -558,7 +569,7 @@ Implements BcryptInterface
 		      next
 		    end if
 		    
-		    if IsLittleEndian then
+		    if isLittleEndian then
 		      //
 		      // Swap the bytes
 		      //
@@ -579,6 +590,11 @@ Implements BcryptInterface
 		    keys( keyIndex ) = streamKey
 		  next
 		  
+		  #if kDebug then
+		    elapsedMs = Microseconds - startMs
+		    System.DebugLog logPrefix + "Stream keys took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		  #endif
+		  
 		  for rep as integer = 1 to repetitions
 		    
 		    for keyIndex as integer = 0 to keys.Ubound
@@ -588,7 +604,7 @@ Implements BcryptInterface
 		      dim keySize as integer = key.Size
 		      
 		      dim j as integer
-		      dim i, k as integer, arrIndex as integer
+		      dim i as integer, arrIndex as integer
 		      dim d0, d1 as UInt32
 		      
 		      arrIndex = 0
@@ -661,59 +677,54 @@ Implements BcryptInterface
 		      next i
 		      
 		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
-		      arrIndex = 0
-		      for i = 0 to 3
-		        for k = 0 to 255 step 2
-		          'self.Encipher( d0, d1 )
+		      for arrIndex = 0 to kSLastByte step 8
+		        'self.Encipher( d0, d1 )
+		        
+		        xl = d0 xor firstPPtr
+		        xr = d1
+		        
+		        pptrEncoderIndex = 4
+		        for inner = 1 to 16 step 2
+		          a = ( xl \ kShift3 )
+		          b = ( xl \ kShift2 ) and kMask3
+		          c = ( xl \ kShift1 ) and kMask3
+		          d = xl and kMask3
 		          
-		          xl = d0 xor firstPPtr
-		          xr = d1
+		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
-		          pptrEncoderIndex = 4
-		          for inner = 1 to 16 step 2
-		            a = ( xl \ kShift3 )
-		            b = ( xl \ kShift2 ) and kMask3
-		            c = ( xl \ kShift1 ) and kMask3
-		            d = xl and kMask3
-		            
-		            j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		            xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		            + mySPtr.UInt32( ( 768 + d ) * 4 )
-		            
-		            xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		            pptrEncoderIndex = pptrEncoderIndex + 4
-		            
-		            a = ( xr \ kShift3 ) 
-		            b = ( xr \ kShift2 ) and kMask3
-		            c = ( xr \ kShift1 ) and kMask3
-		            d = xr and kMask3
-		            
-		            j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		            xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		            + mySPtr.UInt32( ( 768 + d ) * 4 )
-		            
-		            xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		            pptrEncoderIndex = pptrEncoderIndex + 4
-		          next inner
+		          xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
+		          pptrEncoderIndex = pptrEncoderIndex + 4
 		          
-		          xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
+		          a = ( xr \ kShift3 ) 
+		          b = ( xr \ kShift2 ) and kMask3
+		          c = ( xr \ kShift1 ) and kMask3
+		          d = xr and kMask3
 		          
-		          d0 = xr
-		          d1 = xl
+		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
+		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
+		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
-		          
-		          mySPtr.UInt32( arrIndex ) = d0
-		          arrIndex = arrIndex + 4
-		          mySPtr.UInt32( arrIndex ) = d1
-		          arrIndex = arrIndex + 4
-		        next k
+		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
+		          pptrEncoderIndex = pptrEncoderIndex + 4
+		        next inner
+		        
+		        xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
+		        
+		        d0 = xr
+		        d1 = xl
+		        
+		        
+		        mySPtr.UInt32( arrIndex ) = d0
+		        mySPtr.UInt32( arrIndex + 4 ) = d1
 		        
 		        #if DebugBuild then
-		          i = i // A place to break
+		          arrIndex = arrIndex // A place to break
 		        #endif
-		      next i
+		      next arrIndex
+		      
 		    next keyIndex
-		    
 		  next rep
 		  
 		End Sub
@@ -1471,6 +1482,9 @@ Implements BcryptInterface
 
 
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
