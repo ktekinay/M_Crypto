@@ -610,7 +610,6 @@ Implements BcryptInterface
 		  dim xl as UInt32 
 		  dim xr as UInt32 
 		  dim j1 as UInt32
-		  dim d0, d1 as UInt32
 		  dim barrier as integer
 		  dim pptrEncoderIndex as integer
 		  
@@ -647,14 +646,15 @@ Implements BcryptInterface
 		        end if
 		      next pByteIndex
 		      
-		      d0 = kZero
-		      d1 = kZero
+		      xl = kZero
+		      xr = kZero
 		      
 		      for pByteIndex = 0 to kPLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
-		        xl = d0 xor myPPtr.UInt32( 0 )
-		        xr = d1
+		        j1 = xl
+		        xl = xr xor myPPtr.UInt32( 0 )
+		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          a = ( xl \ kShift3 )
@@ -682,20 +682,18 @@ Implements BcryptInterface
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		        
-		        d0 = xr
-		        d1 = xl
 		        
-		        
-		        myPPtr.UInt32( pByteIndex ) = d0
-		        myPPtr.UInt32( pByteIndex + 4 ) = d1
+		        myPPtr.UInt32( pByteIndex ) = xr
+		        myPPtr.UInt32( pByteIndex + 4 ) = xl
 		      next pByteIndex
 		      
 		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
 		      for sByteIndex = 0 to kSLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
-		        xl = d0 xor firstPPtr
-		        xr = d1
+		        j1 = xl
+		        xl = xr xor firstPPtr
+		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          a = ( xl \ kShift3 )
@@ -723,12 +721,9 @@ Implements BcryptInterface
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		        
-		        d0 = xr
-		        d1 = xl
 		        
-		        
-		        mySPtr.UInt32( sByteIndex ) = d0
-		        mySPtr.UInt32( sByteIndex + 4 ) = d1
+		        mySPtr.UInt32( sByteIndex ) = xr
+		        mySPtr.UInt32( sByteIndex + 4 ) = xl
 		        
 		        #if DebugBuild then
 		          sByteIndex = sByteIndex // A place to break
