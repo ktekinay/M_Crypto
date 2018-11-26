@@ -527,6 +527,8 @@ Implements BcryptInterface
 		  const kMask3 as UInt32 = &h000000FF
 		  
 		  const kSLastByte as integer = 4095
+		  const kPLastByte as integer = ( 18 * 4 ) - 1
+		  const kPLastInnerByte as integer = kPLastByte - 7
 		  
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
@@ -603,42 +605,35 @@ Implements BcryptInterface
 		      dim keyPtr as ptr = key.Data
 		      dim keySize as integer = key.Size
 		      
-		      dim j as integer
-		      dim i as integer, arrIndex as integer
+		      dim streamIndex as integer
+		      dim arrIndex as integer
 		      dim d0, d1 as UInt32
 		      
-		      arrIndex = 0
 		      dim barrier as integer = keySize - kStreamWordSize
-		      for i = 0 to kLastIndex step 2 // Two words at a time
-		        'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		      for arrIndex = 0 to kPLastByte step kStreamWordSize // Two words at a time
+		        'temp = Stream2Word( key, streamIndex, streamBuffer, streamBufferPtr )
 		        
-		        myPPtr.UInt64( arrIndex ) = myPPtr.UInt64( arrIndex ) xor keyPtr.UInt64( j )
-		        if j = barrier then
-		          j = 0
+		        myPPtr.UInt64( arrIndex ) = myPPtr.UInt64( arrIndex ) xor keyPtr.UInt64( streamIndex )
+		        if streamIndex = barrier then
+		          streamIndex = 0
 		        else
-		          j = j + kStreamWordSize
+		          streamIndex = streamIndex + kStreamWordSize
 		        end if
-		        
-		        arrIndex = arrIndex + kStreamWordSize
-		      next i
+		      next arrIndex
 		      
 		      dim a, b, c, d as integer // Used as indexes
-		      dim inner as integer
 		      dim xl as UInt32 
 		      dim xr as UInt32 
 		      dim j1 as UInt32
 		      dim pptrEncoderIndex as integer
 		      
-		      j = 0
-		      arrIndex = 0
-		      for i = 0 to kLastIndex step 2
+		      for arrIndex = 0 to kPLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
 		        xl = d0 xor myPPtr.UInt32( 0 )
 		        xr = d1
 		        
-		        pptrEncoderIndex = 4
-		        for inner = 1 to 16 step 2
+		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          a = ( xl \ kShift3 )
 		          b = ( xl \ kShift2 ) and kMask3
 		          c = ( xl \ kShift1 ) and kMask3
@@ -649,7 +644,6 @@ Implements BcryptInterface
 		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
 		          xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		          pptrEncoderIndex = pptrEncoderIndex + 4
 		          
 		          a = ( xr \ kShift3 ) 
 		          b = ( xr \ kShift2 ) and kMask3
@@ -660,21 +654,18 @@ Implements BcryptInterface
 		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
-		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		          pptrEncoderIndex = pptrEncoderIndex + 4
-		        next inner
+		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		        next pptrEncoderIndex
 		        
-		        xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
+		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		        
 		        d0 = xr
 		        d1 = xl
 		        
 		        
 		        myPPtr.UInt32( arrIndex ) = d0
-		        arrIndex = arrIndex + 4
-		        myPPtr.UInt32( arrIndex ) = d1
-		        arrIndex = arrIndex + 4
-		      next i
+		        myPPtr.UInt32( arrIndex + 4 ) = d1
+		      next arrIndex
 		      
 		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
 		      for arrIndex = 0 to kSLastByte step 8
@@ -683,8 +674,7 @@ Implements BcryptInterface
 		        xl = d0 xor firstPPtr
 		        xr = d1
 		        
-		        pptrEncoderIndex = 4
-		        for inner = 1 to 16 step 2
+		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          a = ( xl \ kShift3 )
 		          b = ( xl \ kShift2 ) and kMask3
 		          c = ( xl \ kShift1 ) and kMask3
@@ -695,7 +685,6 @@ Implements BcryptInterface
 		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
 		          xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		          pptrEncoderIndex = pptrEncoderIndex + 4
 		          
 		          a = ( xr \ kShift3 ) 
 		          b = ( xr \ kShift2 ) and kMask3
@@ -706,11 +695,10 @@ Implements BcryptInterface
 		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		          + mySPtr.UInt32( ( 768 + d ) * 4 )
 		          
-		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		          pptrEncoderIndex = pptrEncoderIndex + 4
-		        next inner
+		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		        next pptrEncoderIndex
 		        
-		        xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
+		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		        
 		        d0 = xr
 		        d1 = xl
@@ -752,9 +740,11 @@ Implements BcryptInterface
 		  const kMask3 as UInt32 = &h000000FF
 		  
 		  const kSLastByte as integer = 4095
+		  const kPLastByte as integer = ( 18 * 4 ) - 1
+		  const kPLastInnerByte as integer = kPLastByte - 7
 		  
-		  dim j as Integer
-		  dim i, arrIndex as Integer
+		  dim streamIndex as Integer
+		  dim arrIndex as Integer
 		  dim temp as UInt32
 		  dim x0 as UInt32
 		  dim x1 as UInt32
@@ -840,47 +830,43 @@ Implements BcryptInterface
 		  
 		  const kLastIndex as Integer = BLF_N + 1
 		  
-		  j = 0
-		  arrIndex = 0
+		  streamIndex = 0
 		  dim barrier as integer = streamKeySize - kStreamWordSize
-		  for i = 0 to kLastIndex step 2 // Two words at a time
-		    'temp = Stream2Word( key, j, streamBuffer, streamBufferPtr )
+		  for arrIndex = 0 to kPLastByte step kStreamWordSize // Two words at a time
+		    'temp = Stream2Word( key, streamIndex, streamBuffer, streamBufferPtr )
 		    
-		    myPPtr.UInt64( arrIndex ) = myPPtr.UInt64( arrIndex ) xor streamKeyPtr.UInt64( j )
-		    if j = barrier then
-		      j = 0
+		    myPPtr.UInt64( arrIndex ) = myPPtr.UInt64( arrIndex ) xor streamKeyPtr.UInt64( streamIndex )
+		    if streamIndex = barrier then
+		      streamIndex = 0
 		    else
-		      j = j + kStreamWordSize
+		      streamIndex = streamIndex + kStreamWordSize
 		    end if
-		    
-		    arrIndex = arrIndex + kStreamWordSize
-		  next i
+		  next arrIndex
 		  
 		  dim a, b, c, d as integer // Used as indexes
-		  dim inner as integer
 		  dim xl as UInt32 
 		  dim xr as UInt32 
 		  dim j1 as UInt32
 		  dim pptrEncoderIndex as integer
 		  
 		  barrier = streamDataSize - 4
-		  j = 0
-		  for i = 0 to kLastIndex step 2
-		    'x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
-		    'x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		  streamIndex = 0
+		  for arrIndex = 0 to kPLastByte step 8
+		    'x0 = x0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'x1 = x1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
 		    
-		    x0 = x0 xor streamDataPtr.UInt32( j )
-		    if j = barrier then
-		      j = 0
+		    x0 = x0 xor streamDataPtr.UInt32( streamIndex )
+		    if streamIndex = barrier then
+		      streamIndex = 0
 		    else
-		      j = j + 4
+		      streamIndex = streamIndex + 4
 		    end if
 		    
-		    x1 = x1 xor streamDataPtr.UInt32( j )
-		    if j = barrier then
-		      j = 0
+		    x1 = x1 xor streamDataPtr.UInt32( streamIndex )
+		    if streamIndex = barrier then
+		      streamIndex = 0
 		    else
-		      j = j + 4
+		      streamIndex = streamIndex + 4
 		    end if
 		    
 		    'Encipher( x0, x1 )
@@ -890,8 +876,7 @@ Implements BcryptInterface
 		    
 		    xl = xl xor myPPtr.UInt32( 0 )
 		    
-		    pptrEncoderIndex = 4
-		    for inner = 1 to 16 step 2
+		    for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		      j1 = xl
 		      
 		      a = ( j1 \ kShift3 )
@@ -904,7 +889,6 @@ Implements BcryptInterface
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
 		      xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		      pptrEncoderIndex = pptrEncoderIndex + 4
 		      
 		      j1 = xr
 		      
@@ -917,37 +901,35 @@ Implements BcryptInterface
 		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
-		      xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		      pptrEncoderIndex = pptrEncoderIndex + 4
-		    next inner
+		      xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		    next pptrEncoderIndex
 		    
-		    xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
+		    xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		    
 		    x0 = xr
 		    x1 = xl
 		    
 		    
-		    arrIndex = i * 4
 		    myPPtr.UInt32( arrIndex ) = x0
 		    myPPtr.UInt32( arrIndex + 4 ) = x1
-		  next i
+		  next arrIndex
 		  
 		  dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
 		  for arrIndex = 0 to kSLastByte step 8
-		    'x0 = x0 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
-		    'x1 = x1 Xor Stream2Word( data, j, streamBuffer, streamBufferPtr )
+		    'x0 = x0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'x1 = x1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
 		    
-		    if j = streamDataSize then
-		      j = 0
+		    if streamIndex = streamDataSize then
+		      streamIndex = 0
 		    end if
-		    x0 = x0 xor streamDataPtr.UInt32( j )
-		    j = j + 4
+		    x0 = x0 xor streamDataPtr.UInt32( streamIndex )
+		    streamIndex = streamIndex + 4
 		    
-		    if j = streamDataSize then
-		      j = 0
+		    if streamIndex = streamDataSize then
+		      streamIndex = 0
 		    end if
-		    x1 = x1 xor streamDataPtr.UInt32( j )
-		    j = j + 4
+		    x1 = x1 xor streamDataPtr.UInt32( streamIndex )
+		    streamIndex = streamIndex + 4
 		    
 		    
 		    'Encipher( x0, x1 )
@@ -957,8 +939,7 @@ Implements BcryptInterface
 		    
 		    xl = xl xor firstPPtr
 		    
-		    pptrEncoderIndex = 4
-		    for inner = 1 to 16 step 2
+		    for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		      j1 = xl
 		      
 		      a = ( j1 \ kShift3 )
@@ -971,7 +952,6 @@ Implements BcryptInterface
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
 		      xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		      pptrEncoderIndex = pptrEncoderIndex + 4
 		      
 		      j1 = xr
 		      
@@ -984,9 +964,8 @@ Implements BcryptInterface
 		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
-		      xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
-		      pptrEncoderIndex = pptrEncoderIndex + 4
-		    next inner
+		      xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		    next pptrEncoderIndex
 		    
 		    xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
 		    
