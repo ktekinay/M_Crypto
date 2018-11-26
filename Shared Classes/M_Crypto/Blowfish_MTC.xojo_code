@@ -356,14 +356,16 @@ Implements BcryptInterface
 		  const kMask2 as UInt32 = &h0000FF00
 		  const kMask3 as UInt32 = &h000000FF
 		  
+		  const kPLastByte as integer = ( 18 * 4 ) - 1
+		  const kPLastInnerByte as integer = kPLastByte - 7
+		  
 		  dim dataPtr as Ptr = data.Data
-		  dim blocks as integer = data.Size \ 8
-		  dim byteIndex as integer
-		  dim x0 as UInt32
-		  dim x1 as UInt32
+		  dim lastDataByte as integer = data.Size - 1
+		  dim d0 as UInt32
+		  dim d1 as UInt32
 		  
 		  dim a, b, c, d as integer // Used as indexes
-		  dim inner as integer
+		  dim pptrEncoderIndex as integer
 		  dim xl as UInt32 
 		  dim xr as UInt32 
 		  dim j1 as UInt32
@@ -371,9 +373,9 @@ Implements BcryptInterface
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
 		  
-		  for thisBlock as integer = 1 to blocks
-		    x0 = dataPtr.UInt32( byteIndex )
-		    x1 = dataPtr.UInt32( byteIndex + 4 )
+		  for byteIndex as integer = 0 to lastDataByte step 8
+		    d0 = dataPtr.UInt32( byteIndex )
+		    d1 = dataPtr.UInt32( byteIndex + 4 )
 		    
 		    //
 		    // Encipher is inlined here since this sub
@@ -381,12 +383,12 @@ Implements BcryptInterface
 		    //
 		    'Encipher( x0, x1 )
 		    
-		    xl = x0
-		    xr = x1
+		    xl = d0
+		    xr = d1
 		    
 		    xl = xl xor myPPtr.UInt32( 0 )
 		    
-		    for inner = 1 to 16 step 2
+		    for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		      j1 = xl
 		      
 		      a = ( j1 \ kShift3 )
@@ -398,7 +400,7 @@ Implements BcryptInterface
 		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
-		      xr = xr xor ( j1 xor myPPtr.UInt32( inner * 4 ) )
+		      xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
 		      
 		      j1 = xr
 		      
@@ -411,20 +413,18 @@ Implements BcryptInterface
 		      xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
 		      + mySPtr.UInt32( ( 768 + d ) * 4 )
 		      
-		      xl = xl xor ( j1 xor myPPtr.UInt32( ( inner + 1 ) * 4 ) )
-		    next inner
+		      xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		    next pptrEncoderIndex
 		    
-		    xr = xr xor myPPtr.UInt32( 17 * 4 )
+		    xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		    
-		    x0 = xr
-		    x1 = xl
+		    d0 = xr
+		    d1 = xl
 		    
 		    
-		    dataPtr.UInt32( byteIndex ) = x0
-		    dataPtr.UInt32( byteIndex + 4 ) = x1
-		    
-		    byteIndex = byteIndex + 8
-		  next thisBlock
+		    dataPtr.UInt32( byteIndex ) = d0
+		    dataPtr.UInt32( byteIndex + 4 ) = d1
+		  next byteIndex
 		  
 		End Sub
 	#tag EndMethod
