@@ -373,6 +373,7 @@ Implements BcryptInterface
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
 		  
+		  dim firstPPtrValue as UInt32 = myPPtr.UInt32( 0 )
 		  for byteIndex as integer = 0 to lastDataByte step 8
 		    d0 = dataPtr.UInt32( byteIndex )
 		    d1 = dataPtr.UInt32( byteIndex + 4 )
@@ -386,7 +387,7 @@ Implements BcryptInterface
 		    xl = d0
 		    xr = d1
 		    
-		    xl = xl xor myPPtr.UInt32( 0 )
+		    xl = xl xor firstPPtrValue
 		    
 		    for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		      j1 = xl
