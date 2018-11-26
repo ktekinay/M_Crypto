@@ -34,7 +34,7 @@ Protected Module Scrypt_MTC
 		    next
 		    
 		    //
-		    // Salsa is unrolled here as an optimization
+		    // Salsa is inlined here as an optimization
 		    //
 		    
 		    x.Right( kBlockSize ) = x.Left( kBlockSize )
@@ -325,7 +325,7 @@ Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
 		Private Sub Salsa(p As Ptr)
 		  //
-		  // This function has been unrolled into BlockMix as an optimization.
+		  // This function has been inlined into BlockMix as an optimization.
 		  // It remains here for testing purposes
 		  //
 		  
