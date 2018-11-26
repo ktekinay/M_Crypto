@@ -598,6 +598,10 @@ Implements BcryptInterface
 		    System.DebugLog logPrefix + "Stream keys took " + format( elapsedMs, "#,0.0##" ) + " µs"
 		  #endif
 		  
+		  //
+		  // Encoding starts here
+		  //
+		  
 		  dim a, b, c, d as integer // Used as indexes
 		  dim xl as UInt32 
 		  dim xr as UInt32 
@@ -837,10 +841,9 @@ Implements BcryptInterface
 		    wend
 		  end if
 		  
-		  'dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  'dim streamBufferPtr as ptr = streamBuffer.Data
-		  
-		  const kLastIndex as Integer = BLF_N + 1
+		  //
+		  // Encoding starts here
+		  //
 		  
 		  streamIndex = 0
 		  dim barrier as integer = streamKeySize - kStreamWordSize
@@ -880,6 +883,7 @@ Implements BcryptInterface
 		    else
 		      streamIndex = streamIndex + 4
 		    end if
+		    
 		    
 		    'Encipher( d0, d1 )
 		    
