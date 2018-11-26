@@ -546,6 +546,10 @@ Implements BcryptInterface
 		  #endif
 		  
 		  #if kDebug then
+		    System.DebugLog logPrefix + "Rounds = " + format( repetitions, "#,0" )
+		  #endif
+		  
+		  #if kDebug then
 		    startMs = Microseconds
 		  #endif
 		  for keyIndex as integer = 0 to keys.Ubound
@@ -621,6 +625,10 @@ Implements BcryptInterface
 		  for rep as integer = 1 to repetitions
 		    
 		    for keyIndex = 0 to keys.Ubound
+		      
+		      #if kDebug then
+		        startMs = Microseconds
+		      #endif
 		      
 		      key = keys( keyIndex )
 		      keyPtr = key.Data
@@ -727,6 +735,10 @@ Implements BcryptInterface
 		        #endif
 		      next sByteIndex
 		      
+		      #if kDebug then
+		        elapsedMs = Microseconds - startMs
+		        System.DebugLog logPrefix + "Key index " + str( keyIndex ) + " took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		      #endif
 		    next keyIndex
 		  next rep
 		  
