@@ -1333,8 +1333,16 @@ Implements BcryptInterface
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = false
 		Private Shared Function Stream2Word(data As Xojo.Core.MemoryBlock, ByRef current As Integer, buffer As Xojo.Core.MutableMemoryBlock, bufferPtr As Ptr) As UInt32
+		  // ################################################################
+		  // #                                                              #
+		  // #                         Legacy code                          #
+		  // #                                                              #
+		  // #             This has been inlined wherever needed            #
+		  // #                                                              #
+		  // ################################################################
+		  
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
