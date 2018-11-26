@@ -516,7 +516,7 @@ Implements BcryptInterface
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  const kLastIndex as integer = BLF_N + 1
+		  const kZero as UInt32 = 0
 		  
 		  const kShift3 as UInt32 = 256 ^ 3
 		  const kShift2 as UInt32 = 256 ^ 2
@@ -598,19 +598,32 @@ Implements BcryptInterface
 		    System.DebugLog logPrefix + "Stream keys took " + format( elapsedMs, "#,0.0##" ) + " µs"
 		  #endif
 		  
+		  dim a, b, c, d as integer // Used as indexes
+		  dim xl as UInt32 
+		  dim xr as UInt32 
+		  dim j1 as UInt32
+		  dim d0, d1 as UInt32
+		  dim barrier as integer
+		  dim pptrEncoderIndex as integer
+		  
+		  dim key as Xojo.Core.MutableMemoryBlock
+		  dim keyPtr as ptr
+		  dim keySize as integer
+		  
+		  dim streamIndex as integer
+		  dim sByteIndex, pByteIndex as integer
+		  dim keyIndex as integer
+		  
 		  for rep as integer = 1 to repetitions
 		    
-		    for keyIndex as integer = 0 to keys.Ubound
+		    for keyIndex = 0 to keys.Ubound
 		      
-		      dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
-		      dim keyPtr as ptr = key.Data
-		      dim keySize as integer = key.Size
+		      key = keys( keyIndex )
+		      keyPtr = key.Data
+		      keySize = key.Size
 		      
-		      dim streamIndex as integer
-		      dim sByteIndex, pByteIndex as integer
-		      dim d0, d1 as UInt32
-		      
-		      dim barrier as integer = keySize - kStreamWordSize
+		      barrier = keySize - kStreamWordSize
+		      streamIndex = 0
 		      for pByteIndex = 0 to kPLastByte step kStreamWordSize // Two words at a time
 		        'temp = Stream2Word( key, streamIndex, streamBuffer, streamBufferPtr )
 		        
@@ -622,11 +635,8 @@ Implements BcryptInterface
 		        end if
 		      next pByteIndex
 		      
-		      dim a, b, c, d as integer // Used as indexes
-		      dim xl as UInt32 
-		      dim xr as UInt32 
-		      dim j1 as UInt32
-		      dim pptrEncoderIndex as integer
+		      d0 = kZero
+		      d1 = kZero
 		      
 		      for pByteIndex = 0 to kPLastByte step 8
 		        'self.Encipher( d0, d1 )
@@ -744,12 +754,12 @@ Implements BcryptInterface
 		  const kPLastByte as integer = ( 18 * 4 ) - 1
 		  const kPLastInnerByte as integer = kPLastByte - 7
 		  
-		  dim streamIndex as Integer
+		  dim streamIndex as integer
 		  dim pByteIndex as integer
 		  dim sByteIndex as integer
 		  dim temp as UInt32
-		  dim x0 as UInt32
-		  dim x1 as UInt32
+		  dim d0 as UInt32
+		  dim d1 as UInt32
 		  
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
@@ -854,27 +864,27 @@ Implements BcryptInterface
 		  barrier = streamDataSize - 4
 		  streamIndex = 0
 		  for pByteIndex = 0 to kPLastByte step 8
-		    'x0 = x0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
-		    'x1 = x1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'd0 = d0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'd1 = d1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
 		    
-		    x0 = x0 xor streamDataPtr.UInt32( streamIndex )
+		    d0 = d0 xor streamDataPtr.UInt32( streamIndex )
 		    if streamIndex = barrier then
 		      streamIndex = 0
 		    else
 		      streamIndex = streamIndex + 4
 		    end if
 		    
-		    x1 = x1 xor streamDataPtr.UInt32( streamIndex )
+		    d1 = d1 xor streamDataPtr.UInt32( streamIndex )
 		    if streamIndex = barrier then
 		      streamIndex = 0
 		    else
 		      streamIndex = streamIndex + 4
 		    end if
 		    
-		    'Encipher( x0, x1 )
+		    'Encipher( d0, d1 )
 		    
-		    xl = x0
-		    xr = x1
+		    xl = d0
+		    xr = d1
 		    
 		    xl = xl xor myPPtr.UInt32( 0 )
 		    
@@ -908,36 +918,36 @@ Implements BcryptInterface
 		    
 		    xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
 		    
-		    x0 = xr
-		    x1 = xl
+		    d0 = xr
+		    d1 = xl
 		    
 		    
-		    myPPtr.UInt32( pByteIndex ) = x0
-		    myPPtr.UInt32( pByteIndex + 4 ) = x1
+		    myPPtr.UInt32( pByteIndex ) = d0
+		    myPPtr.UInt32( pByteIndex + 4 ) = d1
 		  next pByteIndex
 		  
 		  dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
 		  for sByteIndex = 0 to kSLastByte step 8
-		    'x0 = x0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
-		    'x1 = x1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'd0 = d0 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
+		    'd1 = d1 Xor Stream2Word( data, streamIndex, streamBuffer, streamBufferPtr )
 		    
 		    if streamIndex = streamDataSize then
 		      streamIndex = 0
 		    end if
-		    x0 = x0 xor streamDataPtr.UInt32( streamIndex )
+		    d0 = d0 xor streamDataPtr.UInt32( streamIndex )
 		    streamIndex = streamIndex + 4
 		    
 		    if streamIndex = streamDataSize then
 		      streamIndex = 0
 		    end if
-		    x1 = x1 xor streamDataPtr.UInt32( streamIndex )
+		    d1 = d1 xor streamDataPtr.UInt32( streamIndex )
 		    streamIndex = streamIndex + 4
 		    
 		    
-		    'Encipher( x0, x1 )
+		    'Encipher( d0, d1 )
 		    
-		    xl = x0
-		    xr = x1
+		    xl = d0
+		    xr = d1
 		    
 		    xl = xl xor firstPPtr
 		    
@@ -971,12 +981,12 @@ Implements BcryptInterface
 		    
 		    xr = xr xor myPPtr.UInt32( pptrEncoderIndex )
 		    
-		    x0 = xr
-		    x1 = xl
+		    d0 = xr
+		    d1 = xl
 		    
 		    
-		    mySPtr.UInt32( sByteIndex ) = x0
-		    mySPtr.Uint32( sByteIndex + 4 ) = x1
+		    mySPtr.UInt32( sByteIndex ) = d0
+		    mySPtr.Uint32( sByteIndex + 4 ) = d1
 		  next sByteIndex
 		  
 		End Sub
