@@ -44,6 +44,11 @@ Protected Module Bcrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  #if kDebug then
+		    dim startMs, elapsedMs as double
+		    dim logPrefix as string = CurrentMethodName + ": "
+		  #endif
+		  
 		  dim r as string
 		  
 		  dim state as M_Crypto.BcryptInterface
@@ -114,7 +119,14 @@ Protected Module Bcrypt_MTC
 		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 		  state.ExpandState( csalt, keyMB )
+		  #if kDebug then
+		    startMs = Microseconds
+		  #endif
 		  state.Expand0State rounds, keyMB, csalt
+		  #if kDebug then
+		    elapsedMs = Microseconds - startMs
+		    System.DebugLog logPrefix + "state.Expand0State took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		  #endif
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
 		  cdata.Left( cdata.Size ) = precomputedCiphertext.Left( cdata.Size ) // Same every time, no need to recompute
@@ -388,6 +400,9 @@ Protected Module Bcrypt_MTC
 	#tag EndConstant
 
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Protected
