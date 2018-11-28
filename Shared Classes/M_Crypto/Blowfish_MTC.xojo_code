@@ -651,6 +651,9 @@ Implements BcryptInterface
 		      xl = kZero
 		      xr = kZero
 		      
+		      //
+		      // Update P
+		      //
 		      for pByteIndex = 0 to kPLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
@@ -659,11 +662,18 @@ Implements BcryptInterface
 		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          a = xl
-		          d = a and &hFF
-		          c = ( a \ 256 ) and &hFF
-		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		          a = ( a \ CType( 256 ^ 3, integer ) )
+		          #if Target32Bit then
+		            a = xl \ kShift3
+		            b = ( xl \ kShift2 ) and kMask3
+		            c = ( xl \ kShift1 ) and kMask3
+		            d = xl and kMask3
+		          #else
+		            a = xl
+		            d = a and &hFF
+		            c = ( a \ 256 ) and &hFF
+		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		            a = ( a \ CType( 256 ^ 3, integer ) )
+		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
 		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
@@ -674,11 +684,18 @@ Implements BcryptInterface
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
 		          xr = xr xor ( j1 xor pValue1 )
 		          
-		          a = xr
-		          d = a and &hFF
-		          c = ( a \ 256 ) and &hFF
-		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		          a = a \ CType( 256 ^ 3, integer )
+		          #if Target32Bit then
+		            a = xr \ kShift3
+		            b = ( xr \ kShift2 ) and kMask3
+		            c = ( xr \ kShift1 ) and kMask3
+		            d = xr and kMask3
+		          #else
+		            a = xr
+		            d = a and &hFF
+		            c = ( a \ 256 ) and &hFF
+		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		            a = ( a \ CType( 256 ^ 3, integer ) )
+		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
 		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
@@ -698,6 +715,9 @@ Implements BcryptInterface
 		      next pByteIndex
 		      
 		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
+		      //
+		      // Update S
+		      //
 		      for sByteIndex = 0 to kSLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
@@ -706,11 +726,18 @@ Implements BcryptInterface
 		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          a = xl
-		          d = a and &hFF
-		          c = ( a \ 256 ) and &hFF
-		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		          a = ( a \ CType( 256 ^ 3, integer ) )
+		          #if Target32Bit then
+		            a = xl \ kShift3
+		            b = ( xl \ kShift2 ) and kMask3
+		            c = ( xl \ kShift1 ) and kMask3
+		            d = xl and kMask3
+		          #else
+		            a = xl
+		            d = a and &hFF
+		            c = ( a \ 256 ) and &hFF
+		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		            a = ( a \ CType( 256 ^ 3, integer ) )
+		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
 		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
@@ -721,11 +748,18 @@ Implements BcryptInterface
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
 		          xr = xr xor ( j1 xor pValue1 )
 		          
-		          a = xr
-		          d = a and &hFF
-		          c = ( a \ 256 ) and &hFF
-		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		          a = a \ CType( 256 ^ 3, integer )
+		          #if Target32Bit then
+		            a = xr \ kShift3
+		            b = ( xr \ kShift2 ) and kMask3
+		            c = ( xr \ kShift1 ) and kMask3
+		            d = xr and kMask3
+		          #else
+		            a = xr
+		            d = a and &hFF
+		            c = ( a \ 256 ) and &hFF
+		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		            a = ( a \ CType( 256 ^ 3, integer ) )
+		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
 		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
