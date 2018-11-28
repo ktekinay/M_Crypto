@@ -132,9 +132,16 @@ Protected Module Bcrypt_MTC
 		  cdata.Left( cdata.Size ) = precomputedCiphertext.Left( cdata.Size ) // Same every time, no need to recompute
 		  
 		  // Now to encrypt
+		  #if kDebug then
+		    startMs = Microseconds
+		  #endif
 		  for k as Integer = 0 to 63
 		    state.Encrypt( cdata )
 		  next k
+		  #if kDebug then
+		    elapsedMs = Microseconds - startMs
+		    System.DebugLog logPrefix + "encryption took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		  #endif
 		  
 		  //
 		  // Copy the bytes from cdata to cipherText in reverse order
