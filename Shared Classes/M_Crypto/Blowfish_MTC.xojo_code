@@ -607,6 +607,8 @@ Implements BcryptInterface
 		  //
 		  
 		  dim a, b, c, d as integer // Used as indexes
+		  dim s1, s2, s3, s4 as UInt32
+		  dim pValue1, pValue2 as UInt32
 		  dim xl as UInt32 
 		  dim xr as UInt32 
 		  dim j1 as UInt32
@@ -657,27 +659,35 @@ Implements BcryptInterface
 		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          a = ( xl \ kShift3 )
-		          b = ( xl \ kShift2 ) and kMask3
-		          c = ( xl \ kShift1 ) and kMask3
-		          d = xl and kMask3
+		          a = xl
+		          d = a and &hFF
+		          c = ( a \ 256 ) and &hFF
+		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		          a = ( a \ CType( 256 ^ 3, integer ) )
 		          
-		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          s1 = mySPtr.UInt32( a * 4 )
+		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
+		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
+		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
+		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
-		          xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
+		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
+		          xr = xr xor ( j1 xor pValue1 )
 		          
-		          a = ( xr \ kShift3 ) 
-		          b = ( xr \ kShift2 ) and kMask3
-		          c = ( xr \ kShift1 ) and kMask3
-		          d = xr and kMask3
+		          a = xr
+		          d = a and &hFF
+		          c = ( a \ 256 ) and &hFF
+		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		          a = a \ CType( 256 ^ 3, integer )
 		          
-		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          s1 = mySPtr.UInt32( a * 4 )
+		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
+		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
+		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
+		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
-		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		          pValue2 = myPPtr.UInt32( pptrEncoderIndex + 4 )
+		          xl = xl xor ( j1 xor pValue2 )
 		        next pptrEncoderIndex
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
@@ -696,27 +706,35 @@ Implements BcryptInterface
 		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          a = ( xl \ kShift3 )
-		          b = ( xl \ kShift2 ) and kMask3
-		          c = ( xl \ kShift1 ) and kMask3
-		          d = xl and kMask3
+		          a = xl
+		          d = a and &hFF
+		          c = ( a \ 256 ) and &hFF
+		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		          a = ( a \ CType( 256 ^ 3, integer ) )
 		          
-		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          s1 = mySPtr.UInt32( a * 4 )
+		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
+		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
+		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
+		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
-		          xr = xr xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex ) )
+		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
+		          xr = xr xor ( j1 xor pValue1 )
 		          
-		          a = ( xr \ kShift3 ) 
-		          b = ( xr \ kShift2 ) and kMask3
-		          c = ( xr \ kShift1 ) and kMask3
-		          d = xr and kMask3
+		          a = xr
+		          d = a and &hFF
+		          c = ( a \ 256 ) and &hFF
+		          b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
+		          a = a \ CType( 256 ^ 3, integer )
 		          
-		          j1 = ( ( mySPtr.UInt32( a * 4 ) + mySPtr.UInt32( ( 256 + b ) * 4 ) ) _
-		          xor mySPtr.UInt32( ( 512 + c ) * 4 ) ) _
-		          + mySPtr.UInt32( ( 768 + d ) * 4 )
+		          s1 = mySPtr.UInt32( a * 4 )
+		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
+		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
+		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
+		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
-		          xl = xl xor ( j1 xor myPPtr.UInt32( pptrEncoderIndex + 4 ) )
+		          pValue2 = myPPtr.UInt32( pptrEncoderIndex + 4 )
+		          xl = xl xor ( j1 xor pValue2 )
 		        next pptrEncoderIndex
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
