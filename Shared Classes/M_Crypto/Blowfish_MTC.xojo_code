@@ -611,7 +611,7 @@ Implements BcryptInterface
 		  dim pValue1, pValue2 as UInt32
 		  dim xl as UInt32 
 		  dim xr as UInt32 
-		  dim j1 as UInt32
+		  dim temp as UInt32
 		  dim barrier as integer
 		  dim pptrEncoderIndex as integer
 		  
@@ -657,9 +657,9 @@ Implements BcryptInterface
 		      for pByteIndex = 0 to kPLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
-		        j1 = xl
+		        temp = xl
 		        xl = xr xor myPPtr.UInt32( 0 )
-		        xr = j1
+		        xr = temp
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          #if Target32Bit then
@@ -675,14 +675,19 @@ Implements BcryptInterface
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
-		          s1 = mySPtr.UInt32( a * 4 )
-		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
-		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
-		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
-		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
+		          a = a * 4
+		          b = ( 256 + b ) * 4
+		          c = ( 512 + c ) * 4
+		          d = ( 768 + d ) * 4
+		          
+		          s1 = mySPtr.UInt32( a )
+		          s2 = mySPtr.UInt32( b )
+		          s3 = mySPtr.UInt32( c )
+		          s4 = mySPtr.UInt32( d )
+		          temp = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
-		          xr = xr xor ( j1 xor pValue1 )
+		          xr = xr xor ( temp xor pValue1 )
 		          
 		          #if Target32Bit then
 		            a = xr \ kShift3
@@ -697,14 +702,19 @@ Implements BcryptInterface
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
-		          s1 = mySPtr.UInt32( a * 4 )
-		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
-		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
-		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
-		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
+		          a = a * 4
+		          b = ( 256 + b ) * 4
+		          c = ( 512 + c ) * 4
+		          d = ( 768 + d ) * 4
+		          
+		          s1 = mySPtr.UInt32( a )
+		          s2 = mySPtr.UInt32( b )
+		          s3 = mySPtr.UInt32( c )
+		          s4 = mySPtr.UInt32( d )
+		          temp = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
 		          pValue2 = myPPtr.UInt32( pptrEncoderIndex + 4 )
-		          xl = xl xor ( j1 xor pValue2 )
+		          xl = xl xor ( temp xor pValue2 )
 		        next pptrEncoderIndex
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
@@ -722,9 +732,9 @@ Implements BcryptInterface
 		      for sByteIndex = 0 to kSLastByte step 8
 		        'self.Encipher( d0, d1 )
 		        
-		        j1 = xl
+		        temp = xl
 		        xl = xr xor myPPtr.UInt32( 0 )
-		        xr = j1
+		        xr = temp
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
 		          #if Target32Bit then
@@ -740,14 +750,19 @@ Implements BcryptInterface
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
-		          s1 = mySPtr.UInt32( a * 4 )
-		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
-		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
-		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
-		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
+		          a = a * 4
+		          b = ( 256 + b ) * 4
+		          c = ( 512 + c ) * 4
+		          d = ( 768 + d ) * 4
+		          
+		          s1 = mySPtr.UInt32( a )
+		          s2 = mySPtr.UInt32( b )
+		          s3 = mySPtr.UInt32( c )
+		          s4 = mySPtr.UInt32( d )
+		          temp = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
-		          xr = xr xor ( j1 xor pValue1 )
+		          xr = xr xor ( temp xor pValue1 )
 		          
 		          #if Target32Bit then
 		            a = xr \ kShift3
@@ -762,14 +777,19 @@ Implements BcryptInterface
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
-		          s1 = mySPtr.UInt32( a * 4 )
-		          s2 = mySPtr.UInt32( ( 256 + b ) * 4 )
-		          s3 = mySPtr.UInt32( ( 512 + c ) * 4 )
-		          s4 = mySPtr.UInt32( ( 768 + d ) * 4 )
-		          j1 = ( ( s1 + s2 ) xor s3 ) + s4 
+		          a = a * 4
+		          b = ( 256 + b ) * 4
+		          c = ( 512 + c ) * 4
+		          d = ( 768 + d ) * 4
+		          
+		          s1 = mySPtr.UInt32( a )
+		          s2 = mySPtr.UInt32( b )
+		          s3 = mySPtr.UInt32( c )
+		          s4 = mySPtr.UInt32( d )
+		          temp = ( ( s1 + s2 ) xor s3 ) + s4 
 		          
 		          pValue2 = myPPtr.UInt32( pptrEncoderIndex + 4 )
-		          xl = xl xor ( j1 xor pValue2 )
+		          xl = xl xor ( temp xor pValue2 )
 		        next pptrEncoderIndex
 		        
 		        xr = xr xor myPPtr.UInt32( kPLastByte - 3 )
