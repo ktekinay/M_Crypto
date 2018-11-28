@@ -227,10 +227,12 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub pDecodeBase64(buffer As Xojo.Core.MutableMemoryBlock, data As Xojo.Core.MemoryBlock)
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim bp, p as integer
 		  dim c1, c2, c3, c4 as byte
@@ -246,7 +248,8 @@ Protected Module Bcrypt_MTC
 		      exit while
 		    end if
 		    
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c1, 2, 8 ) or Bitwise.ShiftRight( c2 and &h30, 4, 8 )
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c1, 2, 8 ) or Bitwise.ShiftRight( c2 and &h30, 4, 8 )
+		    bufferPtr.Byte( bp ) = ( c1 * CType( 2 ^ 2,  byte ) ) or ( ( c2 and CType( &h30, byte ) ) \ CType( 2 ^ 4, byte ) )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
@@ -257,7 +260,8 @@ Protected Module Bcrypt_MTC
 		      exit while
 		    end if
 		    
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4, 8 ) or Bitwise.ShiftRight( c3 and &h3C, 2, 8 )
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4, 8 ) or Bitwise.ShiftRight( c3 and &h3C, 2, 8 )
+		    bufferPtr.Byte( bp ) = ( ( c2 and CType( &h0F, byte ) ) * CType( 2 ^ 4, byte ) ) or ( ( c3 and CType( &h3C, byte ) ) \ CType( 2 ^ 2, byte ) )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
@@ -267,7 +271,8 @@ Protected Module Bcrypt_MTC
 		    if c4 = 255 then
 		      exit while
 		    end if
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6, 8 ) or c4
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6, 8 ) or c4
+		    bufferPtr.Byte( bp ) = ( ( c3 and CType( &h03, byte ) ) * CType( 2 ^ 6, byte ) ) or c4
 		    bp = bp + 1
 		    
 		    p = p + 4
@@ -296,10 +301,12 @@ Protected Module Bcrypt_MTC
 		    c1 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( Bitwise.ShiftRight( c1, 2, 8 ) )
+		    'bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( Bitwise.ShiftRight( c1, 2, 8 ) )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 \ CType( 2 ^ 2, byte ) )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c1 and &h03, 4, 8 )
+		    'c1 = Bitwise.ShiftLeft( c1 and &h03, 4, 8 )
+		    c1 = ( c1 and CType( &h03, byte ) ) * CType( 2 ^ 4, byte )
 		    if p > lastByteIndex then
 		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
@@ -309,11 +316,13 @@ Protected Module Bcrypt_MTC
 		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 4, 8 ) and &h0F )
+		    'c1 = c1 or ( Bitwise.ShiftRight( c2, 4, 8 ) and &h0F )
+		    c1 = c1 or ( ( c2 \ CType( 2 ^ 4, byte ) ) and CType( &h0F, byte ) )
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c2 and &h0F, 2, 8 )
+		    'c1 = Bitwise.ShiftLeft( c2 and &h0F, 2, 8 )
+		    c1 = ( c2 and CType( &h0F, byte ) ) * CType( 2 ^ 2, byte )
 		    if p > lastByteIndex then
 		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
@@ -323,7 +332,8 @@ Protected Module Bcrypt_MTC
 		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 6 , 8) and &h03 )
+		    'c1 = c1 or ( Bitwise.ShiftRight( c2, 6 , 8 ) and &h03 )
+		    c1 = c1 or ( ( c2 \ CType( 2 ^ 6, byte ) ) and CType( &h03, byte ) )
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c2 and &h3F )
