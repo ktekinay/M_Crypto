@@ -669,10 +669,10 @@ Implements BcryptInterface
 		            d = xl and kMask3
 		          #else
 		            a = xl
-		            d = a and &hFF
-		            c = ( a \ 256 ) and &hFF
-		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		            a = ( a \ CType( 256 ^ 3, integer ) )
+		            d = a and &h00000000000000FF
+		            c = ( a and &h000000000000FF00 ) \ 256
+		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
@@ -691,10 +691,10 @@ Implements BcryptInterface
 		            d = xr and kMask3
 		          #else
 		            a = xr
-		            d = a and &hFF
-		            c = ( a \ 256 ) and &hFF
-		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		            a = ( a \ CType( 256 ^ 3, integer ) )
+		            d = a and &h00000000000000FF
+		            c = ( a and &h000000000000FF00 ) \ 256
+		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
@@ -714,7 +714,8 @@ Implements BcryptInterface
 		        myPPtr.UInt32( pByteIndex + 4 ) = xl
 		      next pByteIndex
 		      
-		      dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
+		      'dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
+		      
 		      //
 		      // Update S
 		      //
@@ -722,7 +723,7 @@ Implements BcryptInterface
 		        'self.Encipher( d0, d1 )
 		        
 		        j1 = xl
-		        xl = xr xor firstPPtr
+		        xl = xr xor myPPtr.UInt32( 0 )
 		        xr = j1
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
@@ -733,10 +734,10 @@ Implements BcryptInterface
 		            d = xl and kMask3
 		          #else
 		            a = xl
-		            d = a and &hFF
-		            c = ( a \ 256 ) and &hFF
-		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		            a = ( a \ CType( 256 ^ 3, integer ) )
+		            d = a and &h00000000000000FF
+		            c = ( a and &h000000000000FF00 ) \ 256
+		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
@@ -755,10 +756,10 @@ Implements BcryptInterface
 		            d = xr and kMask3
 		          #else
 		            a = xr
-		            d = a and &hFF
-		            c = ( a \ 256 ) and &hFF
-		            b = ( a \ CType( 256 ^ 2, integer ) ) and &hFF
-		            a = ( a \ CType( 256 ^ 3, integer ) )
+		            d = a and &h00000000000000FF
+		            c = ( a and &h000000000000FF00 ) \ 256
+		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
 		          s1 = mySPtr.UInt32( a * 4 )
