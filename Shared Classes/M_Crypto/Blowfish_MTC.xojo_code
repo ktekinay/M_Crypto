@@ -669,9 +669,9 @@ Implements BcryptInterface
 		            d = xl and kMask3
 		          #else
 		            a = xl
-		            d = a and &h00000000000000FF
-		            c = ( a and &h000000000000FF00 ) \ 256
-		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            d = ( a and CType( &h000000FF, integer ) )
+		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
+		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
@@ -696,9 +696,9 @@ Implements BcryptInterface
 		            d = xr and kMask3
 		          #else
 		            a = xr
-		            d = a and &h00000000000000FF
-		            c = ( a and &h000000000000FF00 ) \ 256
-		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            d = ( a and CType( &h000000FF, integer ) )
+		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
+		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
@@ -724,8 +724,6 @@ Implements BcryptInterface
 		        myPPtr.UInt32( pByteIndex + 4 ) = xl
 		      next pByteIndex
 		      
-		      'dim firstPPtr as UInt32 = myPPtr.UInt32( 0 )
-		      
 		      //
 		      // Update S
 		      //
@@ -744,9 +742,9 @@ Implements BcryptInterface
 		            d = xl and kMask3
 		          #else
 		            a = xl
-		            d = a and &h00000000000000FF
-		            c = ( a and &h000000000000FF00 ) \ 256
-		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            d = ( a and CType( &h000000FF, integer ) )
+		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
+		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
@@ -771,9 +769,9 @@ Implements BcryptInterface
 		            d = xr and kMask3
 		          #else
 		            a = xr
-		            d = a and &h00000000000000FF
-		            c = ( a and &h000000000000FF00 ) \ 256
-		            b = ( a and &h0000000000FF0000 ) \ CType( 256 ^ 2, integer )
+		            d = ( a and CType( &h000000FF, integer ) )
+		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
+		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
 		            a = a \ CType( 256 ^ 3, integer )
 		          #endif
 		          
