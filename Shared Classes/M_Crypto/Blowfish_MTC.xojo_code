@@ -1089,6 +1089,8 @@ Implements BcryptInterface
 		  
 		  if defaultS is nil then
 		    
+		    dim mySPtr as ptr = SPtr
+		    
 		    dim x as integer
 		    for i as integer = 0 to 3
 		      dim arr() as UInt32
@@ -1104,7 +1106,7 @@ Implements BcryptInterface
 		      end
 		      
 		      for i1 as Integer = 0 to arr.Ubound
-		        SPtr.UInt32( x ) = arr( i1 )
+		        mySPtr.UInt32( x ) = arr( i1 )
 		        x = x + 4
 		      next i1
 		    next i
@@ -1120,6 +1122,7 @@ Implements BcryptInterface
 		  static defaultP as Xojo.Core.MutableMemoryBlock
 		  
 		  if defaultP is nil then
+		    dim myPPtr as ptr = PPtr
 		    
 		    dim vals() as UInt32 = UInt32Array( _
 		    &h243f6a88, &h85a308d3, &h13198a2e, &h03707344, _
@@ -1130,7 +1133,7 @@ Implements BcryptInterface
 		    )
 		    
 		    for i as integer = 0 to vals.Ubound
-		      PPtr.UInt32( i * 4 ) = vals( i )
+		      myPPtr.UInt32( i * 4 ) = vals( i )
 		    next i
 		    
 		    defaultP = new Xojo.Core.MutableMemoryBlock( P.Size )
