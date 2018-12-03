@@ -1542,11 +1542,15 @@ Implements BcryptInterface
 		  dim mbOut as new MemoryBlock( expectedSize )
 		  dim pOut as ptr = mbOut
 		  
-		  if expectedSize <> mbIn.Size and expectedSize <> ( mbIn.Size * 2 ) then
+		  dim mbWordSize as integer
+		  select case true
+		  case expectedSize = mbIn.Size
+		    mbWordSize = 4
+		  case ( expectedSize * 2 ) = mbIn.Size
+		    mbWordSize = 8
+		  case else
 		    raise new RuntimeException
-		  end if
-		  
-		  dim mbWordSize as integer = ( mbIn.Size \ expectedSize ) * 4
+		  end select
 		  
 		  dim mbOutIndex as integer
 		  dim mbInLastByte as integer = mbIn.Size - 1
