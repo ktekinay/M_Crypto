@@ -39,6 +39,113 @@ Implements BcryptInterface
 		End Sub
 	#tag EndEvent
 
+	#tag Event , Description = 506572666F726D20612073656C662D74657374206F6E2074686520636C6173732E20496620636F646520697320696D706C656D656E7465642C206D7573742072657475726E20547275652E
+		Function DoSelfTest(ByRef returnErrorMessage As String) As Boolean
+		  const kKey as string = "password"
+		  const kData as string = "1234567890ABCD"
+		  
+		  //
+		  // Set up an initial state
+		  //
+		  dim initialVector as Xojo.Core.MutableMemoryBlock = self.InitialVector
+		  self.InitialVector = nil
+		  dim initialPadding as Padding = self.PaddingMethod
+		  Constructor( Padding.PKCS )
+		  
+		  //
+		  // Set up the keys
+		  //
+		  dim mbKey as Xojo.Core.MutableMemoryBlock = M_Crypto.StringToMutableMemoryBlock( kKey )
+		  dim mbData as Xojo.Core.MutableMemoryBlock = M_Crypto.StringToMutableMemoryBlock( kData )
+		  dim result as string
+		  
+		  //
+		  // Test ExpandState
+		  //
+		  if returnErrorMessage = "" then
+		    ExpandState mbData, mbKey
+		    result = SelfTestMemoryBlockHash( P, 18 * 4 )
+		    System.DebugLog "ExpandState P = " + result
+		    if result <> "335546B718798929DB286BF431347578131297FB7C0DCF7FBED4200637ADEAED" then
+		      returnErrorMessage = "P mismatch after ExpandState"
+		    else
+		      result = SelfTestMemoryBlockHash( S, 1024 * 4 )
+		      System.DebugLog "ExpandState S = " + result
+		      if result <> "1D7B1CE92B99533B95F9676756461EB8BEEFF07A7DDD60C5BE8EE62F47CF7952" then
+		        returnErrorMessage = "S mismatch after ExpandState"
+		      end if
+		    end if
+		  end if
+		  
+		  //
+		  // Test Expand0State
+		  //
+		  if returnErrorMessage = "" then
+		    Expand0State 1, mbData, mbKey
+		    result = SelfTestMemoryBlockHash( P, 18 * 4 )
+		    System.DebugLog "Expand0State P = " + result
+		    if result <> "88D7DA0BA674E47208673DD308D731D3D299A1E3746D7D4A8AED88325B08E70C" then
+		      returnErrorMessage = "P mismatch after ExpandState"
+		    else
+		      result = SelfTestMemoryBlockHash( S, 1024 * 4 )
+		      System.DebugLog "Expand0State S = " + result
+		      if result <> "0D8B54D47B7E0B0527060F749B9F15A17CF7207538B15287990F550ACB5F121E" then
+		        returnErrorMessage = "S mismatch after ExpandState"
+		      end if
+		    end if
+		  end if
+		  
+		  if returnErrorMessage = "" then
+		    Encrypt( mbData )
+		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
+		    System.DebugLog "Encrypt Data = " + result
+		    if result <> "935FAE939D95AAEF2EF71C35C0D3187CC04957A450E80230AB46C8428B550BDF" then
+		      returnErrorMessage = "Data mismatch after Encrypt"
+		    end if
+		  end if
+		  
+		  if returnErrorMessage = "" then
+		    EncryptECB( mbData )
+		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
+		    System.DebugLog "EncryptECB Data = " + result
+		    if result <> "F39CAB4DD928508085C4AD58A40F8C698C00A2502A1DBE503527FA519140A812" then
+		      returnErrorMessage = "Data mismatch after EncryptECB"
+		    end if
+		  end if
+		  
+		  if returnErrorMessage = "" then
+		    EncryptCBC( mbData )
+		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
+		    System.DebugLog "EncryptCBC Data = " + result
+		    if result <> "3809E69D2EFC2B9C747640516C70E43999B9BEA77462FC31845EDD5BAD850107" then
+		      returnErrorMessage = "Data mismatch after EncryptCBC"
+		    end if
+		  end if
+		  
+		  if returnErrorMessage = "" then
+		    dim d0 as UInt32 = 1
+		    dim d1 as UInt32 = 126
+		    Encipher( d0, d1 )
+		    if d0 <> CType( 1759095662, UInt32 ) or d1 <> CType( 231467629, UInt32 ) then
+		      returnErrorMessage = "Encipher fail"
+		    else
+		      Decipher( d0, d1 )
+		      if d0 <> 1 or d1 <> 126 then
+		        returnErrorMessage = "Decipher fail"
+		      end if
+		    end if
+		  end if
+		  
+		  //
+		  // Finish
+		  //
+		  Constructor( "", initialPadding )
+		  self.InitialVector = initialVector
+		  return true
+		  
+		End Function
+	#tag EndEvent
+
 	#tag Event
 		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
@@ -1426,6 +1533,34 @@ Implements BcryptInterface
 		  &h90d4f869, &ha65cdea0, &h3f09252d, &hc208e69f, _
 		  &hb74e6132, &hce77e25b, &h578fdfe3, &h3ac372e6 _
 		  )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Attributes( Hidden ) Private Shared Function SelfTestMemoryBlockHash(mbIn As Xojo.Core.MutableMemoryBlock, expectedSize As Integer) As String
+		  dim pIn as ptr = mbIn.Data
+		  dim mbOut as new MemoryBlock( expectedSize )
+		  dim pOut as ptr = mbOut
+		  
+		  if expectedSize <> mbIn.Size and expectedSize <> ( mbIn.Size * 2 ) then
+		    raise new RuntimeException
+		  end if
+		  
+		  dim mbWordSize as integer = ( mbIn.Size \ expectedSize ) * 4
+		  
+		  dim mbOutIndex as integer
+		  dim mbInLastByte as integer = mbIn.Size - 1
+		  for mbInIndex as integer = 0 to mbInLastByte step mbWordSize
+		    if mbWordSize = 8 then
+		      pOut.UInt32( mbOutIndex ) = pIn.UInt64( mbInIndex )
+		    else
+		      pOut.UInt32( mbOutIndex ) = pIn.UInt32( mbInIndex )
+		    end if
+		    mbOutIndex = mbOutIndex + 4
+		  next
+		  
+		  return EncodeHex( Crypto.SHA256( mbOut ) )
+		  
 		End Function
 	#tag EndMethod
 
