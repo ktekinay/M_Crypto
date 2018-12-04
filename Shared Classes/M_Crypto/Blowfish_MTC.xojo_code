@@ -769,18 +769,10 @@ Implements BcryptInterface
 		        xr = temp
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          #if Target32Bit then
-		            a = xl \ kShift3
-		            b = ( xl \ kShift2 ) and kMask3
-		            c = ( xl \ kShift1 ) and kMask3
-		            d = xl and kMask3
-		          #else
-		            a = xl
-		            d = ( a and CType( &h000000FF, integer ) )
-		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
-		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
-		            a = a \ CType( 256 ^ 3, integer )
-		          #endif
+		          a = xl \ kShift3
+		          b = ( xl and kMask1 ) \ kShift2
+		          c = ( xl and kMask2 ) \ kShift1
+		          d = xl and kMask3
 		          
 		          a = a * 4
 		          b = ( 256 + b ) * 4
@@ -796,18 +788,10 @@ Implements BcryptInterface
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
 		          xr = xr xor ( temp xor pValue1 )
 		          
-		          #if Target32Bit then
-		            a = xr \ kShift3
-		            b = ( xr \ kShift2 ) and kMask3
-		            c = ( xr \ kShift1 ) and kMask3
-		            d = xr and kMask3
-		          #else
-		            a = xr
-		            d = ( a and CType( &h000000FF, integer ) )
-		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
-		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
-		            a = a \ CType( 256 ^ 3, integer )
-		          #endif
+		          a = xr \ kShift3
+		          b = ( xr and kMask1 ) \ kShift2
+		          c = ( xr and kMask2 ) \ kShift1
+		          d = xr and kMask3
 		          
 		          a = a * 4
 		          b = ( 256 + b ) * 4
@@ -842,18 +826,10 @@ Implements BcryptInterface
 		        xr = temp
 		        
 		        for pptrEncoderIndex = 4 to kPLastInnerByte step 8
-		          #if Target32Bit then
-		            a = xl \ kShift3
-		            b = ( xl \ kShift2 ) and kMask3
-		            c = ( xl \ kShift1 ) and kMask3
-		            d = xl and kMask3
-		          #else
-		            a = xl
-		            d = ( a and CType( &h000000FF, integer ) )
-		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
-		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
-		            a = a \ CType( 256 ^ 3, integer )
-		          #endif
+		          a = xl \ kShift3
+		          b = ( xl and kMask1 ) \ kShift2
+		          c = ( xl and kMask2 ) \ kShift1
+		          d = xl and kMask3
 		          
 		          a = a * 4
 		          b = ( 256 + b ) * 4
@@ -869,18 +845,10 @@ Implements BcryptInterface
 		          pValue1 = myPPtr.UInt32( pptrEncoderIndex )
 		          xr = xr xor ( temp xor pValue1 )
 		          
-		          #if Target32Bit then
-		            a = xr \ kShift3
-		            b = ( xr \ kShift2 ) and kMask3
-		            c = ( xr \ kShift1 ) and kMask3
-		            d = xr and kMask3
-		          #else
-		            a = xr
-		            d = ( a and CType( &h000000FF, integer ) )
-		            c = ( a and CType( &h0000FF00, integer ) ) \ CType( 256 ^ 1, integer )
-		            b = ( a and CType( &h00FF0000, integer ) ) \ CType( 256 ^ 2, integer )
-		            a = a \ CType( 256 ^ 3, integer )
-		          #endif
+		          a = xr \ kShift3
+		          b = ( xr and kMask1 ) \ kShift2
+		          c = ( xr and kMask2 ) \ kShift1
+		          d = xr and kMask3
 		          
 		          a = a * 4
 		          b = ( 256 + b ) * 4
