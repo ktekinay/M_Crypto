@@ -332,6 +332,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 __2.5.2__ (______, 2018)
 
 - Digest optimizations.
+- Renamed internal methods in `AES_MTC` and `Blowfish_MTC` to be more descriptive.
 - Bcrypt optimizations.
 
 __2.5.1__ (Nov. 16, 2018)
