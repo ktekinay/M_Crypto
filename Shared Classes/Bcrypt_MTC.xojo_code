@@ -136,7 +136,7 @@ Protected Module Bcrypt_MTC
 		  
 		  // Now to encrypt
 		  for k as Integer = 0 to 63
-		    state.Encrypt( cdata )
+		    state.EncryptMb( cdata )
 		  next k
 		  
 		  cipherText.LittleEndian = false // Make sure the bytes are copied in the right order

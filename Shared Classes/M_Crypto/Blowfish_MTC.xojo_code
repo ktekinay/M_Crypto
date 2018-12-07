@@ -23,13 +23,13 @@ Implements BcryptInterface
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Decrypt data
+		    DecryptMb data
 		    
 		  case Functions.ECB
-		    DecryptECB data 
+		    DecryptMbECB data 
 		    
 		  case Functions.CBC
-		    DecryptCBC data, isFinalBlock
+		    DecryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -43,13 +43,13 @@ Implements BcryptInterface
 		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Encrypt data
+		    EncryptMb data
 		    
 		  case Functions.ECB
-		    EncryptECB data
+		    EncryptMbECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC data, isFinalBlock
+		    EncryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -163,7 +163,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decrypt(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -192,7 +192,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -248,7 +248,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -342,7 +342,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encrypt(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -370,7 +370,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #pragma unused isFinalBlock
 		  
 		  #if not DebugBuild
@@ -418,7 +418,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
