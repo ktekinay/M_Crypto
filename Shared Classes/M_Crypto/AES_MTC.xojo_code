@@ -20,10 +20,10 @@ Inherits M_Crypto.Encrypter
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    DecryptECB data
+		    DecryptMbECB data
 		    
 		  case Functions.CBC
-		    DecryptCBC data, isFinalBlock
+		    DecryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -36,10 +36,10 @@ Inherits M_Crypto.Encrypter
 		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
-		    EncryptECB data
+		    EncryptMbECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC data, isFinalBlock
+		    EncryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -290,7 +290,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -333,7 +333,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastIndex As integer = data.Size - 1
@@ -345,7 +345,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -382,7 +382,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  dim dataPtr as ptr = data.Data
 		  
 		  dim lastByte As integer = data.Size - 1

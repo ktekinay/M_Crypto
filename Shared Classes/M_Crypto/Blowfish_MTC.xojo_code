@@ -23,13 +23,13 @@ Implements BcryptInterface
 		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Decrypt data
+		    DecryptMb data
 		    
 		  case Functions.ECB
-		    DecryptECB data 
+		    DecryptMbECB data 
 		    
 		  case Functions.CBC
-		    DecryptCBC data, isFinalBlock
+		    DecryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -96,7 +96,7 @@ Implements BcryptInterface
 		  end if
 		  
 		  if returnErrorMessage = "" then
-		    Encrypt( mbData )
+		    EncryptMb( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "Encrypt Data = " + result
 		    if result <> "935FAE939D95AAEF2EF71C35C0D3187CC04957A450E80230AB46C8428B550BDF" then
@@ -105,7 +105,7 @@ Implements BcryptInterface
 		  end if
 		  
 		  if returnErrorMessage = "" then
-		    EncryptECB( mbData )
+		    EncryptMbECB( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "EncryptECB Data = " + result
 		    if result <> "F39CAB4DD928508085C4AD58A40F8C698C00A2502A1DBE503527FA519140A812" then
@@ -114,7 +114,7 @@ Implements BcryptInterface
 		  end if
 		  
 		  if returnErrorMessage = "" then
-		    EncryptCBC( mbData )
+		    EncryptMbCBC( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "EncryptCBC Data = " + result
 		    if result <> "3809E69D2EFC2B9C747640516C70E43999B9BEA77462FC31845EDD5BAD850107" then
@@ -150,13 +150,13 @@ Implements BcryptInterface
 		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default
-		    Encrypt data
+		    EncryptMb data
 		    
 		  case Functions.ECB
-		    EncryptECB data
+		    EncryptMbECB data
 		    
 		  case Functions.CBC
-		    EncryptCBC data, isFinalBlock
+		    EncryptMbCBC data, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -268,7 +268,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decrypt(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -297,7 +297,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -353,7 +353,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -447,7 +447,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encrypt(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -538,7 +538,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #pragma unused isFinalBlock
 		  
 		  #if not DebugBuild
@@ -586,7 +586,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMbECB(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False

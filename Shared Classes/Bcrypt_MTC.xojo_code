@@ -136,7 +136,7 @@ Protected Module Bcrypt_MTC
 		    startMs = Microseconds
 		  #endif
 		  for k as Integer = 0 to 63
-		    state.Encrypt( cdata )
+		    state.EncryptMb( cdata )
 		  next k
 		  #if kDebug then
 		    elapsedMs = Microseconds - startMs

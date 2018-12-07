@@ -1,7 +1,7 @@
 #tag Interface
 Protected Interface BcryptInterface
 	#tag Method, Flags = &h0
-		Sub Encrypt(data As Xojo.Core.MutableMemoryBlock)
+		Sub EncryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  
 		End Sub
 	#tag EndMethod
