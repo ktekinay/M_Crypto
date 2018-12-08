@@ -640,7 +640,6 @@ Implements BcryptInterface
 		  
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
-		  dim isLittleEndian as boolean = self.IsLittleEndian
 		  
 		  //
 		  // Create the stream keys
@@ -683,7 +682,7 @@ Implements BcryptInterface
 		      next
 		    end if
 		    
-		    if isLittleEndian then
+		    #if TargetLittleEndian then
 		      //
 		      // Swap the bytes
 		      //
@@ -699,7 +698,7 @@ Implements BcryptInterface
 		        
 		        swapIndex = swapIndex + 4
 		      wend
-		    end if
+		    #endif
 		    
 		    keys( keyIndex ) = streamKey
 		  next
@@ -921,8 +920,6 @@ Implements BcryptInterface
 		  dim myPPtr as ptr = PPtr
 		  dim mySPtr as ptr = SPtr
 		  
-		  dim isLittleEndian as boolean = self.IsLittleEndian
-		  
 		  //
 		  // Create the streams
 		  //
@@ -947,7 +944,7 @@ Implements BcryptInterface
 		  
 		  dim streamDataPtr as ptr = streamData.Data
 		  
-		  if IsLittleEndian then
+		  #if TargetLittleEndian then
 		    dim copyIndex as integer
 		    while copyIndex < streamDataSize
 		      temp = streamDataPtr.UInt32( copyIndex )
@@ -959,7 +956,7 @@ Implements BcryptInterface
 		      
 		      copyIndex = copyIndex + 4
 		    wend
-		  end if
+		  #endif
 		  
 		  dim streamKey as Xojo.Core.MutableMemoryBlock
 		  dim keySize as integer = key.Size
@@ -980,8 +977,8 @@ Implements BcryptInterface
 		  
 		  dim streamKeyPtr as ptr = streamKey.Data
 		  
-		  if IsLittleEndian then
-		    dim copyIndex as integer
+		  #if TargetLittleEndian then
+		    copyIndex = 0
 		    while copyIndex < streamKeySize
 		      temp = streamKeyPtr.UInt32( copyIndex )
 		      streamKeyPtr.UInt32( copyIndex ) = _
@@ -992,7 +989,7 @@ Implements BcryptInterface
 		      
 		      copyIndex = copyIndex + 4
 		    wend
-		  end if
+		  #endif
 		  
 		  //
 		  // Encoding starts here
@@ -1155,8 +1152,6 @@ Implements BcryptInterface
 		  PPtr = P.Data
 		  S = new Xojo.Core.MutableMemoryBlock( 4 * 256 * 4 )
 		  SPtr = S.Data
-		  
-		  IsLittleEndian = P.LittleEndian
 		  
 		  static defaultS as Xojo.Core.MutableMemoryBlock
 		  
@@ -1666,10 +1661,6 @@ Implements BcryptInterface
 		#tag EndGetter
 		Private BLF_MAXKEYLEN As Integer
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
-		Private IsLittleEndian As Boolean
-	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private P As Xojo.Core.MutableMemoryBlock
