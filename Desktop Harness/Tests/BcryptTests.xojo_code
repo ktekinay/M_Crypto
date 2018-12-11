@@ -35,21 +35,32 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub ValidateTest()
+		  self.StopTestOnFail = true
+		  
 		  dim keyArr() as string = array( _
 		  "password", _
-		  "another", _
+		  "1", _
+		  "12", _
+		  "123", _
+		  "1234", _
 		  "really really long" _
 		  )
 		  dim saltArr() as string = array( _
-		  "$2a$10$Rx0ZYqbDsF1OOzEULWc4xO", _
-		  "$2a$10$gmXEULzll3Cu3LfWNRdk6u", _
-		  "$2y$09$jRqLcPxXQBAX8MG0DMINWu" _
+		  "$2y$10$gFlYVWnr3suQtSP5MINSye", _
+		  "$2y$10$K6Tbm93Hq/wz6v5GkdOsuu", _
+		  "$2y$10$dRgsk7crlrRpmv4h/o5DYO", _
+		  "$2y$10$OT44pEPnCJX3jrZfIatGX.", _
+		  "$2a$10$TP/2KuWipRCCoVrLeIrULO", _
+		  "$2y$10$tTZb/RTD5ns0n0rt71dGKu" _
 		  )
 		  
 		  dim expectedArr() as string = array( _
-		  "$2a$10$Rx0ZYqbDsF1OOzEULWc4xO5m26RF0qsgd6iUL2P4mTCmfFlVRBogC", _
-		  "$2a$10$gmXEULzll3Cu3LfWNRdk6u5pcI0/HMSU/o04Zs1nX79EA78wq3KN6", _
-		  "$2y$09$jRqLcPxXQBAX8MG0DMINWuVmvzHri3/SvxyDjY./OU57IRZT6Nh72" _
+		  "$2y$10$gFlYVWnr3suQtSP5MINSyeZ3VAss3hTfwuu2d.GGOM7dYkzeTxkH.", _ // password
+		  "$2y$10$K6Tbm93Hq/wz6v5GkdOsuuVfo/H85.CPDKGxRQE4PiCo63rq3eSm2", _ // 1
+		  "$2y$10$dRgsk7crlrRpmv4h/o5DYO2SiqAAdzcWd2KeA0iKCKJZP7exk9yLu", _ // 12
+		  "$2y$10$OT44pEPnCJX3jrZfIatGX.jvbqmIpXOy8RS0K3ClDEYkWizlCbjj6", _ // 123
+		  "$2a$10$TP/2KuWipRCCoVrLeIrULOsg1AgzX3BnSrgJnxtCIWiBf.VOCp1W2", _ // 1234
+		  "$2y$10$tTZb/RTD5ns0n0rt71dGKuxire5RnOFHQddFauFUE1PP.0EGc2q4." _ // really really long
 		  )
 		  
 		  for i as integer = 0 to keyArr.Ubound
@@ -58,21 +69,17 @@ Inherits TestGroup
 		    dim expected as string = expectedArr( i )
 		    
 		    dim actual as string = Bcrypt_MTC.Hash( key, salt )
-		    Assert.AreSame( expected, actual )
-		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected )
+		    Assert.AreSame( expected, actual, "Hashes differ for " + key.ToText )
+		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected ), "Failed to verify " + key.ToText
 		  next
 		  
 		  dim hash as string = "$2a$12$fEYmH3px9mOdUMQw4mglvubfTSJLb55SK/3wWe3nQ5kpxCLDXtSoG"
 		  
-		  dim sw as new Stopwatch_MTC
-		  sw.Start
+		  StartTestTimer "Verification of 12 rounds"
+		  dim isValid as boolean = Bcrypt_MTC.Verify( "test123", hash )
+		  LogTestTimer "Verification of 12 rounds"
 		  
-		  dim isValid as boolean = Bcrypt_MTC.Verify("test123", hash)
-		  
-		  sw.Stop
-		  
-		  Assert.IsTrue isValid
-		  Assert.Message "Verification of 12 rounds took " + sw.ElapsedSeconds.ToText( Xojo.Core.Locale.Current, "###,0.0##" ) + " s"
+		  Assert.IsTrue isValid, "Verify test123"
 		  
 		End Sub
 	#tag EndMethod

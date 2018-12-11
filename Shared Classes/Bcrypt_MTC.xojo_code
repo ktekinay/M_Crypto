@@ -44,6 +44,11 @@ Protected Module Bcrypt_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  #if kDebug then
+		    dim startMs, elapsedMs as double
+		    dim logPrefix as string = CurrentMethodName + ": "
+		  #endif
+		  
 		  dim r as string
 		  
 		  dim state as M_Crypto.BcryptInterface
@@ -109,41 +114,66 @@ Protected Module Bcrypt_MTC
 		  end if
 		  
 		  // Set up S-Boxes and Subkeys
-		  dim streamBuffer as new Xojo.Core.MutableMemoryBlock( 4 )
-		  streamBuffer.LittleEndian = false
-		  dim streamBufferPtr as ptr = streamBuffer.Data
 		  dim keyTemp as MemoryBlock = key
 		  dim keyMB as new Xojo.Core.MutableMemoryBlock( keyTemp, keyTemp.Size )
 		  
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
 		  state.ExpandState( csalt, keyMB )
-		  dim lastRound as UInt32 = rounds - 1
-		  '#pragma warning "REMOVE THIS!!"
-		  'lastRound = 99
-		  for k as Integer = 0 to lastRound
-		    state.Expand0State( keyMB, streamBuffer, streamBufferPtr )
-		    state.Expand0State( csalt, streamBuffer, streamBufferPtr )
-		    
-		    #if DebugBuild then
-		      if k = lastRound then
-		        k = k // A place to break
-		      end if
-		    #endif
-		  next k
+		  #if kDebug then
+		    startMs = Microseconds
+		  #endif
+		  state.Expand0State rounds, keyMB, csalt
+		  #if kDebug then
+		    elapsedMs = Microseconds - startMs
+		    System.DebugLog logPrefix + "state.Expand0State took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		  #endif
 		  
 		  dim lastBlock as UInt32 = BCRYPT_BLOCKS - 1
 		  cdata.Left( cdata.Size ) = precomputedCiphertext.Left( cdata.Size ) // Same every time, no need to recompute
 		  
 		  // Now to encrypt
+		  #if kDebug then
+		    startMs = Microseconds
+		  #endif
 		  for k as Integer = 0 to 63
 		    state.EncryptMb( cdata )
 		  next k
+		  #if kDebug then
+		    elapsedMs = Microseconds - startMs
+		    System.DebugLog logPrefix + "encryption took " + format( elapsedMs, "#,0.0##" ) + " µs"
+		  #endif
 		  
-		  cipherText.LittleEndian = false // Make sure the bytes are copied in the right order
-		  cdata.LittleEndian = not ciphertext.LittleEndian // Will copy the bytes in reverse order
-		  for i as Integer = 0 to lastBlock
+		  //
+		  // Copy the bytes from cdata to cipherText in reverse order
+		  //
+		  const kMask0 as UInt64 = &hFF00000000000000
+		  const kMask1 as UInt64 = &h00FF000000000000
+		  const kMask2 as UInt64 = &h0000FF0000000000
+		  const kMask3 as UInt64 = &h000000FF00000000
+		  const kMask4 as UInt64 = &h00000000FF000000
+		  const kMask5 as UInt64 = &h0000000000FF0000
+		  const kMask6 as UInt64 = &h000000000000FF00
+		  const kMask7 as UInt64 = &h00000000000000FF
+		  const kShift1 as UInt64 = 256 ^ 1
+		  const kShift3 as UInt64 = 256 ^ 3
+		  
+		  dim temp as UInt64
+		  dim cdataPtr as ptr = cdata.Data
+		  dim cipherTextPtr as ptr = cipherText.Data
+		  for i as Integer = 0 to lastBlock step 2
 		    dim dataIndex as Integer = i * 4
-		    ciphertext.UInt32Value( dataIndex ) = cdata.UInt32Value( dataIndex )
+		    temp = cdataPtr.UInt64( dataIndex )
+		    cipherTextPtr.UInt64( dataIndex ) = _
+		    _ // Word 1
+		    ( ( temp and kMask0 ) \ kShift3 ) or _
+		    ( ( temp and kMask1 ) \ kShift1 ) or _
+		    ( ( temp and kMask2 ) * kShift1 ) or _
+		    ( ( temp and kMask3 ) * kShift3 ) or _
+		    _ // Word 2
+		    ( ( temp and kMask4 ) \ kShift3 ) or _
+		    ( ( temp and kMask5 ) \ kShift1 ) or _
+		    ( ( temp and kMask6 ) * kShift1 ) or _
+		    ( ( temp and kMask7 ) * kShift3 )
 		  next i
 		  
 		  r = "$" + BCRYPT_VERSION + ChrB( minor ) + "$" + format( logr, "00" ) + "$"
@@ -197,10 +227,12 @@ Protected Module Bcrypt_MTC
 
 	#tag Method, Flags = &h21
 		Private Sub pDecodeBase64(buffer As Xojo.Core.MutableMemoryBlock, data As Xojo.Core.MemoryBlock)
-		  #pragma BackgroundTasks False
-		  #pragma BoundsChecking False
-		  #pragma NilObjectChecking False
-		  #pragma StackOverflowChecking False
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
 		  dim bp, p as integer
 		  dim c1, c2, c3, c4 as byte
@@ -216,7 +248,8 @@ Protected Module Bcrypt_MTC
 		      exit while
 		    end if
 		    
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c1, 2, 8 ) or Bitwise.ShiftRight( c2 and &h30, 4, 8 )
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c1, 2, 8 ) or Bitwise.ShiftRight( c2 and &h30, 4, 8 )
+		    bufferPtr.Byte( bp ) = ( c1 * CType( 2 ^ 2,  byte ) ) or ( ( c2 and CType( &h30, byte ) ) \ CType( 2 ^ 4, byte ) )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
@@ -227,7 +260,8 @@ Protected Module Bcrypt_MTC
 		      exit while
 		    end if
 		    
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4, 8 ) or Bitwise.ShiftRight( c3 and &h3C, 2, 8 )
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c2 and &h0F, 4, 8 ) or Bitwise.ShiftRight( c3 and &h3C, 2, 8 )
+		    bufferPtr.Byte( bp ) = ( ( c2 and CType( &h0F, byte ) ) * CType( 2 ^ 4, byte ) ) or ( ( c3 and CType( &h3C, byte ) ) \ CType( 2 ^ 2, byte ) )
 		    bp = bp + 1
 		    if bp > lastByteIndex then
 		      exit while
@@ -237,7 +271,8 @@ Protected Module Bcrypt_MTC
 		    if c4 = 255 then
 		      exit while
 		    end if
-		    bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6, 8 ) or c4
+		    'bufferPtr.Byte( bp ) = Bitwise.ShiftLeft( c3 and &h03, 6, 8 ) or c4
+		    bufferPtr.Byte( bp ) = ( ( c3 and CType( &h03, byte ) ) * CType( 2 ^ 6, byte ) ) or c4
 		    bp = bp + 1
 		    
 		    p = p + 4
@@ -266,10 +301,12 @@ Protected Module Bcrypt_MTC
 		    c1 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( Bitwise.ShiftRight( c1, 2, 8 ) )
+		    'bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( Bitwise.ShiftRight( c1, 2, 8 ) )
+		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 \ CType( 2 ^ 2, byte ) )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c1 and &h03, 4, 8 )
+		    'c1 = Bitwise.ShiftLeft( c1 and &h03, 4, 8 )
+		    c1 = ( c1 and CType( &h03, byte ) ) * CType( 2 ^ 4, byte )
 		    if p > lastByteIndex then
 		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
@@ -279,11 +316,13 @@ Protected Module Bcrypt_MTC
 		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 4, 8 ) and &h0F )
+		    'c1 = c1 or ( Bitwise.ShiftRight( c2, 4, 8 ) and &h0F )
+		    c1 = c1 or ( ( c2 \ CType( 2 ^ 4, byte ) ) and CType( &h0F, byte ) )
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
 		    
-		    c1 = Bitwise.ShiftLeft( c2 and &h0F, 2, 8 )
+		    'c1 = Bitwise.ShiftLeft( c2 and &h0F, 2, 8 )
+		    c1 = ( c2 and CType( &h0F, byte ) ) * CType( 2 ^ 2, byte )
 		    if p > lastByteIndex then
 		      bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		      bp = bp + 1
@@ -293,7 +332,8 @@ Protected Module Bcrypt_MTC
 		    c2 = dataPtr.Byte( p )
 		    p = p + 1
 		    
-		    c1 = c1 or ( Bitwise.ShiftRight( c2, 6 , 8) and &h03 )
+		    'c1 = c1 or ( Bitwise.ShiftRight( c2, 6 , 8 ) and &h03 )
+		    c1 = c1 or ( ( c2 \ CType( 2 ^ 6, byte ) ) and CType( &h03, byte ) )
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c1 )
 		    bp = bp + 1
 		    bufferPtr.Byte( bp ) = base64AlphabetPtr.Byte( c2 and &h3F )
@@ -377,6 +417,9 @@ Protected Module Bcrypt_MTC
 	#tag EndConstant
 
 	#tag Constant, Name = BCRYPT_VERSION, Type = String, Dynamic = False, Default = \"2", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Protected
