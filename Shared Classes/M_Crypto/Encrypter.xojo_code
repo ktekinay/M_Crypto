@@ -347,6 +347,27 @@ Protected Class Encrypter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Attributes( Hidden )  Sub SelfTest()
+		  dim errMsg as string
+		  dim raiseError as boolean
+		  
+		  if RaiseEvent DoSelfTest( errMsg ) = false or errMsg <> "" then
+		    raiseError = true
+		  end if
+		  
+		  if raiseError then 
+		    if errMsg = "" then
+		      errMsg = "SelfTest has not been implemented or unknown error"
+		    end if
+		    dim err as new RuntimeException
+		    err.Message = errMsg
+		    raise err
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Sub SetBlockSize(size As Integer)
 		  zBlockSize = size
@@ -384,6 +405,10 @@ Protected Class Encrypter
 
 	#tag Hook, Flags = &h0
 		Event Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0, Description = 506572666F726D20612073656C662D74657374206F6E2074686520636C6173732E20496620636F646520697320696D706C656D656E7465642C206D7573742072657475726E20547275652E
+		Event DoSelfTest(ByRef returnErrorMessage As String) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0

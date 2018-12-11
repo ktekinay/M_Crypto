@@ -76,9 +76,15 @@ Inherits TestGroup
 		  Assert.Message "Data length is " + format( s.LenB, "#,0" ).ToText + " bytes"
 		  Assert.Message "ChunkSize is " + format( chunkSize, "#,0" ).ToText + " bytes"
 		  
-		  dim d as new SHA512Digest_MTC
+		  
+		  StartTestTimer "native"
+		  dim expected as string = Crypto.SHA512( s )
+		  LogTestTimer "native"
+		  
 		  
 		  StartTestTimer "mine"
+		  
+		  dim d as new SHA512Digest_MTC
 		  
 		  for i as integer = 1 to s.LenB step chunkSize
 		    d.Process s.MidB( i, chunkSize )
@@ -87,9 +93,6 @@ Inherits TestGroup
 		  
 		  LogTestTimer "mine"
 		  
-		  StartTestTimer "native"
-		  dim expected as string = Crypto.SHA512( s )
-		  LogTestTimer "native"
 		  
 		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
 		End Sub
@@ -122,13 +125,41 @@ Inherits TestGroup
 		  expected = Crypto.SHA512( s )
 		  LogTestTimer "native"
 		  
-		  dim d as new SHA512Digest_MTC
 		  dim actual as string
 		  StartTestTimer "mine"
 		  StartProfiling
+		  dim d as new SHA512Digest_MTC
 		  d.Process s
 		  actual = d.Value
 		  StopProfiling
+		  LogTestTimer "mine"
+		  
+		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SuperLargeTest()
+		  dim s as string = "Hello "
+		  while s.LenB <= 10000000
+		    s = s + s
+		  wend
+		  
+		  StartTestTimer "native"
+		  dim expected as string = Crypto.SHA512( s )
+		  LogTestTimer "native"
+		  
+		  
+		  dim d as new SHA512Digest_MTC
+		  
+		  //
+		  // Not including the creation of the object here
+		  // to time the processing only
+		  //
+		  
+		  StartTestTimer "mine"
+		  d.Process s
+		  dim actual as string = d.Value
 		  LogTestTimer "mine"
 		  
 		  Assert.AreEqual EncodeHex( expected ), EncodeHex( actual )

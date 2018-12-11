@@ -8,69 +8,11 @@ Protected Class SHA256Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  Reset
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Process(data As String)
-		  if Buffer <> "" then
-		    data = Buffer + data
-		    Buffer = ""
-		  end if
-		  
-		  dim dataLen as integer = data.LenB
-		  dim remainder as integer = dataLen mod kChunkBytes
-		  if remainder <> 0 then
-		    Buffer = data.RightB( remainder )
-		    dataLen = dataLen - remainder
-		    data = data.LeftB( dataLen )
-		  end if
-		  
-		  if data <> "" then
-		    Process data, Registers, false
-		    CombinedLength = CombinedLength + dataLen
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub Process(data As String, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
-		  #if not DebugBuild then
-		    #pragma BackgroundTasks False
-		    #pragma BoundsChecking False
-		    #pragma NilObjectChecking False
-		    #pragma StackOverflowChecking False
-		  #endif
-		  
-		  const k2 as UInt32 = 2 ^ 2
-		  const k3 as UInt32 = 2 ^ 3
-		  const k6 as UInt32 = 2 ^ 6
-		  const k7 as UInt32 = 2 ^ 7
-		  const k8 as UInt32 = 2 ^ 8
-		  const k10 as UInt32 = 2 ^ 10
-		  const k11 as UInt32 = 2 ^ 11
-		  const k13 as UInt32 = 2 ^ 13
-		  const k14 as UInt32 = 2 ^ 14
-		  const k15 as UInt32 = 2 ^ 15
-		  const k17 as UInt32 = 2 ^ 17
-		  const k18 as UInt32 = 2 ^ 18
-		  const k19 as UInt32 = 2 ^ 19
-		  const k21 as UInt32 = 2 ^ 21
-		  const k22 as UInt32 = 2 ^ 22
-		  const k24 as UInt32 = 2 ^ 24
-		  const k25 as UInt32 = 2 ^ 25
-		  const k26 as UInt32 = 2 ^ 26
-		  const k30 as UInt32 = 2 ^ 30
-		  
 		  //
 		  // Table of constants
 		  //
-		  static k as MemoryBlock
-		  static kPtr as ptr
 		  
-		  if k is nil then
+		  if kMagic is nil then
 		    static arr() as UInt32 = ArrayUInt32( _
 		    &h428a2f98, &h71374491, &hb5c0fbcf, &he9b5dba5, &h3956c25b, &h59f111f1, &h923f82a4, &hab1c5ed5, _
 		    &hd807aa98, &h12835b01, &h243185be, &h550c7dc3, &h72be5d74, &h80deb1fe, &h9bdc06a7, &hc19bf174, _
@@ -82,25 +24,58 @@ Protected Class SHA256Digest_MTC
 		    &h748f82ee, &h78a5636f, &h84c87814, &h8cc70208, &h90befffa, &ha4506ceb, &hbef9a3f7, &hc67178f2 _
 		    )
 		    
-		    k = new MemoryBlock( ( arr.Ubound + 1 ) * 4 )
-		    kPtr = k
+		    kMagic = new MemoryBlock( ( arr.Ubound + 1 ) * 4 )
+		    kMagicPtr = kMagic
 		    
 		    for i as integer = 0 to arr.Ubound
-		      kPtr.UInt32( i * 4 ) = arr( i )
+		      kMagicPtr.UInt32( i * 4 ) = arr( i )
 		    next
+		    
+		    IsLittleEndian = kMagic.LittleEndian
 		  end if
 		  
-		  if Message is nil then
-		    Message = new MemoryBlock( k.Size )
-		    IsLittleEndian = Message.LittleEndian
-		  end if
+		  Message = new MemoryBlock( kMagic.Size )
 		  
-		  dim w as MemoryBlock = Message // Convenience
-		  dim p as ptr = Message
-		  dim lastMessageByteIndex as integer = w.Size - 1
+		  Reset
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Process(mbIn As MemoryBlock, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
+		  #if not DebugBuild then
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
 		  
-		  dim dataLen as integer = data.LenB
-		  dim mbIn as MemoryBlock
+		  const k2 as UInt32 = 2 ^ 2
+		  const k3 as UInt32 = 2 ^ 3
+		  const k6 as UInt32 = 2 ^ 6
+		  const k7 as UInt32 = 2 ^ 7
+		  const k10 as UInt32 = 2 ^ 10
+		  const k11 as UInt32 = 2 ^ 11
+		  const k13 as UInt32 = 2 ^ 13
+		  const k14 as UInt32 = 2 ^ 14
+		  const k15 as UInt32 = 2 ^ 15
+		  const k17 as UInt32 = 2 ^ 17
+		  const k18 as UInt32 = 2 ^ 18
+		  const k19 as UInt32 = 2 ^ 19
+		  const k21 as UInt32 = 2 ^ 21
+		  const k22 as UInt32 = 2 ^ 22
+		  const k25 as UInt32 = 2 ^ 25
+		  const k26 as UInt32 = 2 ^ 26
+		  const k30 as UInt32 = 2 ^ 30
+		  
+		  //
+		  // Make local for easier debugging
+		  //
+		  dim message as MemoryBlock = self.Message
+		  dim kMagicPtr as ptr = self.kMagicPtr
+		  
+		  dim pMessage as ptr = message
+		  
+		  dim dataLen as integer = mbIn.Size
 		  
 		  if isFinal then
 		    
@@ -116,7 +91,7 @@ Protected Class SHA256Digest_MTC
 		      padding = padding + kChunkBytes
 		    end if
 		    
-		    mbIn = new MemoryBlock( dataLen + padding + 1 )
+		    mbIn.Size = dataLen + padding + 1
 		    mbIn.LittleEndian = false
 		    
 		    //
@@ -129,15 +104,9 @@ Protected Class SHA256Digest_MTC
 		    //
 		    mbIn.UInt64Value( mbIn.Size - 8 ) = ( CombinedLength + dataLen ) * 8 // In bits
 		    
-		    if dataLen <> 0 then
-		      mbIn.StringValue( 0, dataLen ) = data
-		    end if
-		    
-		  else // Not isFinal so the data will already be a multiple 
-		    
-		    mbIn = data
-		    
 		  end if
+		  
+		  dim pIn as ptr = mbIn
 		  
 		  dim h0 as UInt32 = useRegisters.H0
 		  dim h1 as UInt32 = useRegisters.H1
@@ -154,7 +123,6 @@ Protected Class SHA256Digest_MTC
 		  dim s0, s1 as UInt32
 		  dim newValue as UInt32
 		  
-		  static lastRoundIndex as integer = ( k.Size \ 4 ) - 1
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  
 		  //
@@ -166,29 +134,54 @@ Protected Class SHA256Digest_MTC
 		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
-		    dim pIn as ptr = mbIn
+		    //
+		    // We'll do this two words at a time
+		    //
+		    const k8_64 as UInt64 = 2 ^ 8
+		    const k24_64 as UInt64 = 2 ^ 24
 		    
-		    for i as integer = 0 to lastByteIndex step 4
-		      temp1 = pIn.UInt32( i )
-		      temp2 = _
-		      ( temp1 \ k24 ) or _
-		      ( ( temp1 and &h00FF0000 ) \ k8 ) or _
-		      ( ( temp1 and &h0000FF00 ) * k8 ) or _
-		      ( temp1 * k24 )
-		      if temp2 <> temp1 then
-		        pIn.UInt32( i ) = temp2
-		      end if
+		    const kMask0 as UInt64 = &hFF00000000000000
+		    const kMask1 as UInt64 = &h00FF000000000000
+		    const kMask2 as UInt64 = &h0000FF0000000000
+		    const kMask3 as UInt64 = &h000000FF00000000
+		    const kMask4 as UInt64 = &h00000000FF000000
+		    const kMask5 as UInt64 = &h0000000000FF0000
+		    const kMask6 as UInt64 = &h000000000000FF00
+		    const kMask7 as UInt64 = &h00000000000000FF
+		    
+		    dim t1 as UInt64
+		    
+		    for i as integer = 0 to lastByteIndex step 8
+		      t1 = pIn.UInt64( i )
+		      pIn.UInt64( i ) = _
+		      _ // Word 1
+		      ( ( t1 and kMask0 ) \ k24_64 ) or _
+		      ( ( t1 and kMask1 ) \ k8_64 ) or _
+		      ( ( t1 and kMask2 ) * k8_64 ) or _
+		      ( ( t1 and kMask3 ) * k24_64 ) or _
+		      _ // Word 2
+		      ( ( t1 and kMask4 ) \ k24_64 ) or _
+		      ( ( t1 and kMask5 ) \ k8_64 ) or _
+		      ( ( t1 and kMask6 ) * k8_64 ) or _
+		      ( ( t1 and kMask7 ) * k24_64 )
 		    next
 		  end if
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
+		    //
+		    // Copy the chunk to the Message (faster than StringValue)
+		    //
+		    dim copyIndex as integer = 0
+		    while copyIndex < kChunkBytes
+		      pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      copyIndex = copyIndex + 8
+		    wend
 		    
-		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 4
-		      word0 = p.UInt32( wordIndex - 64 )
-		      word1 = p.UInt32( wordIndex - 60 )
-		      word9 = p.UInt32( wordIndex - 28 )
-		      word14 = p.UInt32( wordIndex - 8 )
+		    for wordIndex as integer = kChunkBytes to kLastMessageByteIndex step 4
+		      word0 = pMessage.UInt32( wordIndex - 64 )
+		      word1 = pMessage.UInt32( wordIndex - 60 )
+		      word9 = pMessage.UInt32( wordIndex - 28 )
+		      word14 = pMessage.UInt32( wordIndex - 8 )
 		      
 		      'dim s0 as UInt32 = ( RotateRight( word1, 7 ) xor RotateRight( word1, 18 ) ) xor ( word1 \ k3 )
 		      s0 = _
@@ -203,7 +196,7 @@ Protected Class SHA256Digest_MTC
 		      xor ( word14 \ k10 )
 		      
 		      newValue = word0 + s0 + word9 + s1
-		      p.UInt32( wordIndex ) = newValue
+		      pMessage.UInt32( wordIndex ) = newValue
 		    next
 		    
 		    a = h0 
@@ -215,7 +208,7 @@ Protected Class SHA256Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    for i as integer = 0 to lastRoundIndex
+		    for i as integer = 0 to kLastRoundIndex
 		      'dim s1 as UInt32 = RotateRight( e, 6 ) xor RotateRight( e, 11 ) xor RotateRight( e, 25 )
 		      s1 = _
 		      ( ( e \ k6 ) or ( e * k26 ) ) xor _
@@ -223,7 +216,7 @@ Protected Class SHA256Digest_MTC
 		      ( ( e \ k25 ) or ( e * k7 ) )
 		      
 		      ch = ( e and f ) xor ( ( not e ) and g )
-		      temp1 = h + s1 + ch + kPtr.UInt32( i * 4 ) + p.UInt32( i * 4 )
+		      temp1 = h + s1 + ch + kMagicPtr.UInt32( i * 4 ) + pMessage.UInt32( i * 4 )
 		      
 		      'dim s0 as UInt32 = RotateRight( a, 2 ) xor RotateRight( a, 13 ) xor RotateRight( a, 22 )
 		      s0 = _
@@ -269,6 +262,29 @@ Protected Class SHA256Digest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Process(data As String)
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
+		  
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
+		  if remainder <> 0 then
+		    Buffer = data.RightB( remainder )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
+		  end if
+		  
+		  if data <> "" then
+		    Process data, Registers, false
+		    CombinedLength = CombinedLength + dataLen
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Reset()
 		  Registers.H0 = &h6a09e667
 		  Registers.H1 = &hbb67ae85
@@ -295,7 +311,15 @@ Protected Class SHA256Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private IsLittleEndian As Boolean
+		Private Shared IsLittleEndian As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared kMagic As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared kMagicPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -322,7 +346,13 @@ Protected Class SHA256Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
+	#tag Constant, Name = kLastMessageByteIndex, Type = Double, Dynamic = False, Default = \"255", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kLastRoundIndex, Type = Double, Dynamic = False, Default = \"63", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.2", Scope = Public
 	#tag EndConstant
 
 

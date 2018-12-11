@@ -34,7 +34,7 @@ Protected Module Scrypt_MTC
 		    next
 		    
 		    //
-		    // Salsa is unrolled here as an optimization
+		    // Salsa is inlined here as an optimization
 		    //
 		    
 		    x.Right( kBlockSize ) = x.Left( kBlockSize )
@@ -273,8 +273,15 @@ Protected Module Scrypt_MTC
 		  
 		  dim lastWordIndex as integer = mbSize - 64
 		  dim lastMBByteIndex as integer = mbSize - 1
+		  dim lastWord as UInt32
 		  for i as integer = 0 to lastNIndex
-		    dim lastWord as UInt32 = mb.UInt32Value( lastWordIndex ) // Must use the mb function to honor endiness
+		    #if TargetLittleEndian then
+		      lastWord = mbPtr.UInt32( lastWordIndex )
+		    #else
+		      // Must use the mb function to honor endiness
+		      lastWord = mb.UInt32Value( lastWordIndex )
+		    #endif
+		    
 		    dim j as integer = lastWord mod n
 		    dim start as integer = j * mbSize
 		    for byteIndex as integer = 0 to lastMBByteIndex step 8
@@ -325,7 +332,7 @@ Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
 		Private Sub Salsa(p As Ptr)
 		  //
-		  // This function has been unrolled into BlockMix as an optimization.
+		  // This function has been inlined into BlockMix as an optimization.
 		  // It remains here for testing purposes
 		  //
 		  
@@ -395,7 +402,7 @@ Protected Module Scrypt_MTC
 	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.2", Scope = Protected
 	#tag EndConstant
 
 

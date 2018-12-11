@@ -8,36 +8,49 @@ Protected Class SHA512Digest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
+		  //
+		  // Table of constants
+		  //
+		  
+		  if kMagic is nil then
+		    dim arr() as UInt64 = ArrayUInt64( _
+		    &h428a2f98d728ae22, &h7137449123ef65cd, &hb5c0fbcfec4d3b2f, &he9b5dba58189dbbc, &h3956c25bf348b538, _
+		    &h59f111f1b605d019, &h923f82a4af194f9b, &hab1c5ed5da6d8118, &hd807aa98a3030242, &h12835b0145706fbe, _
+		    &h243185be4ee4b28c, &h550c7dc3d5ffb4e2, &h72be5d74f27b896f, &h80deb1fe3b1696b1, &h9bdc06a725c71235, _
+		    &hc19bf174cf692694, &he49b69c19ef14ad2, &hefbe4786384f25e3, &h0fc19dc68b8cd5b5, &h240ca1cc77ac9c65, _
+		    &h2de92c6f592b0275, &h4a7484aa6ea6e483, &h5cb0a9dcbd41fbd4, &h76f988da831153b5, &h983e5152ee66dfab, _
+		    &ha831c66d2db43210, &hb00327c898fb213f, &hbf597fc7beef0ee4, &hc6e00bf33da88fc2, &hd5a79147930aa725, _
+		    &h06ca6351e003826f, &h142929670a0e6e70, &h27b70a8546d22ffc, &h2e1b21385c26c926, &h4d2c6dfc5ac42aed, _
+		    &h53380d139d95b3df, &h650a73548baf63de, &h766a0abb3c77b2a8, &h81c2c92e47edaee6, &h92722c851482353b, _
+		    &ha2bfe8a14cf10364, &ha81a664bbc423001, &hc24b8b70d0f89791, &hc76c51a30654be30, &hd192e819d6ef5218, _
+		    &hd69906245565a910, &hf40e35855771202a, &h106aa07032bbd1b8, &h19a4c116b8d2d0c8, &h1e376c085141ab53, _
+		    &h2748774cdf8eeb99, &h34b0bcb5e19b48a8, &h391c0cb3c5c95a63, &h4ed8aa4ae3418acb, &h5b9cca4f7763e373, _
+		    &h682e6ff3d6b2b8a3, &h748f82ee5defb2fc, &h78a5636f43172f60, &h84c87814a1f0ab72, &h8cc702081a6439ec, _
+		    &h90befffa23631e28, &ha4506cebde82bde9, &hbef9a3f7b2c67915, &hc67178f2e372532b, &hca273eceea26619c, _
+		    &hd186b8c721c0c207, &heada7dd6cde0eb1e, &hf57d4f7fee6ed178, &h06f067aa72176fba, &h0a637dc5a2c898a6, _
+		    &h113f9804bef90dae, &h1b710b35131c471b, &h28db77f523047d84, &h32caab7b40c72493, &h3c9ebe0a15c9bebc, _
+		    &h431d67c49c100d4c, &h4cc5d4becb3e42b6, &h597f299cfc657e2a, &h5fcb6fab3ad6faec, &h6c44198c4a475817 _
+		    )
+		    
+		    kMagic = new MemoryBlock( ( arr.Ubound + 1 ) * 8 )
+		    kMagicPtr = kMagic
+		    
+		    for i as integer = 0 to arr.Ubound
+		      kMagicPtr.UInt64( i * 8 ) = arr( i )
+		    next
+		    
+		    IsLittleEndian = kMagic.LittleEndian
+		  end if
+		  
+		  Message = new MemoryBlock( kMagic.Size )
+		  
 		  Reset
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Process(data As String)
-		  if Buffer <> "" then
-		    data = Buffer + data
-		    Buffer = ""
-		  end if
-		  
-		  dim dataLen as integer = data.LenB
-		  dim remainder as integer = dataLen mod kChunkBytes
-		  if remainder <> 0 then
-		    Buffer = data.RightB( remainder )
-		    dataLen = dataLen - remainder
-		    data = data.LeftB( dataLen )
-		  end if
-		  
-		  if data <> "" then
-		    Process data, Registers, false
-		    CombinedLength = CombinedLength + dataLen
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
-		Private Sub Process(data As String, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
+		Private Sub Process(mbIn As MemoryBlock, ByRef useRegisters As RegisterStruct, isFinal As Boolean)
 		  #if not DebugBuild then
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -71,50 +84,14 @@ Protected Class SHA512Digest_MTC
 		  const k63 as UInt64 = &h8000000000000000 // 2 ^ 63 won't work here
 		  
 		  //
-		  // Table of constants
+		  // Make local for easier debugging
 		  //
-		  static k as MemoryBlock
-		  static kPtr as ptr
+		  dim message as MemoryBlock = self.Message
+		  dim kMagicPtr as ptr = self.kMagicPtr
 		  
-		  if k is nil then
-		    dim arr() as UInt64 = ArrayUInt64( _
-		    &h428a2f98d728ae22, &h7137449123ef65cd, &hb5c0fbcfec4d3b2f, &he9b5dba58189dbbc, &h3956c25bf348b538, _
-		    &h59f111f1b605d019, &h923f82a4af194f9b, &hab1c5ed5da6d8118, &hd807aa98a3030242, &h12835b0145706fbe, _
-		    &h243185be4ee4b28c, &h550c7dc3d5ffb4e2, &h72be5d74f27b896f, &h80deb1fe3b1696b1, &h9bdc06a725c71235, _
-		    &hc19bf174cf692694, &he49b69c19ef14ad2, &hefbe4786384f25e3, &h0fc19dc68b8cd5b5, &h240ca1cc77ac9c65, _
-		    &h2de92c6f592b0275, &h4a7484aa6ea6e483, &h5cb0a9dcbd41fbd4, &h76f988da831153b5, &h983e5152ee66dfab, _
-		    &ha831c66d2db43210, &hb00327c898fb213f, &hbf597fc7beef0ee4, &hc6e00bf33da88fc2, &hd5a79147930aa725, _
-		    &h06ca6351e003826f, &h142929670a0e6e70, &h27b70a8546d22ffc, &h2e1b21385c26c926, &h4d2c6dfc5ac42aed, _
-		    &h53380d139d95b3df, &h650a73548baf63de, &h766a0abb3c77b2a8, &h81c2c92e47edaee6, &h92722c851482353b, _
-		    &ha2bfe8a14cf10364, &ha81a664bbc423001, &hc24b8b70d0f89791, &hc76c51a30654be30, &hd192e819d6ef5218, _
-		    &hd69906245565a910, &hf40e35855771202a, &h106aa07032bbd1b8, &h19a4c116b8d2d0c8, &h1e376c085141ab53, _
-		    &h2748774cdf8eeb99, &h34b0bcb5e19b48a8, &h391c0cb3c5c95a63, &h4ed8aa4ae3418acb, &h5b9cca4f7763e373, _
-		    &h682e6ff3d6b2b8a3, &h748f82ee5defb2fc, &h78a5636f43172f60, &h84c87814a1f0ab72, &h8cc702081a6439ec, _
-		    &h90befffa23631e28, &ha4506cebde82bde9, &hbef9a3f7b2c67915, &hc67178f2e372532b, &hca273eceea26619c, _
-		    &hd186b8c721c0c207, &heada7dd6cde0eb1e, &hf57d4f7fee6ed178, &h06f067aa72176fba, &h0a637dc5a2c898a6, _
-		    &h113f9804bef90dae, &h1b710b35131c471b, &h28db77f523047d84, &h32caab7b40c72493, &h3c9ebe0a15c9bebc, _
-		    &h431d67c49c100d4c, &h4cc5d4becb3e42b6, &h597f299cfc657e2a, &h5fcb6fab3ad6faec, &h6c44198c4a475817 _
-		    )
-		    
-		    k = new MemoryBlock( ( arr.Ubound + 1 ) * 8 )
-		    kPtr = k
-		    
-		    for i as integer = 0 to arr.Ubound
-		      kPtr.UInt64( i * 8 ) = arr( i )
-		    next
-		  end if
+		  dim pMessage as ptr = message
 		  
-		  if Message is nil then
-		    Message = new MemoryBlock( k.Size )
-		    IsLittleEndian = Message.LittleEndian
-		  end if
-		  
-		  dim w as MemoryBlock = Message // Convenience
-		  dim p as ptr = Message
-		  dim lastMessageByteIndex as integer = w.Size - 1
-		  
-		  dim dataLen as integer = data.LenB
-		  dim mbIn as MemoryBlock
+		  dim dataLen as integer = mbIn.Size
 		  
 		  if isFinal then
 		    
@@ -130,7 +107,7 @@ Protected Class SHA512Digest_MTC
 		      padding = padding + kChunkBytes
 		    end if
 		    
-		    mbIn = new MemoryBlock( dataLen + padding + 1 )
+		    mbIn.Size = dataLen + padding + 1
 		    mbIn.LittleEndian = false
 		    
 		    //
@@ -143,15 +120,9 @@ Protected Class SHA512Digest_MTC
 		    //
 		    mbIn.UInt64Value( mbIn.Size - 8 ) = ( CombinedLength + dataLen ) * 8 // In bits
 		    
-		    if dataLen <> 0 then
-		      mbIn.StringValue( 0, dataLen ) = data
-		    end if
-		    
-		  else // Not isFinal so the data will already be a multiple 
-		    
-		    mbIn = data
-		    
 		  end if
+		  
+		  dim pIn as ptr = mbIn
 		  
 		  dim h0 as UInt64 = useRegisters.H0
 		  dim h1 as UInt64 = useRegisters.H1
@@ -168,7 +139,6 @@ Protected Class SHA512Digest_MTC
 		  dim s0, s1 as UInt64
 		  dim newValue as UInt64
 		  
-		  static lastRoundIndex as integer = ( k.Size \ 8 ) - 1
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  
 		  //
@@ -180,33 +150,42 @@ Protected Class SHA512Digest_MTC
 		  // MemoryBlock functions to access the data.
 		  //
 		  if IsLittleEndian then
-		    dim pIn as ptr = mbIn
+		    const kMask1 as UInt64 = &h00FF000000000000
+		    const kMask2 as UInt64 = &h0000FF0000000000
+		    const kMask3 as UInt64 = &h000000FF00000000
+		    const kMask4 as UInt64 = &h00000000FF000000
+		    const kMask5 as UInt64 = &h0000000000FF0000
+		    const kMask6 as UInt64 = &h000000000000FF00
 		    
 		    for i as integer = 0 to lastByteIndex step 8
 		      temp1 = pIn.UInt64( i )
-		      temp2 = _
+		      pIn.UInt64( i ) = _
 		      ( temp1 \ k56 ) or _
-		      ( ( temp1 and &h00FF000000000000 ) \ k40 ) or _
-		      ( ( temp1 and &h0000FF0000000000 ) \ k24 ) or _
-		      ( ( temp1 and &h000000FF00000000 ) \ k8 ) or _
-		      ( ( temp1 and &h00000000FF000000 ) * k8 ) or _
-		      ( ( temp1 and &h0000000000FF0000 ) * k24 ) or _
-		      ( ( temp1 and &h000000000000FF00 ) * k40 ) or _
+		      ( ( temp1 and kMask1 ) \ k40 ) or _
+		      ( ( temp1 and kMask2 ) \ k24 ) or _
+		      ( ( temp1 and kMask3 ) \ k8 ) or _
+		      ( ( temp1 and kMask4 ) * k8 ) or _
+		      ( ( temp1 and kMask5 ) * k24 ) or _
+		      ( ( temp1 and kMask6 ) * k40 ) or _
 		      ( temp1 * k56 )
-		      if temp2 <> temp1 then
-		        pIn.UInt64( i ) = temp2
-		      end if
 		    next
 		  end if
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
-		    w.StringValue( 0, kChunkBytes ) = mbIn.StringValue( chunkIndex, kChunkBytes )
+		    //
+		    // Copy the chunk to the Message (faster than StringValue)
+		    //
+		    dim copyIndex as integer = 0
+		    while copyIndex < kChunkBytes
+		      pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      copyIndex = copyIndex + 8
+		    wend
 		    
-		    for wordIndex as integer = kChunkBytes to lastMessageByteIndex step 8
-		      word0 = p.UInt64( wordIndex - 128 )
-		      word1 = p.UInt64( wordIndex - 120 )
-		      word9 = p.UInt64( wordIndex - 56 )
-		      word14 = p.UInt64( wordIndex - 16 )
+		    for wordIndex as integer = kChunkBytes to kLastMessageByteIndex step 8
+		      word0 = pMessage.UInt64( wordIndex - 128 )
+		      word1 = pMessage.UInt64( wordIndex - 120 )
+		      word9 = pMessage.UInt64( wordIndex - 56 )
+		      word14 = pMessage.UInt64( wordIndex - 16 )
 		      
 		      'dim s0 as UInt64 = ( RotateRight( word1, 1 ) xor RotateRight( word1, 8 ) ) xor ( word1 \ k7 )
 		      s0 = _
@@ -221,7 +200,7 @@ Protected Class SHA512Digest_MTC
 		      xor ( word14 \ k6 )
 		      
 		      newValue = word0 + s0 + word9 + s1
-		      p.UInt64( wordIndex ) = word0 + s0 + word9 + s1
+		      pMessage.UInt64( wordIndex ) = word0 + s0 + word9 + s1
 		    next
 		    
 		    a = h0 
@@ -233,14 +212,14 @@ Protected Class SHA512Digest_MTC
 		    g = h6
 		    h = h7
 		    
-		    for i as integer = 0 to lastRoundIndex
+		    for i as integer = 0 to kLastRoundIndex
 		      'dim s1 as UInt64 = RotateRight( e, 14 ) xor RotateRight( e, 18 ) xor RotateRight( e, 41 )
 		      s1 = _
 		      ( ( e \ k14 ) or ( e * k50 ) ) xor _
 		      ( ( e \ k18 ) or ( e * k46 ) ) xor _
 		      ( ( e \ k41 ) or ( e * k23 ) )
 		      ch = ( e and f ) xor ( ( not e ) and g )
-		      temp1 = h + s1 + ch + kPtr.UInt64( i * 8 ) + p.UInt64( i * 8 )
+		      temp1 = h + s1 + ch + kMagicPtr.UInt64( i * 8 ) + pMessage.UInt64( i * 8 )
 		      
 		      'dim s0 as UInt64 = RotateRight( a, 28 ) xor RotateRight( a, 34 ) xor RotateRight( a, 39 )
 		      s0 = _
@@ -286,6 +265,29 @@ Protected Class SHA512Digest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Process(data As String)
+		  if Buffer <> "" then
+		    data = Buffer + data
+		    Buffer = ""
+		  end if
+		  
+		  dim dataLen as integer = data.LenB
+		  dim remainder as integer = dataLen mod kChunkBytes
+		  if remainder <> 0 then
+		    Buffer = data.RightB( remainder )
+		    dataLen = dataLen - remainder
+		    data = data.LeftB( dataLen )
+		  end if
+		  
+		  if data <> "" then
+		    Process data, Registers, false
+		    CombinedLength = CombinedLength + dataLen
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Reset()
 		  Registers.H0 = &h6a09e667f3bcc908
 		  Registers.H1 = &hbb67ae8584caa73b
@@ -312,7 +314,15 @@ Protected Class SHA512Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private IsLittleEndian As Boolean
+		Private Shared IsLittleEndian As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared kMagic As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared kMagicPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -339,7 +349,13 @@ Protected Class SHA512Digest_MTC
 	#tag Constant, Name = kChunkBytes, Type = Double, Dynamic = False, Default = \"128", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.1", Scope = Public
+	#tag Constant, Name = kLastMessageByteIndex, Type = Double, Dynamic = False, Default = \"639", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kLastRoundIndex, Type = Double, Dynamic = False, Default = \"79", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.2", Scope = Public
 	#tag EndConstant
 
 
