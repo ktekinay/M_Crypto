@@ -1,5 +1,5 @@
 Type=Desktop
-RBProjectVersion=2018.03
+RBProjectVersion=2018.04
 MinIDEVersion=20070100
 Class=App;App.xojo_code;&h0000000014C611D3;&h0000000000000000;false
 Window=WndLegacy;WndLegacy.xojo_window;&h0000000057BC7FF2;&h0000000000000000;false
@@ -58,7 +58,7 @@ Class=SHA512DigestTest;Tests/SHA512DigestTest.xojo_code;&h000000004DB86FFF;&h000
 AppMenuBar=MenuBar1
 MajorVersion=2
 MinorVersion=5
-SubVersion=1
+SubVersion=2
 NonRelease=0
 Release=3
 InfoVersion=

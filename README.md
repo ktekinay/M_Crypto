@@ -329,11 +329,11 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.5.2__ (______, 2018)
+__2.5.2__ (Dec. 11, 2018)
 
 - Digest optimizations.
-- Renamed internal methods in `AES_MTC` and `Blowfish_MTC` to be more descriptive.
 - Bcrypt optimizations.
+- Renamed internal methods in `AES_MTC` and `Blowfish_MTC` to be more descriptive.
 
 __2.5.1__ (Nov. 16, 2018)
 
