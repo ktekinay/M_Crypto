@@ -10,7 +10,7 @@ Inherits M_Crypto.Encrypter
 		  Nk = other.Nk
 		  NumberOfRounds = other.NumberOfRounds
 		  if other.RoundKey isa object then
-		    RoundKey = new Xojo.Core.MutableMemoryBlock( other.RoundKey )
+		    RoundKey = other.RoundKey.LeftB( other.RoundKey.Size )
 		  end if
 		  zBits = other.zBits
 		End Sub
@@ -113,7 +113,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the dataPtr, startAt before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey.Data
+		  dim ptrRoundKey as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -142,7 +142,7 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // ShiftRows
 		    //
-		    dim temp As integer 
+		    dim temp As byte 
 		    
 		    //
 		    // Rotate first row 1 column to left  
@@ -185,10 +185,10 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        dim dataIndex As integer = ( i * 4 ) + startAt
 		        
-		        dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
-		        dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
-		        dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
-		        dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
+		        dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
+		        dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
+		        dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
+		        dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		        
 		        dim tmp As integer = byte0 xor byte1 xor byte2 xor byte3
 		        
@@ -318,8 +318,136 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
-		    InvCipher dataPtr, startAt
-		    XorWithVector dataPtr, startAt, vectorPtr
+		    'InvCipher dataPtr, startAt
+		    if true then
+		      //
+		      // Used for InvShiftRows
+		      //
+		      dim row0col0 As integer = startAt + 0
+		      dim row0col1 As integer = startAt + 4
+		      dim row0col2 As integer = startAt + 8
+		      dim row0col3 As integer = startAt + 12
+		      
+		      dim row1col0 as integer = row0col0 + 1
+		      dim row1col1 as integer = row0col1 + 1
+		      dim row1col2 as integer = row0col2 + 1
+		      dim row1col3 as integer = row0col3 + 1
+		      
+		      dim row2col0 as integer = row0col0 + 2
+		      dim row2col1 as integer = row0col1 + 2
+		      dim row2col2 as integer = row0col2 + 2
+		      dim row2col3 as integer = row0col3 + 2
+		      
+		      dim row3col0 as integer = row0col0 + 3
+		      dim row3col1 as integer = row0col1 + 3
+		      dim row3col2 as integer = row0col2 + 3
+		      dim row3col3 as integer = row0col3 + 3
+		      
+		      dim ptrInvSbox as ptr = InvSbox
+		      dim round As integer = NumberOfRounds
+		      
+		      //
+		      // AddRoundKey
+		      // Add the First round key to the state before starting the rounds.
+		      //
+		      dim ptrRoundKey as ptr = RoundKey
+		      
+		      for i As integer = 0 to 3
+		        for j As integer = 0 to 3
+		          dim dataIndex as integer = ( i * 4 + j ) + startAt
+		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        next
+		      next
+		      
+		      //
+		      // There will be NumberOfRounds rounds.
+		      // The first NumberOfRounds-1 rounds are identical.
+		      // These NumberOfRounds-1 rounds are executed in the loop below.
+		      //
+		      dim lastRound as integer = NumberOfRounds - 1
+		      for round = lastRound to 0 step -1
+		        //
+		        // InvShiftRows
+		        //
+		        dim temp As byte 
+		        
+		        //
+		        // Rotate first row 1 columns to right
+		        //
+		        temp = dataPtr.Byte( row1col3 )
+		        dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
+		        dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
+		        dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
+		        dataPtr.Byte( row1col0 ) = temp
+		        
+		        //
+		        // Rotate second row 2 columns to right 
+		        //
+		        temp = dataPtr.Byte( row2col0 )
+		        dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		        dataPtr.Byte( row2col2 ) = temp
+		        
+		        temp = dataPtr.Byte( row2col1 )
+		        dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		        dataPtr.Byte( row2col3 ) = temp
+		        
+		        //
+		        // Rotate third row 3 columns to right
+		        //
+		        temp = dataPtr.Byte( row3col0 )
+		        dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
+		        dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
+		        dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
+		        dataPtr.Byte( row3col3 ) = temp
+		        
+		        //
+		        // InvSubBytes
+		        //
+		        for i As integer = 0 to 3
+		          for j As integer = 0 to 3
+		            dim dataIndex As integer = ( j * 4 + i ) + startAt
+		            dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          next
+		        next
+		        
+		        //
+		        // AddRoundKey
+		        //
+		        for i As integer = 0 to 3
+		          for j As integer = 0 to 3
+		            dim dataIndex As integer = ( i * 4 + j ) + startAt
+		            dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		          next
+		        next
+		        
+		        if round <> 0 then
+		          //
+		          // InvMixColumns (not for last round)
+		          //
+		          for i As integer = 0 to 3
+		            dim dataIndex As integer = ( i * 4 ) + startAt
+		            
+		            dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
+		            dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
+		            dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
+		            dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
+		            
+		            dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
+		            dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
+		            dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
+		            dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		          next
+		        end if
+		      next
+		    end if
+		    
+		    'XorWithVector dataPtr, startAt, vectorPtr
+		    if true then
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
+		      dim dataIndex As integer = startAt + 8
+		      dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
+		    end if
+		    
 		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
 		  next
 		  
@@ -368,8 +496,158 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
-		    XorWithVector dataPtr, startAt, vectorPtr
-		    Cipher dataPtr, startAt
+		    'XorWithVector dataPtr, startAt, vectorPtr
+		    if true then
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
+		      dim dataIndex As integer = startAt + 8
+		      dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
+		    end if
+		    
+		    'Cipher dataPtr, startAt
+		    if true then
+		      //
+		      // Used for ShiftRows
+		      //
+		      dim row0col0 As integer = startAt + 0
+		      dim row0col1 As integer = startAt + 4
+		      dim row0col2 As integer = startAt + 8
+		      dim row0col3 As integer = startAt + 12
+		      
+		      dim row1col0 as integer = row0col0 + 1
+		      dim row1col1 as integer = row0col1 + 1
+		      dim row1col2 as integer = row0col2 + 1
+		      dim row1col3 as integer = row0col3 + 1
+		      
+		      dim row2col0 as integer = row0col0 + 2
+		      dim row2col1 as integer = row0col1 + 2
+		      dim row2col2 as integer = row0col2 + 2
+		      dim row2col3 as integer = row0col3 + 2
+		      
+		      dim row3col0 as integer = row0col0 + 3
+		      dim row3col1 as integer = row0col1 + 3
+		      dim row3col2 as integer = row0col2 + 3
+		      dim row3col3 as integer = row0col3 + 3
+		      
+		      dim ptrSbox as ptr = Sbox
+		      dim round As integer = 0
+		      
+		      //
+		      // AddRoundKey
+		      // Add the First round key to the dataPtr, startAt before starting the rounds.
+		      //
+		      dim ptrRoundKey as ptr = RoundKey
+		      
+		      for i As integer = 0 to 3
+		        for j As integer = 0 to 3
+		          dim dataIndex As integer = ( i * 4 + j ) + startAt
+		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        next
+		      next
+		      
+		      //
+		      // There will be NumberOfRounds rounds.
+		      // The first NumberOfRounds-1 rounds are identical.
+		      // These NumberOfRounds-1 rounds are executed in the loop below.
+		      //
+		      for round = 1 to NumberOfRounds
+		        
+		        //
+		        // Subbytes
+		        //
+		        for i As integer = 0 to 3
+		          for j As integer = 0 to 3
+		            dim dataIndex As integer = ( j * 4 + i ) + startAt
+		            dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          next
+		        next
+		        
+		        //
+		        // ShiftRows
+		        //
+		        dim temp As byte 
+		        
+		        //
+		        // Rotate first row 1 column to left  
+		        //
+		        temp = dataPtr.Byte( row1col0 )
+		        dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
+		        dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
+		        dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
+		        dataPtr.Byte( row1col3 ) = temp
+		        
+		        //
+		        // Rotate second row 2 columns to left  
+		        //
+		        temp = dataPtr.Byte( row2col0 )
+		        dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
+		        dataPtr.Byte( row2col2 ) = temp
+		        
+		        temp = dataPtr.Byte( row2col1 )
+		        dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
+		        dataPtr.Byte( row2col3 ) = temp
+		        
+		        //
+		        // Rotate third row 3 columns to left
+		        //
+		        temp = dataPtr.Byte( row3col0 )
+		        dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
+		        dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
+		        dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
+		        dataPtr.Byte( row3col1 ) = temp
+		        
+		        if round <> NumberOfRounds then
+		          //
+		          // MixColumns (not for last round)
+		          //
+		          const kOne As integer = 1
+		          const kShift1 As integer = 2
+		          const kShift7 As integer = 128
+		          const kXtimeMult As integer = &h1B
+		          
+		          for i As integer = 0 to 3
+		            dim dataIndex As integer = ( i * 4 ) + startAt
+		            
+		            dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
+		            dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
+		            dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
+		            dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
+		            
+		            dim tmp As integer = byte0 xor byte1 xor byte2 xor byte3
+		            
+		            dim tm As integer
+		            
+		            tm = byte0 xor byte1
+		            tm = XtimePtr.Byte( tm )
+		            
+		            dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
+		            
+		            tm = byte1 xor byte2
+		            tm = XtimePtr.Byte( tm )
+		            dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
+		            
+		            tm = byte2 xor byte3
+		            tm = XtimePtr.Byte( tm )
+		            dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
+		            
+		            tm = byte3 xor byte0
+		            tm = XtimePtr.Byte( tm )
+		            dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
+		          next
+		        end if
+		        
+		        //
+		        // AddRoundKey
+		        //
+		        for i As integer = 0 to 3
+		          for j As integer = 0 to 3
+		            dim dataIndex As integer = ( i * 4 + j ) + startAt
+		            dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		          next
+		        next
+		      next
+		    end if
+		    
+		    
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
 		  next
 		  
@@ -405,16 +683,20 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // The first round key is the key itself.
 		  //
-		  RoundKey = new Xojo.Core.MutableMemoryBlock( KeyExpSize )
-		  M_Crypto.CopyStringToMutableMemoryBlock( key.LeftB( KeyLen ), RoundKey )
+		  RoundKey = new MemoryBlock( KeyExpSize )
+		  if key.LenB > KeyLen then
+		    RoundKey.StringValue( 0, KeyLen ) = key.LeftB( KeyLen )
+		  else
+		    RoundKey.StringValue( 0, key.LenB ) = key
+		  end if
 		  
-		  dim ptrRoundKey as Ptr = RoundKey.Data
+		  dim ptrRoundKey as Ptr = RoundKey
 		  
 		  //
 		  // All other round keys are found from the previous round keys.
 		  //
-		  dim tempa as new Xojo.Core.MutableMemoryBlock( 4 )
-		  dim ptrTempa as ptr = tempa.Data
+		  dim tempa as new MemoryBlock( 4 )
+		  dim ptrTempa as ptr = tempa
 		  dim ptrSbox as ptr = Sbox
 		  dim ptrRcon as ptr = Rcon
 		  
@@ -427,8 +709,10 @@ Inherits M_Crypto.Encrypter
 		      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 		      
 		      // Function RotWord()
-		      dim firstByte As integer = ptrTempa.Byte( 0 )
-		      tempa.Left( 3 ) = tempa.Mid( 1, 3 )
+		      dim firstByte As byte = ptrTempa.Byte( 0 )
+		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 1 )
+		      ptrTempa.Byte( 1 ) = ptrTempa.Byte( 2 )
+		      ptrTempa.Byte( 2 ) = ptrTempa.Byte( 3 )
 		      ptrTempa.Byte( 3 ) = firstByte
 		      
 		      // SubWord() is a function that takes a four-byte input word and 
@@ -628,7 +912,7 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the state before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey.Data
+		  dim ptrRoundKey as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
@@ -647,7 +931,7 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // InvShiftRows
 		    //
-		    dim temp As integer 
+		    dim temp As byte 
 		    
 		    //
 		    // Rotate first row 1 columns to right
@@ -705,10 +989,10 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        dim dataIndex As integer = ( i * 4 ) + startAt
 		        
-		        dim byte0 As integer = dataPtr.Byte( dataIndex + 0 )
-		        dim byte1 As integer = dataPtr.Byte( dataIndex + 1 )
-		        dim byte2 As integer = dataPtr.Byte( dataIndex + 2 )
-		        dim byte3 As integer = dataPtr.Byte( dataIndex + 3 )
+		        dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
+		        dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
+		        dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
+		        dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		        
 		        dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
 		        dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
@@ -1002,8 +1286,12 @@ Inherits M_Crypto.Encrypter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub XorWithVector(dataPtr As Ptr, startAt As Integer, vectorPtr As Ptr)
+	#tag Method, Flags = &h21, CompatibilityFlags = false
+		Attributes( deprecated ) Private Sub XorWithVector(dataPtr As Ptr, startAt As Integer, vectorPtr As Ptr)
+		  //
+		  // For reference only
+		  // This was manually unrolled into Encrypt/Decrypt
+		  //
 		  dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
 		  dim dataIndex As integer = startAt + 8
 		  dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
@@ -1078,7 +1366,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private RoundKey As Xojo.Core.MutableMemoryBlock
+		Private RoundKey As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1130,17 +1418,25 @@ Inherits M_Crypto.Encrypter
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Bits"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="BlockSize"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CurrentVector"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
@@ -1150,6 +1446,7 @@ Inherits M_Crypto.Encrypter
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -1157,16 +1454,21 @@ Inherits M_Crypto.Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PaddingMethod"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Padding"
 			EditorType="Enum"
 			#tag EnumValues
@@ -1179,7 +1481,9 @@ Inherits M_Crypto.Encrypter
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -1187,10 +1491,13 @@ Inherits M_Crypto.Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="UseFunction"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Functions"
 			EditorType="Enum"
 			#tag EnumValues
