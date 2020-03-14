@@ -307,6 +307,8 @@ Inherits M_Crypto.Encrypter
 		  dim ptrRoundKey as ptr = RoundKey
 		  dim ptrInvSbox as ptr = InvSbox
 		  
+		  dim temp As byte 
+		  
 		  //
 		  // Copy the original data so we have source
 		  // for the vector
@@ -351,8 +353,6 @@ Inherits M_Crypto.Encrypter
 		    dim row3col3 as integer = row0col3 + 3
 		    
 		    dim round As integer = NumberOfRounds
-		    
-		    dim temp As byte 
 		    
 		    //
 		    // AddRoundKey
@@ -476,6 +476,8 @@ Inherits M_Crypto.Encrypter
 		  dim ptrRoundKey as ptr = RoundKey
 		  dim ptrInvSbox as ptr = InvSbox
 		  
+		  dim temp As byte 
+		  
 		  dim dataIndex as integer
 		  dim lastIndex As integer = data.Size - 1
 		  for startAt As integer = 0 to lastIndex step kBlockLen
@@ -505,8 +507,6 @@ Inherits M_Crypto.Encrypter
 		    dim row3col3 as integer = row0col3 + 3
 		    
 		    dim round As integer = NumberOfRounds
-		    
-		    dim temp As byte 
 		    
 		    //
 		    // AddRoundKey
@@ -629,6 +629,7 @@ Inherits M_Crypto.Encrypter
 		  dim vectorPtr as ptr = vectorMB.Data
 		  
 		  dim temp As byte 
+		  dim temp2 as byte
 		  
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
@@ -742,26 +743,24 @@ Inherits M_Crypto.Encrypter
 		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
 		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		          
-		          dim tmp As integer = byte0 xor byte1 xor byte2 xor byte3
+		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          dim tm As integer
+		          temp2 = byte0 xor byte1
+		          temp2 = XtimePtr.Byte( temp2 )
 		          
-		          tm = byte0 xor byte1
-		          tm = XtimePtr.Byte( tm )
+		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
+		          temp2 = byte1 xor byte2
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          tm = byte1 xor byte2
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
+		          temp2 = byte2 xor byte3
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          tm = byte2 xor byte3
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
-		          
-		          tm = byte3 xor byte0
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
+		          temp2 = byte3 xor byte0
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
 		      
@@ -801,6 +800,7 @@ Inherits M_Crypto.Encrypter
 		  dim ptrSbox as ptr = Sbox
 		  
 		  dim temp As byte 
+		  dim temp2 as byte
 		  
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
@@ -911,26 +911,24 @@ Inherits M_Crypto.Encrypter
 		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
 		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		          
-		          dim tmp As integer = byte0 xor byte1 xor byte2 xor byte3
+		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          dim tm As integer
+		          temp2 = byte0 xor byte1
+		          temp2 = XtimePtr.Byte( temp2 )
 		          
-		          tm = byte0 xor byte1
-		          tm = XtimePtr.Byte( tm )
+		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
+		          temp2 = byte1 xor byte2
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          tm = byte1 xor byte2
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
+		          temp2 = byte2 xor byte3
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          tm = byte2 xor byte3
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
-		          
-		          tm = byte3 xor byte0
-		          tm = XtimePtr.Byte( tm )
-		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
+		          temp2 = byte3 xor byte0
+		          temp2 = XtimePtr.Byte( temp2 )
+		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
 		      
