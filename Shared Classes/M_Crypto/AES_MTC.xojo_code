@@ -304,6 +304,8 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
+		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrInvSbox as ptr = InvSbox
 		  
 		  //
 		  // Copy the original data so we have source
@@ -348,14 +350,14 @@ Inherits M_Crypto.Encrypter
 		    dim row3col2 as integer = row0col2 + 3
 		    dim row3col3 as integer = row0col3 + 3
 		    
-		    dim ptrInvSbox as ptr = InvSbox
 		    dim round As integer = NumberOfRounds
+		    
+		    dim temp As byte 
 		    
 		    //
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    dim ptrRoundKey as ptr = RoundKey
 		    
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
@@ -374,7 +376,6 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // InvShiftRows
 		      //
-		      dim temp As byte 
 		      
 		      //
 		      // Rotate first row 1 columns to right
@@ -472,6 +473,8 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
+		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrInvSbox as ptr = InvSbox
 		  
 		  dim dataIndex as integer
 		  dim lastIndex As integer = data.Size - 1
@@ -501,14 +504,14 @@ Inherits M_Crypto.Encrypter
 		    dim row3col2 as integer = row0col2 + 3
 		    dim row3col3 as integer = row0col3 + 3
 		    
-		    dim ptrInvSbox as ptr = InvSbox
 		    dim round As integer = NumberOfRounds
+		    
+		    dim temp As byte 
 		    
 		    //
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    dim ptrRoundKey as ptr = RoundKey
 		    
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
@@ -527,7 +530,6 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // InvShiftRows
 		      //
-		      dim temp As byte 
 		      
 		      //
 		      // Rotate first row 1 columns to right
@@ -612,6 +614,8 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
+		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrSbox as ptr = Sbox
 		  
 		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
 		  
@@ -623,6 +627,8 @@ Inherits M_Crypto.Encrypter
 		  end if
 		  
 		  dim vectorPtr as ptr = vectorMB.Data
+		  
+		  dim temp As byte 
 		  
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
@@ -656,19 +662,16 @@ Inherits M_Crypto.Encrypter
 		    dim row3col2 as integer = row0col2 + 3
 		    dim row3col3 as integer = row0col3 + 3
 		    
-		    dim ptrSbox as ptr = Sbox
 		    dim round As integer = 0
 		    
 		    //
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    dim ptrRoundKey as ptr = RoundKey
-		    
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( i * kNb + j )
 		      next
 		    next
 		    
@@ -692,7 +695,6 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // ShiftRows
 		      //
-		      dim temp As byte 
 		      
 		      //
 		      // Rotate first row 1 column to left  
@@ -795,6 +797,10 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
+		  dim ptrRoundKey as ptr = RoundKey
+		  dim ptrSbox as ptr = Sbox
+		  
+		  dim temp As byte 
 		  
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
@@ -824,19 +830,17 @@ Inherits M_Crypto.Encrypter
 		    dim row3col2 as integer = row0col2 + 3
 		    dim row3col3 as integer = row0col3 + 3
 		    
-		    dim ptrSbox as ptr = Sbox
 		    dim round As integer = 0
 		    
 		    //
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    dim ptrRoundKey as ptr = RoundKey
 		    
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( i * kNb + j )
 		      next
 		    next
 		    
@@ -860,7 +864,6 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // ShiftRows
 		      //
-		      dim temp As byte 
 		      
 		      //
 		      // Rotate first row 1 column to left  
@@ -1137,7 +1140,7 @@ Inherits M_Crypto.Encrypter
 		      const kShift7 As integer = 128
 		      const kXtimeMult As integer = &h1B
 		      
-		      XtimePtr.Byte( x ) = ( x * kShift1 )  xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
+		      XtimePtr.Byte( x ) = ( x * kShift1 ) xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
 		      
 		    next
 		    
