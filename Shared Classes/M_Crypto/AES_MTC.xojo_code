@@ -1129,20 +1129,35 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Shared Sub InitXtime()
 		  if XtimeMB is nil then
+		    const kHex as string = _
+		    "00020406080a0c0e10121416181a1c1es20222426282a2c2e30323436383a3c3e" + _
+		    "40424446484a4c4e50525456585a5c5es60626466686a6c6e70727476787a7c7e" + _
+		    "80828486888a8c8e90929496989a9c9esa0a2a4a6a8aaacaeb0b2b4b6b8babcbe" + _
+		    "c0c2c4c6c8caccced0d2d4d6d8dadcdese0e2e4e6e8eaeceef0f2f4f6f8fafcfe" + _
+		    "1b191f1d131117150b090f0d03010705s3b393f3d333137352b292f2d23212725" + _
+		    "5b595f5d535157554b494f4d43414745s7b797f7d737177756b696f6d63616765" + _
+		    "9b999f9d939197958b898f8d83818785sbbb9bfbdb3b1b7b5aba9afada3a1a7a5" + _
+		    "dbd9dfddd3d1d7d5cbc9cfcdc3c1c7c5sfbf9fffdf3f1f7f5ebe9efede3e1e7e5"
 		    
-		    XtimeMB = new MemoryBlock( 256 )
+		    XtimeMB = DecodeHex( kHex )
 		    XtimePtr = XtimeMB
 		    
-		    for x as integer = 0 to 255
-		      
-		      const kOne As integer = 1
-		      const kShift1 As integer = 2
-		      const kShift7 As integer = 128
-		      const kXtimeMult As integer = &h1B
-		      
-		      XtimePtr.Byte( x ) = ( x * kShift1 ) xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
-		      
-		    next
+		    //
+		    // The data is a result of this calculation
+		    //
+		    'XtimeMB = new MemoryBlock( 256 )
+		    'XtimePtr = XtimeMB
+		    '
+		    'for x as integer = 0 to 255
+		    '
+		    'const kOne As integer = 1
+		    'const kShift1 As integer = 2
+		    'const kShift7 As integer = 128
+		    'const kXtimeMult As integer = &h1B
+		    '
+		    'XtimePtr.Byte( x ) = ( x * kShift1 ) xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
+		    '
+		    'next
 		    
 		  end if
 		  
