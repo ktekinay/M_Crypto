@@ -1074,11 +1074,6 @@ Inherits M_Crypto.Encrypter
 		    'p.Byte( x ) = Multiply( x, v )
 		    'next
 		    'next
-		    '
-		    'System.DebugLog EncodeHex( MultiplyH9MB )
-		    'System.DebugLog EncodeHex( MultiplyHBMB )
-		    'System.DebugLog EncodeHex( MultiplyHDMB )
-		    'System.DebugLog EncodeHex( MultiplyHEMB )
 		    
 		    MultiplyH9MB = DecodeHex( kMultiplyH9Hex )
 		    MultiplyHBMB = DecodeHex( kMultiplyHBHex )
