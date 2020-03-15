@@ -358,13 +358,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    
-		    for i As integer = 0 to 3
-		      for j As integer = 0 to 3
-		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		      next
-		    next
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -372,7 +367,7 @@ Inherits M_Crypto.Encrypter
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
 		    dim lastRound as integer = NumberOfRounds - 1
-		    for round = lastRound to 0 step -1
+		    for round = lastRound downto 0
 		      //
 		      // InvShiftRows
 		      //
@@ -419,12 +414,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( i * 4 + j ) + startAt
-		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		        next
-		      next
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		      
 		      if round <> 0 then
 		        //
@@ -512,13 +503,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    
-		    for i As integer = 0 to 3
-		      for j As integer = 0 to 3
-		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		      next
-		    next
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -526,7 +512,7 @@ Inherits M_Crypto.Encrypter
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
 		    dim lastRound as integer = NumberOfRounds - 1
-		    for round = lastRound to 0 step -1
+		    for round = lastRound downto 0 
 		      //
 		      // InvShiftRows
 		      //
@@ -573,12 +559,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( i * 4 + j ) + startAt
-		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		        next
-		      next
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		      
 		      if round <> 0 then
 		        //
@@ -669,12 +651,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    for i As integer = 0 to 3
-		      for j As integer = 0 to 3
-		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( i * kNb + j )
-		      next
-		    next
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( 0 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -767,12 +745,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( i * 4 + j ) + startAt
-		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		        next
-		      next
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		    next
 		    
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
@@ -836,13 +810,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    
-		    for i As integer = 0 to 3
-		      for j As integer = 0 to 3
-		        dataIndex = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( i * kNb + j )
-		      next
-		    next
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( 0 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -935,12 +904,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( i * 4 + j ) + startAt
-		          dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
-		        next
-		      next
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
 		    next
 		  next
 		  
