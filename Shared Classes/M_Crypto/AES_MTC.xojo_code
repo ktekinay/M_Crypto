@@ -328,7 +328,6 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
-		    dim endAt as integer = startAt + 15
 		    
 		    'InvCipher dataPtr, startAt
 		    //
@@ -505,7 +504,6 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastIndex As integer = data.Size - 1
 		  for startAt As integer = 0 to lastIndex step kBlockLen
-		    dim endAt as integer = startAt + 15
 		    
 		    'InvCipher( dataPtr, startAt )
 		    
@@ -682,7 +680,6 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
-		    dim endAt as integer = startAt + 15
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
 		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
@@ -807,11 +804,6 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
-		        const kOne As integer = 1
-		        const kShift1 As integer = 2
-		        const kShift7 As integer = 128
-		        const kXtimeMult As integer = &h1B
-		        
 		        for i As integer = 0 to 3
 		          dataIndex = ( i * 4 ) + startAt
 		          
@@ -878,7 +870,6 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
-		    dim endAt as integer = startAt + 15
 		    
 		    'Cipher( dataPtr, startAt )
 		    
@@ -999,11 +990,6 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
-		        const kOne As integer = 1
-		        const kShift1 As integer = 2
-		        const kShift7 As integer = 128
-		        const kXtimeMult As integer = &h1B
-		        
 		        for i As integer = 0 to 3
 		          dataIndex = ( i * 4 ) + startAt
 		          
