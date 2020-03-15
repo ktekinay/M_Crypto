@@ -814,21 +814,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = byte0 xor byte1
-		          temp2 = XtimePtr.Byte( temp2 )
-		          
+		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
 		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = byte1 xor byte2
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
 		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = byte2 xor byte3
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
 		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = byte3 xor byte0
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
 		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
@@ -1000,21 +995,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = byte0 xor byte1
-		          temp2 = XtimePtr.Byte( temp2 )
-		          
+		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
 		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = byte1 xor byte2
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
 		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = byte2 xor byte3
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
 		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = byte3 xor byte0
-		          temp2 = XtimePtr.Byte( temp2 )
+		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
 		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
