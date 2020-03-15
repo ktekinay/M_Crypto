@@ -1,6 +1,106 @@
 #tag Class
 Protected Class StressTests
-Inherits TestGroup
+Inherits EncrypterTestGroup
+	#tag Method, Flags = &h0
+		Sub AESCBCTimingTest()
+		  //
+		  // Timing test
+		  //
+		  
+		  const kRounds = 1000
+		  const kFormat as text = "#,###,###,##0.0###"
+		  
+		  dim loc as Xojo.Core.Locale = Xojo.Core.Locale.Current
+		  
+		  dim e as new AES_MTC( 256 )
+		  e.UseFunction = AES_MTC.Functions.CBC
+		  e.SetKey Crypto.SHA256( "Some password" )
+		  
+		  dim s as string = kLongData
+		  Assert.Message "Data is " + s.Bytes.ToText( loc, "#,###,##0" ) + " bytes"
+		  Assert.Message "Using " + kRounds.ToText( loc, "#,###,##0" ) + " rounds"
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  dim encrypted as string
+		  for i as integer = 1 to kRounds
+		    sw.Start
+		    StartProfiling
+		    encrypted = e.Encrypt( s )
+		    StopProfiling
+		    sw.Stop
+		  next
+		  
+		  Assert.Message "Encryption took " + sw.ElapsedMilliSeconds.ToText( loc, kFormat ) + "  ms"
+		  sw.Reset
+		  
+		  dim decrypted as string
+		  for i as integer = 1 to kRounds
+		    sw.Start
+		    StartProfiling
+		    decrypted = e.Decrypt( encrypted )
+		    StopProfiling
+		    sw.Stop
+		  next
+		  
+		  Assert.Message "Decryption took " + sw.ElapsedMilliSeconds.ToText( loc, kFormat ) + "  ms"
+		  
+		  decrypted = decrypted.DefineEncoding( s.Encoding )
+		  Assert.AreSame( s, decrypted )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub AESECBTimingTest()
+		  //
+		  // Timing test
+		  //
+		  
+		  const kRounds = 1000
+		  const kFormat as text = "#,###,###,##0.0###"
+		  
+		  dim loc as Xojo.Core.Locale = Xojo.Core.Locale.Current
+		  
+		  dim e as new AES_MTC( 256 )
+		  e.UseFunction = AES_MTC.Functions.ECB
+		  e.SetKey Crypto.SHA256( "Some password" )
+		  
+		  dim s as string = kLongData
+		  Assert.Message "Data is " + s.Bytes.ToText( loc, "#,###,##0" ) + " bytes"
+		  Assert.Message "Using " + kRounds.ToText( loc, "#,###,##0" ) + " rounds"
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  dim encrypted as string
+		  for i as integer = 1 to kRounds
+		    sw.Start
+		    StartProfiling
+		    encrypted = e.Encrypt( s )
+		    StopProfiling
+		    sw.Stop
+		  next
+		  
+		  Assert.Message "Encryption took " + sw.ElapsedMilliSeconds.ToText( loc, kFormat ) + "  ms"
+		  sw.Reset
+		  
+		  dim decrypted as string
+		  for i as integer = 1 to kRounds
+		    sw.Start
+		    StartProfiling
+		    decrypted = e.Decrypt( encrypted )
+		    StopProfiling
+		    sw.Stop
+		  next
+		  
+		  Assert.Message "Decryption took " + sw.ElapsedMilliSeconds.ToText( loc, kFormat ) + "  ms"
+		  
+		  decrypted = decrypted.DefineEncoding( s.Encoding )
+		  Assert.AreSame( s, decrypted )
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub BcryptStressTest()
 		  //
