@@ -62,12 +62,12 @@ Inherits M_Crypto.Encrypter
 		  // This was manually inlined into Cipher and InvCipher
 		  //
 		  
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim roundKeyPtr as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
 		      dim dataIndex As integer = ( i * 4 + j ) + startAt
-		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor roundKeyPtr.Byte( round * kNb * 4 + i * kNb + j )
 		    next
 		  next
 		  
@@ -111,19 +111,19 @@ Inherits M_Crypto.Encrypter
 		  dim row3col2 as integer = row0col2 + 3
 		  dim row3col3 as integer = row0col3 + 3
 		  
-		  dim ptrSbox as ptr = Sbox
+		  dim sboxPtr as ptr = Sbox
 		  dim round As integer = 0
 		  
 		  //
 		  // AddRoundKey
 		  // Add the First round key to the dataPtr, startAt before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim roundKeyPtr as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
 		      dim dataIndex As integer = ( i * 4 + j ) + startAt
-		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor roundKeyPtr.Byte( round * kNb * 4 + i * kNb + j )
 		    next
 		  next
 		  
@@ -140,7 +140,7 @@ Inherits M_Crypto.Encrypter
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dim dataIndex As integer = ( j * 4 + i ) + startAt
-		        dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		        dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      next
 		    next
 		    
@@ -224,7 +224,7 @@ Inherits M_Crypto.Encrypter
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dim dataIndex As integer = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor roundKeyPtr.Byte( round * kNb * 4 + i * kNb + j )
 		      next
 		    next
 		  next
@@ -304,7 +304,7 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim roundKeyPtr as ptr = RoundKey
 		  dim ptrInvSbox as ptr = InvSbox
 		  
 		  dim temp As byte 
@@ -358,8 +358,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -414,8 +414,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		      
 		      if round <> 0 then
 		        //
@@ -464,7 +464,7 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim roundKeyPtr as ptr = RoundKey
 		  dim ptrInvSbox as ptr = InvSbox
 		  
 		  dim temp As byte 
@@ -503,8 +503,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -559,8 +559,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		      
 		      if round <> 0 then
 		        //
@@ -596,8 +596,8 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
-		  dim ptrRoundKey as ptr = RoundKey
-		  dim ptrSbox as ptr = Sbox
+		  dim roundKeyPtr as ptr = RoundKey
+		  dim sboxPtr as ptr = Sbox
 		  
 		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
 		  
@@ -651,8 +651,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( 0 )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( 8 )
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( 0 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -667,7 +667,7 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        for j As integer = 0 to 3
 		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		        next
 		      next
 		      
@@ -745,8 +745,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    next
 		    
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
@@ -770,8 +770,8 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  dim dataPtr as ptr = data.Data
-		  dim ptrRoundKey as ptr = RoundKey
-		  dim ptrSbox as ptr = Sbox
+		  dim roundKeyPtr as ptr = RoundKey
+		  dim sboxPtr as ptr = Sbox
 		  
 		  dim temp As byte 
 		  dim temp2 as byte
@@ -810,8 +810,8 @@ Inherits M_Crypto.Encrypter
 		    // AddRoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( 0 )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( 8 )
+		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( 0 )
+		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
@@ -826,7 +826,7 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        for j As integer = 0 to 3
 		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		        next
 		      next
 		      
@@ -904,8 +904,8 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor ptrRoundKey.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor ptrRoundKey.UInt64( round * kNb * 4 + 8 )
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    next
 		  next
 		  
@@ -931,19 +931,19 @@ Inherits M_Crypto.Encrypter
 		    RoundKey.StringValue( 0, key.LenB ) = key
 		  end if
 		  
-		  dim ptrRoundKey as Ptr = RoundKey
+		  dim roundKeyPtr as Ptr = RoundKey
 		  
 		  //
 		  // All other round keys are found from the previous round keys.
 		  //
 		  dim tempa as new MemoryBlock( 4 )
 		  dim ptrTempa as ptr = tempa
-		  dim ptrSbox as ptr = Sbox
+		  dim sboxPtr as ptr = Sbox
 		  dim ptrRcon as ptr = Rcon
 		  
 		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
 		  for i As integer = Nk to iLast
-		    ptrTempa.UInt32( 0 ) = ptrRoundKey.UInt32( ( i - 1 ) * 4 )
+		    ptrTempa.UInt32( 0 ) = roundKeyPtr.UInt32( ( i - 1 ) * 4 )
 		    
 		    if ( i mod Nk ) = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
@@ -960,10 +960,10 @@ Inherits M_Crypto.Encrypter
 		      // applies the S-box to each of the four bytes to produce an output word.
 		      
 		      // Function Subword()
-		      ptrTempa.Byte( 0 ) = ptrSbox.Byte( ptrTempa.Byte( 0 ) )
-		      ptrTempa.Byte( 1 ) = ptrSbox.Byte( ptrTempa.Byte( 1 ) )
-		      ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
-		      ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
+		      ptrTempa.Byte( 0 ) = sboxPtr.Byte( ptrTempa.Byte( 0 ) )
+		      ptrTempa.Byte( 1 ) = sboxPtr.Byte( ptrTempa.Byte( 1 ) )
+		      ptrTempa.Byte( 2 ) = sboxPtr.Byte( ptrTempa.Byte( 2 ) )
+		      ptrTempa.Byte( 3 ) = sboxPtr.Byte( ptrTempa.Byte( 3 ) )
 		      
 		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ Nk )
 		      
@@ -971,16 +971,16 @@ Inherits M_Crypto.Encrypter
 		    
 		    if Bits = 256 then
 		      if ( i mod Nk ) = 4 then
-		        ptrTempa.Byte( 0 ) = ptrSbox.Byte( ptrTempa.Byte( 0 ) )
-		        ptrTempa.Byte( 1 ) = ptrSbox.Byte( ptrTempa.Byte( 1 ) )
-		        ptrTempa.Byte( 2 ) = ptrSbox.Byte( ptrTempa.Byte( 2 ) )
-		        ptrTempa.Byte( 3 ) = ptrSbox.Byte( ptrTempa.Byte( 3 ) )
+		        ptrTempa.Byte( 0 ) = sboxPtr.Byte( ptrTempa.Byte( 0 ) )
+		        ptrTempa.Byte( 1 ) = sboxPtr.Byte( ptrTempa.Byte( 1 ) )
+		        ptrTempa.Byte( 2 ) = sboxPtr.Byte( ptrTempa.Byte( 2 ) )
+		        ptrTempa.Byte( 3 ) = sboxPtr.Byte( ptrTempa.Byte( 3 ) )
 		      end if
 		    end if
 		    
 		    dim iTimes4 As integer = i * 4
 		    dim iMinusNk As integer = ( i - Nk ) * 4
-		    ptrRoundKey.UInt32( iTimes4 ) = ptrRoundKey.UInt32( iMinusNk ) xor ptrTempa.UInt32( 0 )
+		    roundKeyPtr.UInt32( iTimes4 ) = roundKeyPtr.UInt32( iMinusNk ) xor ptrTempa.UInt32( 0 )
 		  next
 		  
 		End Sub
@@ -1168,12 +1168,12 @@ Inherits M_Crypto.Encrypter
 		  // AddRoundKey
 		  // Add the First round key to the state before starting the rounds.
 		  //
-		  dim ptrRoundKey as ptr = RoundKey
+		  dim roundKeyPtr as ptr = RoundKey
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
 		      dim dataIndex as integer = ( i * 4 + j ) + startAt
-		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		      dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor roundKeyPtr.Byte( round * kNb * 4 + i * kNb + j )
 		    next
 		  next
 		  
@@ -1234,7 +1234,7 @@ Inherits M_Crypto.Encrypter
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dim dataIndex As integer = ( i * 4 + j ) + startAt
-		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor ptrRoundKey.Byte( round * kNb * 4 + i * kNb + j )
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor roundKeyPtr.Byte( round * kNb * 4 + i * kNb + j )
 		      next
 		    next
 		    
@@ -1530,12 +1530,12 @@ Inherits M_Crypto.Encrypter
 		  // This was manually inlined into Cipher
 		  //
 		  
-		  dim ptrSbox as ptr = Sbox
+		  dim sboxPtr as ptr = Sbox
 		  
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
 		      dim dataIndex As integer = ( j * 4 + i ) + startAt
-		      dataPtr.Byte( dataIndex ) = ptrSbox.Byte( dataPtr.Byte( dataIndex ) )
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		    next
 		  next
 		  
