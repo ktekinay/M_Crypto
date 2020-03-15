@@ -328,6 +328,8 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
+		    dim endAt as integer = startAt + 15
+		    
 		    'InvCipher dataPtr, startAt
 		    //
 		    // Used for InvShiftRows
@@ -404,12 +406,43 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // InvSubBytes
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		        next
-		      next
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = startAt
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      
 		      //
 		      // AddRoundKey
@@ -472,6 +505,8 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastIndex As integer = data.Size - 1
 		  for startAt As integer = 0 to lastIndex step kBlockLen
+		    dim endAt as integer = startAt + 15
+		    
 		    'InvCipher( dataPtr, startAt )
 		    
 		    //
@@ -549,12 +584,43 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // InvSubBytes
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		        next
-		      next
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = startAt
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      
 		      //
 		      // AddRoundKey
@@ -616,6 +682,8 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
+		    dim endAt as integer = startAt + 15
+		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
 		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
 		    dataIndex = startAt + 8
@@ -664,12 +732,43 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Subbytes
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		        next
-		      next
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = startAt
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      
 		      //
 		      // ShiftRows
@@ -779,6 +878,8 @@ Inherits M_Crypto.Encrypter
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
 		  for startAt As integer = 0 to lastByte step kBlockLen
+		    dim endAt as integer = startAt + 15
+		    
 		    'Cipher( dataPtr, startAt )
 		    
 		    //
@@ -823,12 +924,43 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Subbytes
 		      //
-		      for i As integer = 0 to 3
-		        for j As integer = 0 to 3
-		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		        next
-		      next
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = startAt
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      
 		      //
 		      // ShiftRows
