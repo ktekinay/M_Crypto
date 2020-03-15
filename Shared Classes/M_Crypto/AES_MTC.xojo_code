@@ -305,7 +305,7 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data.Data
 		  dim roundKeyPtr as ptr = RoundKey
-		  dim ptrInvSbox as ptr = InvSbox
+		  dim invSboxPtr as ptr = InvSbox
 		  
 		  dim temp As byte 
 		  
@@ -407,7 +407,7 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        for j As integer = 0 to 3
 		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		        next
 		      next
 		      
@@ -465,7 +465,7 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim dataPtr as ptr = data.Data
 		  dim roundKeyPtr as ptr = RoundKey
-		  dim ptrInvSbox as ptr = InvSbox
+		  dim invSboxPtr as ptr = InvSbox
 		  
 		  dim temp As byte 
 		  
@@ -552,7 +552,7 @@ Inherits M_Crypto.Encrypter
 		      for i As integer = 0 to 3
 		        for j As integer = 0 to 3
 		          dataIndex = ( j * 4 + i ) + startAt
-		          dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		          dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		        next
 		      next
 		      
@@ -1161,7 +1161,7 @@ Inherits M_Crypto.Encrypter
 		  dim row3col2 as integer = row0col2 + 3
 		  dim row3col3 as integer = row0col3 + 3
 		  
-		  dim ptrInvSbox as ptr = InvSbox
+		  dim invSboxPtr as ptr = InvSbox
 		  dim round As integer = NumberOfRounds
 		  
 		  //
@@ -1224,7 +1224,7 @@ Inherits M_Crypto.Encrypter
 		    for i As integer = 0 to 3
 		      for j As integer = 0 to 3
 		        dim dataIndex As integer = ( j * 4 + i ) + startAt
-		        dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		        dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      next
 		    next
 		    
@@ -1358,11 +1358,11 @@ Inherits M_Crypto.Encrypter
 		  // This was manually inlined into InvCipher
 		  //
 		  
-		  dim ptrInvSbox as ptr = InvSbox
+		  dim invSboxPtr as ptr = InvSbox
 		  for i As integer = 0 to 3
 		    for j As integer = 0 to 3
 		      dim dataIndex As integer = ( j * 4 + i ) + startAt
-		      dataPtr.Byte( dataIndex ) = ptrInvSbox.Byte( dataPtr.Byte( dataIndex ) )
+		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		    next
 		  next
 		  
