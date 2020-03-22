@@ -1,6 +1,7 @@
 Type=Console
-RBProjectVersion=2018.04
+RBProjectVersion=2019.031
 MinIDEVersion=20070100
+OrigIDEVersion=00000000
 Class=App;App.xojo_code;&h000000007908E7FF;&h0000000000000000;false
 Module=M_ANSI;M_ANSI.xojo_code;&h0000000010F3A7FF;&h0000000000000000;false
 Module=OptionParserModule;OptionParserModule.xojo_code;&h0000000025C327FF;&h0000000000000000;false
@@ -30,7 +31,7 @@ Class=ScryptUnitTester;../Shared Classes/Scrypt_MTC/ScryptUnitTester.xojo_code;&
 Class=BadInputException;../Shared Classes/Scrypt_MTC/BadInputException.xojo_code;&h0000000028B777FF;&h0000000053BF77FF;false
 MajorVersion=2
 MinorVersion=5
-SubVersion=2
+SubVersion=3
 NonRelease=0
 Release=3
 InfoVersion=
