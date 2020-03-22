@@ -134,7 +134,7 @@ dim salt as string = Bcrypt_MTC.GenerateSalt( 10 )
 // $2y$10$7XjO9J5P1DJJPCy7xbHYHu , for example
 hash = Bcrypt_MTC.Hash( "somebody's password", salt )
 // $2y$10$7XjO9J5P1DJJPCy7xbHYHuCSdEEaV6gsxhZbogNGFlq5dwAiX2S8K
-    
+
 ```
 
 #### <a name='scrypt-example'></a>Scrypt
@@ -328,6 +328,11 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.5.3__ (Mar. 22, 2020)
+
+- Optimized AES code (~2 times faster!).
+- More unit tests.
 
 __2.5.2__ (Dec. 11, 2018)
 
