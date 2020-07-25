@@ -1,50 +1,7 @@
 #tag Class
-Protected Class DesktopTestController
-Inherits TestController
-	#tag Event
-		Sub InitializeTestGroups()
-		  // Instantiate TestGroup subclasses here so that they can be run
-		  
-		  Dim group As TestGroup
-		  
-		  'group = New XojoUnitTests(Self, "Assertion")
-		  'group = New XojoUnitFailTests(Self, "Always Fail")
-		  
-		  group = new AES128NullsTests( self, "AES-128-Nulls" )
-		  group = new AES128NullsWithCountTests( self, "AES-128-NullsWithCount" )
-		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
-		  group = new AES256AdditionalModesTests( self, "AES-256-Addl-Modes" )
-		  group = new AES256NullsTests( self, "AES-256-Nulls" )
-		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
-		  
-		  group = new BcryptTests( self, "Bcrypt" )
-		  group = new BlowfishAdditionalModesTests( self, "Blowfish-Addl-Modes" )
-		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS" )
-		  
-		  group = new EncrypterTests( self, "Encrypter" )
-		  
-		  group = new M_CryptoTests( self, "M_Crypto" )
-		  
-		  group = new ScryptTests( self, "Scrypt" )
-		  
-		  group = new SHA256DigestTest( self, "SHA256Digest" )
-		  group = new SHA512DigestTest( self, "SHA512Digest" )
-		  
-		  group = new StressTests( self, "Stress Tests" )
-		  group.IncludeGroup = false
-		End Sub
-	#tag EndEvent
-
-
+Protected Class AES256AdditionalModesTests
+Inherits EncrypterTestGroup
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AllTestCount"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Integer"
-			EditorType=""
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Duration"
 			Visible=false
@@ -54,7 +11,7 @@ Inherits TestController
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="FailedCount"
+			Name="FailedTestCount"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
@@ -62,11 +19,11 @@ Inherits TestController
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="GroupCount"
+			Name="IncludeGroup"
 			Visible=false
 			Group="Behavior"
-			InitialValue=""
-			Type="Integer"
+			InitialValue="True"
+			Type="Boolean"
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -110,15 +67,7 @@ Inherits TestController
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="PassedCount"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Integer"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="RunGroupCount"
+			Name="PassedTestCount"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
@@ -134,11 +83,19 @@ Inherits TestController
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="SkippedCount"
+			Name="SkippedTestCount"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
 			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="StopTestOnFail"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Boolean"
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -147,6 +104,14 @@ Inherits TestController
 			Group="ID"
 			InitialValue=""
 			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TestCount"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Integer"
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
