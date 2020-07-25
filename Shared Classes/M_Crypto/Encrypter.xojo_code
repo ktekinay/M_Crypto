@@ -37,10 +37,28 @@ Protected Class Encrypter
 		  
 		  select case f
 		  case Functions.Default, Functions.CBC, Functions.ECB
+		    RaiseErrorIf( PaddingMethod = Padding.None, kErrorPaddingCannotBeNone )
+		    
 		    if isFinalBlock then
 		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
 		    else
 		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		    end if
+		    
+		    RaiseEvent Decrypt( f, data, isFinalBlock )
+		    
+		    if isFinalBlock then
+		      DepadIfNeeded( data )
+		      zCurrentVector = nil
+		    end if
+		    
+		  case Functions.CFB, Functions.OFB
+		    if PaddingMethod <> Padding.None then
+		      if isFinalBlock then
+		        RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
+		      else
+		        RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		      end if
 		    end if
 		    
 		    RaiseEvent Decrypt( f, data, isFinalBlock )
@@ -76,9 +94,27 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function DecryptCFB(data As String, isFinalBlock As Boolean = True) As String
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Decrypt( Functions.CFB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
 		  self.Decrypt( Functions.ECB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function DecryptOFB(data As String, isFinalBlock As Boolean = True) As String
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Decrypt( Functions.OFB, mb, isFinalBlock )
 		  dim result as string = MemoryBlockToString( mb )
 		  return result
 		End Function
@@ -88,7 +124,7 @@ Protected Class Encrypter
 		Private Sub DepadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
 		  // See PadIfNeeded for a description of how padding works.
 		  
-		  if data is nil or data.Size = 0 then
+		  if data is nil or data.Size = 0 or PaddingMethod = Padding.None then
 		    return
 		  end if
 		  
@@ -191,6 +227,8 @@ Protected Class Encrypter
 		  
 		  select case f
 		  case Functions.Default, Functions.CBC, Functions.ECB
+		    RaiseErrorIf( PaddingMethod = Padding.None, kErrorPaddingCannotBeNone )
+		    
 		    if isFinalBlock then
 		      PadIfNeeded( data )
 		    else
@@ -198,6 +236,19 @@ Protected Class Encrypter
 		    end if
 		    
 		    RaiseEvent Encrypt( f, data, isfinalBlock )
+		    
+		    if isFinalBlock then
+		      zCurrentVector = nil
+		    end if
+		    
+		    return
+		    
+		  case Functions.CFB, Functions.OFB
+		    if isFinalBlock then
+		      PadIfNeeded( data )
+		    else
+		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
+		    end if
 		    
 		    if isFinalBlock then
 		      zCurrentVector = nil
@@ -231,9 +282,27 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function EncryptCFB(data As String, isFinalBlock As Boolean = True) As String
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Encrypt( Functions.CFB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
 		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
 		  self.Encrypt( Functions.ECB, mb, isFinalBlock )
+		  dim result as string = MemoryBlockToString( mb )
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function EncryptOFB(data As String, isFinalBlock As Boolean = True) As String
+		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  self.Encrypt( Functions.OFB, mb, isFinalBlock )
 		  dim result as string = MemoryBlockToString( mb )
 		  return result
 		End Function
@@ -273,7 +342,7 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub PadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
-		  if data is nil or data.Size = 0 then
+		  if data is nil or data.Size = 0 or PaddingMethod = Padding.None then
 		    return
 		  end if
 		  
@@ -505,6 +574,9 @@ Protected Class Encrypter
 	#tag Constant, Name = kErrorNoKeySet, Type = String, Dynamic = False, Default = \"A key must be specified during construction or within ExpandState or Expand0State before encrypting or decrypting.", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kErrorPaddingCannotBeNone, Type = String, Dynamic = False, Default = \"Padding cannot be None with this mode.", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = kErrorVectorSize, Type = String, Dynamic = False, Default = \"Vector must be empty (will default to nulls)\x2C or exactly BLOCKSIZE bytes or hexadecimal characters representing BLOCKSIZE bytes", Scope = Protected
 	#tag EndConstant
 
@@ -512,25 +584,33 @@ Protected Class Encrypter
 	#tag Enum, Name = Functions, Type = Integer, Flags = &h0
 		Default
 		  ECB
-		CBC
+		  CBC
+		  CFB
+		OFB
 	#tag EndEnum
 
 	#tag Enum, Name = Padding, Type = Integer, Flags = &h0
 		NullsOnly
 		  NullsWithCount
-		PKCS
+		  PKCS
+		None
 	#tag EndEnum
 
 
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="BlockSize"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="CurrentVector"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
@@ -540,6 +620,7 @@ Protected Class Encrypter
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -547,16 +628,21 @@ Protected Class Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PaddingMethod"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Padding"
 			EditorType="Enum"
 			#tag EnumValues
@@ -569,7 +655,9 @@ Protected Class Encrypter
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -577,10 +665,13 @@ Protected Class Encrypter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="UseFunction"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Functions"
 			EditorType="Enum"
 			#tag EnumValues

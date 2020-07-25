@@ -1,6 +1,75 @@
 #tag Class
 Protected Class AES256AdditionalModesTests
 Inherits EncrypterTestGroup
+	#tag Method, Flags = &h0
+		Sub CFBTest()
+		  dim key as string 
+		  dim data as string 
+		  dim expectedHex as string 
+		  dim vectorHex as string
+		  dim encrypted as string
+		  dim e as AES_MTC
+		  
+		  vectorHex = "000102030405060708090A0B0C0D0E0F"
+		  key = "password"
+		  data = "1234567890123456"
+		  expectedHex = "5E2BCBE12FE8F61AC97BE2CF82308DF9"
+		  
+		  e = GetAES( key )
+		  e.SetInitialVector vectorHex
+		  
+		  encrypted = e.EncryptCFB( data )
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  
+		  encrypted = e.EncryptCFB( data )
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  
+		  dim decrypted as string = e.DecryptCFB( encrypted ).DefineEncoding( data.Encoding )
+		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
+		  
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetAES(key As String) As AES_MTC
+		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.None )
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub OFBTest()
+		  dim key as string 
+		  dim data as string 
+		  dim expectedHex as string 
+		  dim vectorHex as string
+		  dim encrypted as string
+		  dim e as AES_MTC
+		  
+		  vectorHex = "000102030405060708090A0B0C0D0E0F"
+		  key = "password"
+		  data = "1234567890123456"
+		  expectedHex = "5EC76DC5A87EC9C1E135674C8EF2F466"
+		  
+		  e = GetAES( key )
+		  e.SetInitialVector vectorHex
+		  
+		  encrypted = e.EncryptOFB( data )
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  
+		  encrypted = e.EncryptOFB( data )
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  
+		  dim decrypted as string = e.DecryptOFB( encrypted ).DefineEncoding( data.Encoding )
+		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
+		  
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"
