@@ -839,9 +839,9 @@ Inherits M_Crypto.Encrypter
 		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    next
 		    
-		    dim diff as integer = lastByte - dataIndex + 1
+		    dim diff as integer = lastByte - startAt + 1
 		    
-		    if type = Functions.CFB and diff >= 8 then
+		    if type = Functions.CFB and diff >= 16 then
 		      saveVectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
 		      saveVectorPtr.UInt64( 8 ) = dataPtr.UInt64( startAt + 8 )
 		    end if
