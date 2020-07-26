@@ -1002,6 +1002,9 @@ End
 	#tag Constant, Name = kLabelCBC, Type = String, Dynamic = False, Default = \"CBC", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kLabelCFB, Type = String, Dynamic = False, Default = \"CFB", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kLabelDecrypt, Type = String, Dynamic = False, Default = \"Decrypt", Scope = Private
 	#tag EndConstant
 
@@ -1023,10 +1026,16 @@ End
 	#tag Constant, Name = kLabelNone, Type = String, Dynamic = False, Default = \"None", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kLabelNoPadding, Type = String, Dynamic = False, Default = \"None", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kLabelNullsOnly, Type = String, Dynamic = False, Default = \"Nulls Only", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kLabelNullsWithCount, Type = String, Dynamic = False, Default = \"Nulls With Count", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kLabelOFB, Type = String, Dynamic = False, Default = \"OFB", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kLabelPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
@@ -1127,10 +1136,11 @@ End
 #tag Events mnuPadding
 	#tag Event
 		Sub Open()
-		  me.AddRows array( kLabelPKCS, kLabelNullsWithCount, kLabelNullsOnly )
+		  me.AddRows array( kLabelPKCS, kLabelNullsWithCount, kLabelNullsOnly, kLabelNoPadding )
 		  me.RowTag( 0 ) = M_Crypto.Encrypter.Padding.PKCS
 		  me.RowTag( 1 ) = M_Crypto.Encrypter.Padding.NullsWithCount
 		  me.RowTag( 2 ) = M_Crypto.Encrypter.Padding.NullsOnly
+		  me.RowTag( 3 ) = M_Crypto.Encrypter.Padding.None
 		  
 		  me.ListIndex = 0
 		  
@@ -1145,10 +1155,12 @@ End
 #tag Events mnuEncryptFunction
 	#tag Event
 		Sub Open()
-		  me.AddRows array( kLabelDefault, kLabelECB, kLabelCBC )
+		  me.AddRows array( kLabelDefault, kLabelECB, kLabelCBC, kLabelCFB, kLabelOFB )
 		  me.RowTag( 0 ) = M_Crypto.Encrypter.Functions.Default
 		  me.RowTag( 1 ) = M_Crypto.Encrypter.Functions.ECB
 		  me.RowTag( 2 ) = M_Crypto.Encrypter.Functions.CBC
+		  me.RowTag( 3 ) = M_Crypto.Encrypter.Functions.CFB
+		  me.RowTag( 4 ) = M_Crypto.Encrypter.Functions.OFB
 		  
 		  me.ListIndex = 2
 		  

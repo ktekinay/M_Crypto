@@ -53,6 +53,10 @@ Protected Class Encrypter
 		    end if
 		    
 		  case Functions.CFB, Functions.OFB
+		    if zSaveVector is nil then
+		      zSaveVector = new Xojo.Core.MutableMemoryBlock( zBlockSize )
+		    end if
+		    
 		    if PaddingMethod <> Padding.None then
 		      if isFinalBlock then
 		        RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorDecryptionBlockSize )
@@ -249,6 +253,8 @@ Protected Class Encrypter
 		    else
 		      RaiseErrorIf( ( data.Size mod BlockSize ) <> 0, kErrorIntermediateEncyptionBlockSize )
 		    end if
+		    
+		    RaiseEvent Encrypt( f, data, isfinalBlock )
 		    
 		    if isFinalBlock then
 		      zCurrentVector = nil
@@ -560,6 +566,10 @@ Protected Class Encrypter
 		#tag EndSetter
 		Protected zCurrentVector As Xojo.Core.MutableMemoryBlock
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h1
+		Protected zSaveVector As Xojo.Core.MutableMemoryBlock
+	#tag EndProperty
 
 
 	#tag Constant, Name = kErrorDecryptionBlockSize, Type = String, Dynamic = False, Default = \"Data blocks must be an exact multiple of BlockSize", Scope = Private

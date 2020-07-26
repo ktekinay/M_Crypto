@@ -1,6 +1,6 @@
 #tag Class
 Protected Class BlowfishAdditionalModesTests
-Inherits EncrypterTestGroup
+Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CFBTest()
 		  dim key as string 

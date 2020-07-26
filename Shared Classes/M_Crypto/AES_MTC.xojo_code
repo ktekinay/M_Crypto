@@ -25,6 +25,9 @@ Inherits M_Crypto.Encrypter
 		  case Functions.CBC
 		    DecryptMbCBC data, isFinalBlock
 		    
+		  case Functions.CFB, Functions.OFB
+		    DecryptMbVector data, type, isFinalBlock
+		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
 		    
@@ -40,6 +43,9 @@ Inherits M_Crypto.Encrypter
 		    
 		  case Functions.CBC
 		    EncryptMbCBC data, isFinalBlock
+		    
+		  case Functions.CFB, Functions.OFB
+		    EncryptMbVector data, type, isFinalBlock
 		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
@@ -651,6 +657,238 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub DecryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  dim dataPtr as ptr = data.Data
+		  dim roundKeyPtr as ptr = RoundKey
+		  dim sboxPtr as ptr = Sbox
+		  
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  end if
+		  if vectorMB is nil then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		  end if
+		  
+		  dim vectorPtr as ptr = vectorMB.Data
+		  
+		  dim saveVectorPtr as ptr = zSaveVector.Data
+		  
+		  dim temp As byte 
+		  dim temp2 as byte
+		  
+		  //
+		  // Used for ShiftRows
+		  //
+		  const row0col0 As integer = 0
+		  const row0col1 As integer = 4
+		  const row0col2 As integer = 8
+		  const row0col3 As integer = 12
+		  
+		  const row1col0 as integer = row0col0 + 1
+		  const row1col1 as integer = row0col1 + 1
+		  const row1col2 as integer = row0col2 + 1
+		  const row1col3 as integer = row0col3 + 1
+		  
+		  const row2col0 as integer = row0col0 + 2
+		  const row2col1 as integer = row0col1 + 2
+		  const row2col2 as integer = row0col2 + 2
+		  const row2col3 as integer = row0col3 + 2
+		  
+		  const row3col0 as integer = row0col0 + 3
+		  const row3col1 as integer = row0col1 + 3
+		  const row3col2 as integer = row0col2 + 3
+		  const row3col3 as integer = row0col3 + 3
+		  
+		  dim dataIndex as integer
+		  dim lastByte As integer = data.Size - 1
+		  for startAt As integer = 0 to lastByte step kBlockLen
+		    
+		    'Cipher vectorPtr, startAt
+		    
+		    dim round As integer = 0
+		    
+		    //
+		    // AddRoundKey
+		    // Add the First round key to the vectorPtr before starting the rounds
+		    //
+		    vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( 0 )
+		    vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( 8 )
+		    
+		    //
+		    // There will be NumberOfRounds rounds.
+		    // The first NumberOfRounds-1 rounds are identical.
+		    // These NumberOfRounds-1 rounds are executed in the loop below.
+		    //
+		    for round = 1 to NumberOfRounds
+		      
+		      //
+		      // Subbytes
+		      //
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = 0
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      
+		      //
+		      // ShiftRows
+		      //
+		      
+		      //
+		      // Rotate first row 1 column to left  
+		      //
+		      temp = vectorPtr.Byte( row1col0 )
+		      vectorPtr.Byte( row1col0 ) = vectorPtr.Byte( row1col1 )
+		      vectorPtr.Byte( row1col1 ) = vectorPtr.Byte( row1col2 )
+		      vectorPtr.Byte( row1col2 ) = vectorPtr.Byte( row1col3 )
+		      vectorPtr.Byte( row1col3 ) = temp
+		      
+		      //
+		      // Rotate second row 2 columns to left  
+		      //
+		      temp = vectorPtr.Byte( row2col0 )
+		      vectorPtr.Byte( row2col0 ) = vectorPtr.Byte( row2col2 )
+		      vectorPtr.Byte( row2col2 ) = temp
+		      
+		      temp = vectorPtr.Byte( row2col1 )
+		      vectorPtr.Byte( row2col1 ) = vectorPtr.Byte( row2col3 )
+		      vectorPtr.Byte( row2col3 ) = temp
+		      
+		      //
+		      // Rotate third row 3 columns to left
+		      //
+		      temp = vectorPtr.Byte( row3col0 )
+		      vectorPtr.Byte( row3col0 ) = vectorPtr.Byte( row3col3 )
+		      vectorPtr.Byte( row3col3 ) = vectorPtr.Byte( row3col2 )
+		      vectorPtr.Byte( row3col2 ) = vectorPtr.Byte( row3col1 )
+		      vectorPtr.Byte( row3col1 ) = temp
+		      
+		      if round <> NumberOfRounds then
+		        //
+		        // MixColumns (not for last round)
+		        //
+		        for i As integer = 0 to 3
+		          dataIndex = ( i * 4 )
+		          
+		          dim byte0 as byte = vectorPtr.Byte( dataIndex + 0 )
+		          dim byte1 as byte = vectorPtr.Byte( dataIndex + 1 )
+		          dim byte2 as byte = vectorPtr.Byte( dataIndex + 2 )
+		          dim byte3 as byte = vectorPtr.Byte( dataIndex + 3 )
+		          
+		          temp = byte0 xor byte1 xor byte2 xor byte3
+		          
+		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
+		        next
+		      end if
+		      
+		      //
+		      // AddRoundKey
+		      //
+		      vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
+		    next
+		    
+		    dim diff as integer = lastByte - dataIndex + 1
+		    
+		    if type = Functions.CFB and diff >= 8 then
+		      saveVectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
+		      saveVectorPtr.UInt64( 8 ) = dataPtr.UInt64( startAt + 8 )
+		    end if
+		    
+		    'XorWithVector dataPtr, startAt, vectorPtr
+		    dataIndex = startAt
+		    dim vectorIndex as integer = 0
+		    do
+		      select case diff
+		      case is >= 8
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( vectorIndex )
+		        dataIndex = dataIndex + 8
+		        vectorIndex = vectorIndex + 8
+		        diff = diff - 8
+		      case is >= 4
+		        dataPtr.UInt32( dataIndex ) = dataPtr.UInt32( dataIndex )  xor vectorPtr.UInt32( vectorIndex )
+		        dataIndex = dataIndex + 4
+		        vectorIndex = vectorIndex + 4
+		        diff = diff - 4
+		      case is >= 2
+		        dataPtr.UInt16( dataIndex ) = dataPtr.UInt16( dataIndex )  xor vectorPtr.UInt16( vectorIndex )
+		        dataIndex = dataIndex + 2
+		        vectorIndex = vectorIndex + 2
+		        diff = diff - 2
+		      case else
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex )  xor vectorPtr.Byte( vectorIndex )
+		        dataIndex = dataIndex + 1
+		        vectorIndex = vectorIndex + 1
+		        diff = diff - 1
+		      end select
+		    loop until diff = 0 or vectorIndex = kBlockLen
+		    
+		    if type = Functions.CFB then
+		      vectorPtr.UInt64( 0 ) = saveVectorPtr.UInt64( 0 )
+		      vectorPtr.UInt64( 8 ) = saveVectorPtr.UInt64( 8 )
+		    end if
+		    
+		  next
+		  
+		  if not isFinalBlock then
+		    zCurrentVector = vectorMB
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub EncryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -1016,6 +1254,230 @@ Inherits M_Crypto.Encrypter
 		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    next
 		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub EncryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  dim dataPtr as ptr = data.Data
+		  dim roundKeyPtr as ptr = RoundKey
+		  dim sboxPtr as ptr = Sbox
+		  
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  end if
+		  if vectorMB is nil then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		  end if
+		  
+		  dim vectorPtr as ptr = vectorMB.Data
+		  
+		  dim temp As byte 
+		  dim temp2 as byte
+		  
+		  //
+		  // Used for ShiftRows
+		  //
+		  const row0col0 As integer = 0
+		  const row0col1 As integer = 4
+		  const row0col2 As integer = 8
+		  const row0col3 As integer = 12
+		  
+		  const row1col0 as integer = row0col0 + 1
+		  const row1col1 as integer = row0col1 + 1
+		  const row1col2 as integer = row0col2 + 1
+		  const row1col3 as integer = row0col3 + 1
+		  
+		  const row2col0 as integer = row0col0 + 2
+		  const row2col1 as integer = row0col1 + 2
+		  const row2col2 as integer = row0col2 + 2
+		  const row2col3 as integer = row0col3 + 2
+		  
+		  const row3col0 as integer = row0col0 + 3
+		  const row3col1 as integer = row0col1 + 3
+		  const row3col2 as integer = row0col2 + 3
+		  const row3col3 as integer = row0col3 + 3
+		  
+		  dim dataIndex as integer
+		  dim lastByte As integer = data.Size - 1
+		  for startAt As integer = 0 to lastByte step kBlockLen
+		    
+		    'Cipher vectorPtr, startAt
+		    
+		    dim round As integer = 0
+		    
+		    //
+		    // AddRoundKey
+		    // Add the First round key to the vectorPtr before starting the rounds
+		    //
+		    vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( 0 )
+		    vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( 8 )
+		    
+		    //
+		    // There will be NumberOfRounds rounds.
+		    // The first NumberOfRounds-1 rounds are identical.
+		    // These NumberOfRounds-1 rounds are executed in the loop below.
+		    //
+		    for round = 1 to NumberOfRounds
+		      
+		      //
+		      // Subbytes
+		      //
+		      // Unroll this loop
+		      //
+		      'for dataIndex = startAt to endAt
+		      'vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      'next
+		      dataIndex = 0
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      dataIndex = dataIndex + 1
+		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      
+		      //
+		      // ShiftRows
+		      //
+		      
+		      //
+		      // Rotate first row 1 column to left  
+		      //
+		      temp = vectorPtr.Byte( row1col0 )
+		      vectorPtr.Byte( row1col0 ) = vectorPtr.Byte( row1col1 )
+		      vectorPtr.Byte( row1col1 ) = vectorPtr.Byte( row1col2 )
+		      vectorPtr.Byte( row1col2 ) = vectorPtr.Byte( row1col3 )
+		      vectorPtr.Byte( row1col3 ) = temp
+		      
+		      //
+		      // Rotate second row 2 columns to left  
+		      //
+		      temp = vectorPtr.Byte( row2col0 )
+		      vectorPtr.Byte( row2col0 ) = vectorPtr.Byte( row2col2 )
+		      vectorPtr.Byte( row2col2 ) = temp
+		      
+		      temp = vectorPtr.Byte( row2col1 )
+		      vectorPtr.Byte( row2col1 ) = vectorPtr.Byte( row2col3 )
+		      vectorPtr.Byte( row2col3 ) = temp
+		      
+		      //
+		      // Rotate third row 3 columns to left
+		      //
+		      temp = vectorPtr.Byte( row3col0 )
+		      vectorPtr.Byte( row3col0 ) = vectorPtr.Byte( row3col3 )
+		      vectorPtr.Byte( row3col3 ) = vectorPtr.Byte( row3col2 )
+		      vectorPtr.Byte( row3col2 ) = vectorPtr.Byte( row3col1 )
+		      vectorPtr.Byte( row3col1 ) = temp
+		      
+		      if round <> NumberOfRounds then
+		        //
+		        // MixColumns (not for last round)
+		        //
+		        for i As integer = 0 to 3
+		          dataIndex = ( i * 4 )
+		          
+		          dim byte0 as byte = vectorPtr.Byte( dataIndex + 0 )
+		          dim byte1 as byte = vectorPtr.Byte( dataIndex + 1 )
+		          dim byte2 as byte = vectorPtr.Byte( dataIndex + 2 )
+		          dim byte3 as byte = vectorPtr.Byte( dataIndex + 3 )
+		          
+		          temp = byte0 xor byte1 xor byte2 xor byte3
+		          
+		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
+		          
+		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
+		        next
+		      end if
+		      
+		      //
+		      // AddRoundKey
+		      //
+		      vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( round * kNb * 4 )
+		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
+		    next
+		    
+		    'XorWithVector dataPtr, startAt, vectorPtr
+		    dataIndex = startAt
+		    dim vectorIndex as integer = 0
+		    dim diff as integer = lastByte - dataIndex + 1
+		    do
+		      select case diff
+		      case is >= 8
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( vectorIndex )
+		        dataIndex = dataIndex + 8
+		        vectorIndex = vectorIndex + 8
+		        diff = diff - 8
+		      case is >= 4
+		        dataPtr.UInt32( dataIndex ) = dataPtr.UInt32( dataIndex )  xor vectorPtr.UInt32( vectorIndex )
+		        dataIndex = dataIndex + 4
+		        vectorIndex = vectorIndex + 4
+		        diff = diff - 4
+		      case is >= 2
+		        dataPtr.UInt16( dataIndex ) = dataPtr.UInt16( dataIndex )  xor vectorPtr.UInt16( vectorIndex )
+		        dataIndex = dataIndex + 2
+		        vectorIndex = vectorIndex + 2
+		        diff = diff - 2
+		      case else
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex )  xor vectorPtr.Byte( vectorIndex )
+		        dataIndex = dataIndex + 1
+		        vectorIndex = vectorIndex + 1
+		        diff = diff - 1
+		      end select
+		    loop until diff = 0 or vectorIndex = kBlockLen
+		    
+		    if type = Functions.CFB then
+		      vectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
+		      vectorPtr.UInt64( 8 ) = dataPtr.UInt64( startAt + 8 )
+		    end if
+		    
+		  next
+		  
+		  if not isFinalBlock then
+		    zCurrentVector = vectorMB
+		  end if
 		  
 		End Sub
 	#tag EndMethod

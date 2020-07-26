@@ -1,28 +1,28 @@
 #tag Class
-Protected Class AES256AdditionalModesTests
-Inherits EncrypterTestGroup
+Protected Class AES128AdditionalModesTests
+Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CFBTest()
 		  dim key as string 
 		  dim data as string 
-		  dim expectedHex as string 
+		  dim expectedBase64 as string 
 		  dim vectorHex as string
 		  dim encrypted as string
 		  dim e as AES_MTC
 		  
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
-		  key = "password"
-		  data = "1234567890123456"
-		  expectedHex = "5E2BCBE12FE8F61AC97BE2CF82308DF9"
+		  key = Crypto.SHA256( "password" )
+		  data = "123456789012345612345678901234561234567890123"
+		  expectedBase64 = "TBXgDGtEFvyAA+ho5ma1VlGrM/RXIzHnkV1YS40TWSVYMb9j9b4yHMrkjFpd"
 		  
 		  e = GetAES( key )
 		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptCFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted ) , "Encrypted doesn't match 1"
 		  
 		  encrypted = e.EncryptCFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted ) , "Encrypted doesn't match 2"
 		  
 		  dim decrypted as string = e.DecryptCFB( encrypted ).DefineEncoding( data.Encoding )
 		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
@@ -34,7 +34,7 @@ Inherits EncrypterTestGroup
 
 	#tag Method, Flags = &h21
 		Private Function GetAES(key As String) As AES_MTC
-		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits256, AES_MTC.Padding.None )
+		  return new AES_MTC( key, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.None )
 		End Function
 	#tag EndMethod
 
@@ -42,24 +42,24 @@ Inherits EncrypterTestGroup
 		Sub OFBTest()
 		  dim key as string 
 		  dim data as string 
-		  dim expectedHex as string 
+		  dim expectedBase64 as string 
 		  dim vectorHex as string
 		  dim encrypted as string
 		  dim e as AES_MTC
 		  
 		  vectorHex = "000102030405060708090A0B0C0D0E0F"
-		  key = "password"
-		  data = "1234567890123456"
-		  expectedHex = "5EC76DC5A87EC9C1E135674C8EF2F466"
+		  key = Crypto.SHA256( "password" )
+		  data = "123456789012345612345678901234561234567890123"
+		  expectedBase64 = "TBXgDGtEFvyAA+ho5ma1Vq2fSWu5dSIT9LK2O3jzgTJRWyd/xY1Gmre9WrbC"
 		  
 		  e = GetAES( key )
 		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptOFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted ) , "Encrypted doesn't match 1"
 		  
 		  encrypted = e.EncryptOFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted ) , "Encrypted doesn't match 2"
 		  
 		  dim decrypted as string = e.DecryptOFB( encrypted ).DefineEncoding( data.Encoding )
 		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
