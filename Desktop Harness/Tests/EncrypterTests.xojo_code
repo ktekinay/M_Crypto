@@ -77,6 +77,20 @@ Inherits TestGroup
 		  expected.SetKey key
 		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
 		  
+		  code = M_Crypto.kCodeAES128CFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 128 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeAES128OFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 128 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  
 		  code = M_Crypto.kCodeAES192CBC
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
@@ -90,6 +104,20 @@ Inherits TestGroup
 		  expected = new AES_MTC( 192 )
 		  expected.SetKey key
 		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeAES192CFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 192 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeAES192OFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 192 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
 		  
 		  code = M_Crypto.kCodeAES256CBC
 		  actual = M_Crypto.GetEncrypter( code )
@@ -105,6 +133,20 @@ Inherits TestGroup
 		  expected.SetKey key
 		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
 		  
+		  code = M_Crypto.kCodeAES256CFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 256 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeAES256OFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new AES_MTC( 256 )
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  
 		  code = M_Crypto.kCodeBlowfishCBC
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
@@ -118,6 +160,20 @@ Inherits TestGroup
 		  expected = new Blowfish_MTC
 		  expected.SetKey key
 		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeBlowfishCFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new Blowfish_MTC
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  
+		  code = M_Crypto.kCodeBlowfishOFB
+		  actual = M_Crypto.GetEncrypter( code )
+		  actual.SetKey key
+		  expected = new Blowfish_MTC
+		  expected.SetKey key
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
 		  
 		End Sub
 	#tag EndMethod
@@ -197,19 +253,27 @@ Inherits TestGroup
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FailedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
+			Visible=false
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -217,11 +281,15 @@ Inherits TestGroup
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsRunning"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -229,48 +297,71 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="NotImplementedCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="StopTestOnFail"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -278,6 +369,7 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
