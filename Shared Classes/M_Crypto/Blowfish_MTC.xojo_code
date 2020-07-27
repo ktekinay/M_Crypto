@@ -1858,7 +1858,7 @@ Implements BcryptInterface
 	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.3", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Public
 	#tag EndConstant
 
 
@@ -1914,6 +1914,7 @@ Implements BcryptInterface
 				"0 - NullsOnly"
 				"1 - NullsWithCount"
 				"2 - PKCS"
+				"3 - None"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -1943,6 +1944,8 @@ Implements BcryptInterface
 				"0 - Default"
 				"1 - ECB"
 				"2 - CBC"
+				"3 - CFB"
+				"4 - OFB"
 			#tag EndEnumValues
 		#tag EndViewProperty
 	#tag EndViewBehavior

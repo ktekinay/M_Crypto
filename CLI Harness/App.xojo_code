@@ -353,6 +353,9 @@ Inherits ConsoleApplication
 		  case kPaddingPKCS
 		    e.PaddingMethod = M_Crypto.Encrypter.Padding.PKCS
 		    
+		  case kPaddingNone
+		    e.PaddingMethod = M_Crypto.Encrypter.Padding.None
+		    
 		  end select
 		  
 		  e.SetInitialVector Parser.StringValue( kOptionInitialVector, "" )
@@ -619,10 +622,10 @@ Inherits ConsoleApplication
 			    
 			    o = new Option( "e", kOptionEncrypter, "Encrypter to use for encrypt/decrypt", Option.OptionType.String )
 			    o.AddAllowedValue _
-			    "aes-128", "aes-128-cbc", "aes-128-ecb", _
-			    "aes-192", "aes-192-cbc", "aes-192-ecb", _
-			    "aes-256", "aes-256-cbc", "aes-256-ecb", _
-			    "bf", "bf-cbc", "bf-ecb"
+			    "aes-128", "aes-128-cbc", "aes-128-cfb", "aes-128-ecb", "aes-128-ofb", _
+			    "aes-192", "aes-192-cbc", "aes-192-cfb", "aes-192-ecb", "aes-192-ofb",_
+			    "aes-256", "aes-256-cbc", "aes-256-cfb", "aes-256-ecb", "aes-256-ofb", _
+			    "bf", "bf-cbc", "bf-cfb", "bf-ecb", "bf-ofb"
 			    parser.AddOption o
 			    
 			    o = new Option( "k", kOptionKey, "The encryption key as plain, hex, or Base64", Option.OptionType.String )
@@ -643,7 +646,7 @@ Inherits ConsoleApplication
 			    parser.AddOption o
 			    
 			    o = new Option( "p", kOptionPadding, "The padding to use [default PKCS]", Option.OptionType.String )
-			    o.AddAllowedValue kPaddingNullsOnly, kPaddingNullsWithCount, kPaddingPKCS
+			    o.AddAllowedValue kPaddingNullsOnly, kPaddingNullsWithCount, kPaddingPKCS, kPaddingNone
 			    parser.AddOption o
 			    
 			    o = new Option( "", kOptionInitialVector, "With CBC encryption, the initial vector as plain or hex", Option.OptionType.String )
@@ -797,6 +800,9 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kOptionVersion, Type = String, Dynamic = False, Default = \"version", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kPaddingNone, Type = String, Dynamic = False, Default = \"None", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kPaddingNullsOnly, Type = String, Dynamic = False, Default = \"Nulls-Only", Scope = Private
 	#tag EndConstant
 
@@ -806,7 +812,7 @@ Inherits ConsoleApplication
 	#tag Constant, Name = kPaddingPKCS, Type = String, Dynamic = False, Default = \"PKCS", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.3", Scope = Private
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Private
 	#tag EndConstant
 
 

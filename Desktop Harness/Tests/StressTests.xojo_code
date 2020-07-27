@@ -480,7 +480,7 @@ Inherits EncrypterTestGroup
 		    actual = EncodeBase64( actual, 0 )
 		    
 		    if expected = actual then
-		      Assert.Pass cipher.ToText
+		      Assert.Pass cipher.ToText + " passed"
 		    else
 		      Assert.AreEqual expected.Left( 6 ) + "..." + expected.Right( 6 ), _
 		      actual.Left( 6 ) + "..." + actual.Right( 6), _
