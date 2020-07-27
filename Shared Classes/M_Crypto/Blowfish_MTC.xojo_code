@@ -31,6 +31,9 @@ Implements BcryptInterface
 		  case Functions.CBC
 		    DecryptMbCBC data, isFinalBlock
 		    
+		  case Functions.CFB, Functions.OFB
+		    DecryptMbVector data, type, isFinalBlock
+		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
 		    
@@ -158,6 +161,9 @@ Implements BcryptInterface
 		  case Functions.CBC
 		    EncryptMbCBC data, isFinalBlock
 		    
+		  case Functions.CFB, Functions.OFB
+		    EncryptMbVector data, type, isFinalBlock
+		    
 		  case else
 		    raise new M_Crypto.UnsupportedFunctionException
 		    
@@ -192,7 +198,7 @@ Implements BcryptInterface
 
 	#tag Method, Flags = &h0
 		Sub Constructor(key as String, paddingMethod as Padding)
-		  SetBlockSize 8
+		  SetBlockSize kBlockLen
 		  self.PaddingMethod = paddingMethod
 		  
 		  // See if a key was provided
@@ -380,6 +386,91 @@ Implements BcryptInterface
 		    
 		    byteIndex = byteIndex + 8
 		  next i
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub DecryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		  #pragma unused isFinalBlock
+		  
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		    zCurrentVector = vectorMB
+		  end if
+		  
+		  if vectorMB is nil then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( 8 )
+		    zCurrentVector = vectorMB
+		  end if
+		  dim vectorPtr as ptr = vectorMB.Data
+		  
+		  dim saveVectorPtr as ptr = zSaveVector.Data
+		  
+		  dim r, l as UInt32
+		  dim dataPtr as Ptr = data.Data
+		  dim blocks as integer = data.Size \ 8
+		  dim startAt as integer
+		  dim diff as integer 
+		  dim vectorIndex as integer
+		  dim dataIndex as integer
+		  
+		  data.LittleEndian = false
+		  vectorMB.LittleEndian = false
+		  
+		  dim lastByte as integer = data.Size - 1
+		  for startAt = 0 to lastByte step kBlockLen
+		    l = vectorMB.UInt32Value( 0 )
+		    r = vectorMB.UInt32Value( 4 )
+		    
+		    Encipher( l, r )
+		    
+		    vectorMB.UInt32Value( 0 ) = l
+		    vectorMB.UInt32Value( 4 ) = r
+		    
+		    diff = lastByte + startAt + 1
+		    vectorIndex = 0
+		    dataIndex = startAt
+		    
+		    if type = Functions.CFB and diff >= kBlockLen then
+		      saveVectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
+		    end if
+		    
+		    do
+		      select case diff
+		      case is >= kBlockLen
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 0 )
+		        exit
+		      case is >= 4
+		        dataPtr.UInt32( dataIndex ) = dataPtr.UInt32( dataIndex ) xor vectorPtr.UInt32( vectorIndex )
+		        vectorIndex = vectorIndex + 4
+		        dataIndex = dataIndex + 4
+		        diff = diff - 4
+		      case is >= 2
+		        dataPtr.UInt16( dataIndex ) = dataPtr.UInt16( dataIndex ) xor vectorPtr.UInt16( vectorIndex )
+		        vectorIndex = vectorIndex + 2
+		        dataIndex = dataIndex + 2
+		        diff = diff - 2
+		      case else
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor vectorPtr.Byte( vectorIndex )
+		        vectorIndex = vectorIndex + 1
+		        dataIndex = dataIndex + 1
+		        diff = diff - 1
+		      end select
+		    loop until vectorIndex = kBlockLen
+		    
+		    if type = Functions.CFB and diff >= kBlockLen then
+		      vectorPtr.UInt64( 0 )  = saveVectorPtr.UInt64( 0 )
+		    end if
+		  next 
 		  
 		End Sub
 	#tag EndMethod
@@ -611,6 +702,85 @@ Implements BcryptInterface
 		    
 		    byteIndex = byteIndex + 8
 		  next i
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub EncryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		  #pragma unused isFinalBlock
+		  
+		  #if not DebugBuild
+		    #pragma BackgroundTasks False
+		    #pragma BoundsChecking False
+		    #pragma NilObjectChecking False
+		    #pragma StackOverflowChecking False
+		  #endif
+		  
+		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		    zCurrentVector = vectorMB
+		  end if
+		  
+		  if vectorMB is nil then
+		    vectorMB = new Xojo.Core.MutableMemoryBlock( 8 )
+		    zCurrentVector = vectorMB
+		  end if
+		  dim vectorPtr as ptr = vectorMB.Data
+		  
+		  dim r, l as UInt32
+		  dim dataPtr as Ptr = data.Data
+		  dim blocks as integer = data.Size \ 8
+		  dim startAt as integer
+		  dim diff as integer 
+		  dim vectorIndex as integer
+		  dim dataIndex as integer
+		  
+		  data.LittleEndian = false
+		  vectorMB.LittleEndian = false
+		  
+		  dim lastByte as integer = data.Size - 1
+		  for startAt = 0 to lastByte step kBlockLen
+		    l = vectorMB.UInt32Value( 0 )
+		    r = vectorMB.UInt32Value( 4 )
+		    
+		    Encipher( l, r )
+		    
+		    vectorMB.UInt32Value( 0 ) = l
+		    vectorMB.UInt32Value( 4 ) = r
+		    
+		    diff = lastByte + startAt + 1
+		    vectorIndex = 0
+		    dataIndex = startAt
+		    
+		    do
+		      select case diff
+		      case is >= kBlockLen
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 0 )
+		        exit
+		      case is >= 4
+		        dataPtr.UInt32( dataIndex ) = dataPtr.UInt32( dataIndex ) xor vectorPtr.UInt32( vectorIndex )
+		        vectorIndex = vectorIndex + 4
+		        dataIndex = dataIndex + 4
+		        diff = diff - 4
+		      case is >= 2
+		        dataPtr.UInt16( dataIndex ) = dataPtr.UInt16( dataIndex ) xor vectorPtr.UInt16( vectorIndex )
+		        vectorIndex = vectorIndex + 2
+		        dataIndex = dataIndex + 2
+		        diff = diff - 2
+		      case else
+		        dataPtr.Byte( dataIndex ) = dataPtr.Byte( dataIndex ) xor vectorPtr.Byte( vectorIndex )
+		        vectorIndex = vectorIndex + 1
+		        dataIndex = dataIndex + 1
+		        diff = diff - 1
+		      end select
+		    loop until vectorIndex = kBlockLen
+		    
+		    if type = Functions.CFB and diff >= kBlockLen then
+		      vectorPtr.UInt64( 0 )  = dataPtr.UInt64( startAt )
+		    end if
+		  next 
+		  
 		End Sub
 	#tag EndMethod
 
@@ -1680,6 +1850,9 @@ Implements BcryptInterface
 
 
 	#tag Constant, Name = BLF_N, Type = Double, Dynamic = False, Default = \"16", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kBlockLen, Type = Double, Dynamic = False, Default = \"8", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private

@@ -684,6 +684,8 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim temp As byte 
 		  dim temp2 as byte
+		  dim diff as integer
+		  dim vectorIndex as integer
 		  
 		  //
 		  // Used for ShiftRows
@@ -839,18 +841,24 @@ Inherits M_Crypto.Encrypter
 		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
 		    next
 		    
-		    dim diff as integer = lastByte - startAt + 1
+		    diff = lastByte - startAt + 1
 		    
-		    if type = Functions.CFB and diff >= 16 then
+		    if type = Functions.CFB and diff >= kBlockLen then
 		      saveVectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
 		      saveVectorPtr.UInt64( 8 ) = dataPtr.UInt64( startAt + 8 )
 		    end if
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
 		    dataIndex = startAt
-		    dim vectorIndex as integer = 0
+		    vectorIndex = 0
 		    do
 		      select case diff
+		      case is >= kBlockLen
+		        // Optimization to save a loop
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( 0 )
+		        dataIndex = dataIndex + 8
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( 8 )
+		        exit
 		      case is >= 8
 		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( vectorIndex )
 		        dataIndex = dataIndex + 8
@@ -872,9 +880,9 @@ Inherits M_Crypto.Encrypter
 		        vectorIndex = vectorIndex + 1
 		        diff = diff - 1
 		      end select
-		    loop until diff = 0 or vectorIndex = kBlockLen
+		    loop until vectorIndex = kBlockLen
 		    
-		    if type = Functions.CFB then
+		    if type = Functions.CFB and diff >= kBlockLen then
 		      vectorPtr.UInt64( 0 ) = saveVectorPtr.UInt64( 0 )
 		      vectorPtr.UInt64( 8 ) = saveVectorPtr.UInt64( 8 )
 		    end if
@@ -1284,6 +1292,8 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim temp As byte 
 		  dim temp2 as byte
+		  dim vectorIndex as integer
+		  dim diff as integer
 		  
 		  //
 		  // Used for ShiftRows
@@ -1441,10 +1451,16 @@ Inherits M_Crypto.Encrypter
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
 		    dataIndex = startAt
-		    dim vectorIndex as integer = 0
-		    dim diff as integer = lastByte - dataIndex + 1
+		    vectorIndex = 0
+		    diff = lastByte - dataIndex + 1
 		    do
 		      select case diff
+		      case is >= kBlockLen
+		        // Optimization to save a loop
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( 0 )
+		        dataIndex = dataIndex + 8
+		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( 8 )
+		        exit
 		      case is >= 8
 		        dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex )  xor vectorPtr.UInt64( vectorIndex )
 		        dataIndex = dataIndex + 8
@@ -1466,9 +1482,9 @@ Inherits M_Crypto.Encrypter
 		        vectorIndex = vectorIndex + 1
 		        diff = diff - 1
 		      end select
-		    loop until diff = 0 or vectorIndex = kBlockLen
+		    loop until vectorIndex = kBlockLen
 		    
-		    if type = Functions.CFB then
+		    if type = Functions.CFB and diff >= kBlockLen then
 		      vectorPtr.UInt64( 0 ) = dataPtr.UInt64( startAt )
 		      vectorPtr.UInt64( 8 ) = dataPtr.UInt64( startAt + 8 )
 		    end if

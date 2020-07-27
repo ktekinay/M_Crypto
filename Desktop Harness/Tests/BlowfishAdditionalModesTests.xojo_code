@@ -5,24 +5,24 @@ Inherits TestGroup
 		Sub CFBTest()
 		  dim key as string 
 		  dim data as string 
-		  dim expectedHex as string 
+		  dim expectedBase64 as string 
 		  dim vectorHex as string
 		  dim encrypted as string
 		  dim e as Blowfish_MTC
 		  
 		  vectorHex = "0001020304050607"
-		  key = "password"
-		  data = "1234567890123456"
-		  expectedHex = "5f53f5e7ce80fd632a6938ab7bbbd1bd"
+		  key = DecodeHex( "12345678901234567890123456789012" )
+		  data = "The quick brown fox jumps over the lazy dog."
+		  expectedBase64 = "qxHSocLmHbIkYUk4pq0Q27gfN/b8TT+Y7hUHTiDubEGZabLjE1UC7PctnyA="
 		  
 		  e = GetBF( key )
 		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptCFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted, 0 ), "Encrypted doesn't match 1"
 		  
 		  encrypted = e.EncryptCFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted, 0 ), "Encrypted doesn't match 2"
 		  
 		  dim decrypted as string = e.DecryptCFB( encrypted ).DefineEncoding( data.Encoding )
 		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
@@ -43,24 +43,24 @@ Inherits TestGroup
 		Sub OFBTest()
 		  dim key as string 
 		  dim data as string 
-		  dim expectedHex as string 
+		  dim expectedBase64 as string 
 		  dim vectorHex as string
 		  dim encrypted as string
 		  dim e as Blowfish_MTC
 		  
 		  vectorHex = "0001020304050607"
-		  key = "password"
-		  data = "1234567890123456"
-		  expectedHex = "5ff93ed656c17da2c21e56cb68c4a825"
+		  key = DecodeHex( "12345678901234567890123456789012" )
+		  data = "The quick brown fox jumps over the lazy dog."
+		  expectedBase64 = "qxHSocLmHbKRA26X8Cgds8/sZ7x0c0CUCmZ+l0aymr3G43pIN0iUk1+GXb8="
 		  
 		  e = GetBF( key )
 		  e.SetInitialVector vectorHex
 		  
 		  encrypted = e.EncryptOFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 1"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted, 0 ), "Encrypted doesn't match 1"
 		  
 		  encrypted = e.EncryptOFB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ) , "Encrypted doesn't match 2"
+		  Assert.AreEqual expectedBase64, EncodeBase64( encrypted, 0 ), "Encrypted doesn't match 2"
 		  
 		  dim decrypted as string = e.DecryptOFB( encrypted ).DefineEncoding( data.Encoding )
 		  Assert.AreEqual data, decrypted, "Decrypted doesn't match"
