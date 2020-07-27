@@ -367,7 +367,6 @@ Inherits EncrypterTestGroup
 		  const kKeyHex as string = "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"
 		  const kIVHex as string = "0123456789abcdeffedcba9876543210"
 		  
-		  dim key as string = DecodeHex( kKeyHex )
 		  dim iv as string = DecodeHex( kIVHex )
 		  dim data as string = kLongData
 		  while ( data.Len mod 16 ) <> 0 
@@ -487,6 +486,48 @@ Inherits EncrypterTestGroup
 		      cipher.ToText
 		    end if
 		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CrashTest()
+		  //
+		  // This test runs through the different encrypters with various sizes of data
+		  // just to make sure we don't crash. Just finishing the test is considered a pass.
+		  //
+		  
+		  const kPwd as string = "12345678901234567890"
+		  
+		  dim encrypters() as M_Crypto.Encrypter
+		  
+		  encrypters.Append new AES_MTC( kPwd, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.PKCS )
+		  encrypters( encrypters.Ubound ).UseFunction = AES_MTC.Functions.CBC
+		  encrypters.Append new AES_MTC( kPwd, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.None )
+		  encrypters( encrypters.Ubound ).UseFunction = AES_MTC.Functions.OFB
+		  
+		  encrypters.Append new Blowfish_MTC( kPwd, AES_MTC.Padding.PKCS )
+		  encrypters( encrypters.Ubound ).UseFunction = Blowfish_MTC.Functions.CBC
+		  encrypters.Append new Blowfish_MTC( kPwd, Blowfish_MTC.Padding.None )
+		  encrypters( encrypters.Ubound ).UseFunction = Blowfish_MTC.Functions.OFB
+		  
+		  const kRounds as integer = 100
+		  const kMinBytes as integer = 5
+		  const kMaxBytes as integer = 60
+		  
+		  for round as integer = 1 to kRounds
+		    for bytes as integer = kMinBytes to kMaxBytes
+		      dim data as string = Crypto.GenerateRandomBytes( bytes )
+		      dim dataHex as string = EncodeHex( data )
+		      
+		      for each e as M_Crypto.Encrypter in encrypters
+		        Assert.Message "Round: " + round.ToText + ", bytes: " + bytes.ToText + ", " + _
+		        e.Code.ToText + "/" + e.PaddingString.ToText
+		        dim result as string = e.Decrypt( e.Encrypt( data ) )
+		        Assert.AreEqual dataHex, EncodeHex( result ), e.Code.ToText + "/" + e.PaddingString.ToText
+		      next e
+		    next bytes
+		  next round
 		  
 		End Sub
 	#tag EndMethod

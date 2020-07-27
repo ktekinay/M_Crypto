@@ -417,7 +417,6 @@ Implements BcryptInterface
 		  
 		  dim r, l as UInt32
 		  dim dataPtr as Ptr = data.Data
-		  dim blocks as integer = data.Size \ 8
 		  dim startAt as integer
 		  dim diff as integer 
 		  dim vectorIndex as integer
@@ -730,7 +729,6 @@ Implements BcryptInterface
 		  
 		  dim r, l as UInt32
 		  dim dataPtr as Ptr = data.Data
-		  dim blocks as integer = data.Size \ 8
 		  dim startAt as integer
 		  dim diff as integer 
 		  dim vectorIndex as integer

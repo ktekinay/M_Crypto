@@ -14,11 +14,13 @@ Inherits TestController
 		  group = new AES128NullsWithCountTests( self, "AES-128-NullsWithCount" )
 		  group = new AES128PKCSTests( self, "AES-128-PKCS" )
 		  group = new AES128AdditionalModesTests( self, "AES-128-Addl-Modes" )
+		  group = new AES256NoneTests( self, "AES-256-None" )
 		  group = new AES256NullsTests( self, "AES-256-Nulls" )
 		  group = new AES256PKCSTests( self, "AES-256-PKCS" )
 		  
 		  group = new BcryptTests( self, "Bcrypt" )
 		  group = new BlowfishAdditionalModesTests( self, "Blowfish-Addl-Modes" )
+		  group = new BlowfishNoneTests( self, "Blowfish-None" )
 		  group = new BlowfishPKCS5Tests( self, "Blowfish-PKCS" )
 		  
 		  group = new EncrypterTests( self, "Encrypter" )

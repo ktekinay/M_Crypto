@@ -507,6 +507,42 @@ Protected Class Encrypter
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  dim code as string
+			  if self isa Blowfish_MTC then
+			    code = "bf"
+			  elseif self isa AES_MTC then
+			    code = "aes-" + AES_MTC( self ).Bits.ToString
+			  else
+			    code = "unknown"
+			  end if
+			  
+			  select case UseFunction
+			  case Functions.Default
+			    //
+			    // Do nothing
+			    //
+			  case Functions.CBC
+			    code = code + "-cbc"
+			  case Functions.CFB
+			    code = code + "-cfb"
+			  case Functions.ECB
+			    code = code + "-ecb"
+			  case Functions.OFB
+			    code = code + "-ofb"
+			  case else
+			    code = code + "-unknown"
+			  end select
+			  
+			  return code
+			  
+			End Get
+		#tag EndGetter
+		Code As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  return MemoryBlockToString( zCurrentVector )
 			  
 			End Get
@@ -521,6 +557,26 @@ Protected Class Encrypter
 	#tag Property, Flags = &h0
 		PaddingMethod As Padding
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  select case PaddingMethod
+			  case Padding.None
+			    return "none"
+			  case Padding.NullsOnly
+			    return "nulls"
+			  case Padding.NullsWithCount
+			    return "nullswithcount"
+			  case Padding.PKCS
+			    return "pkcs"
+			  case else
+			    return "unknown"
+			  end select
+			End Get
+		#tag EndGetter
+		PaddingString As String
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0, Description = 5768656E207365742C20456E637279707420616E6420446563727970742077696C6C2075736520746865207370656369666965642066756E6374696F6E
 		UseFunction As Functions
@@ -659,6 +715,7 @@ Protected Class Encrypter
 				"0 - NullsOnly"
 				"1 - NullsWithCount"
 				"2 - PKCS"
+				"3 - None"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -688,7 +745,25 @@ Protected Class Encrypter
 				"0 - Default"
 				"1 - ECB"
 				"2 - CBC"
+				"3 - CFB"
+				"4 - OFB"
 			#tag EndEnumValues
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Code"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="PaddingString"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
