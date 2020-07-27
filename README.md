@@ -350,7 +350,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.6__ (___)
+__2.6__ (Jul. 27, 2020)
 
 - Added CFB and OFB modes.
 - Added `Encrypter.Code` and `.PaddingString` computed properties.
