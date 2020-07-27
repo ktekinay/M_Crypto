@@ -280,7 +280,7 @@ The is the default method for AES and Blowfish.
 
 While ECB and CBC modes require exact block sizes, CFB and OFB modes do not. (They accomplish this by encrypting the initial and subsequent vectors rather than the data directly.) In these modes only, you may specify no padding and the encrypted output will be exactly the size of your data.
 
-Without padding, decrypting with any password produce output and will not result in an exception..
+Without padding, decrypting with any password will produce output without raising an exception.
 
 ## Compatibility
 
