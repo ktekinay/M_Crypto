@@ -56,6 +56,50 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CodeAndPaddingTest()
+		  dim expectedCodes() as string = array( _
+		  M_Crypto.kCodeAES128CBC, _
+		  M_Crypto.kCodeAES128CFB, _
+		  M_Crypto.kCodeAES128ECB, _
+		  M_Crypto.kCodeAES128OFB, _
+		  _
+		  M_Crypto.kCodeAES192CBC, _
+		  M_Crypto.kCodeAES192CFB, _
+		  M_Crypto.kCodeAES192ECB, _
+		  M_Crypto.kCodeAES192OFB, _
+		  _
+		  M_Crypto.kCodeAES256CBC, _
+		  M_Crypto.kCodeAES256CFB, _
+		  M_Crypto.kCodeAES256ECB, _
+		  M_Crypto.kCodeAES256OFB, _
+		  _
+		  M_Crypto.kCodeBlowfishCBC, _
+		  M_Crypto.kCodeBlowfishCFB, _
+		  M_Crypto.kCodeBlowfishECB, _
+		  M_Crypto.kCodeBlowfishOFB _
+		  )
+		  
+		  dim expectedPaddings() as pair = array( _
+		  "none" : M_Crypto.Encrypter.Padding.None, _
+		  "nulls" : M_Crypto.Encrypter.Padding.NullsOnly, _
+		  "nullswithcount" : M_Crypto.Encrypter.Padding.NullsWithCount, _
+		  "pkcs" : M_Crypto.Encrypter.Padding.PKCS _
+		  )
+		  
+		  dim e as M_Crypto.Encrypter
+		  
+		  for each code as string in expectedCodes
+		    for each pad as pair in expectedPaddings
+		      e = M_Crypto.GetEncrypter( code )
+		      Assert.AreEqual code, e.Code
+		      Assert.AreEqual pad.Left.StringValue, e.PaddingString
+		    next
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub GetFromCodeTest()
 		  dim actual as M_Crypto.Encrypter
 		  dim expected as M_Crypto.Encrypter
