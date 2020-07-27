@@ -183,6 +183,12 @@ Protected Module M_Crypto
 		    case "ecb"
 		      result.UseFunction = Encrypter.Functions.ECB
 		      
+		    case "cfb"
+		      result.UseFunction = Encrypter.Functions.CFB
+		      
+		    case "ofb"
+		      result.UseFunction = Encrypter.Functions.OFB
+		      
 		    end select
 		  end if
 		  
@@ -214,31 +220,55 @@ Protected Module M_Crypto
 	#tag Constant, Name = kCodeAES128CBC, Type = String, Dynamic = False, Default = \"aes-128-cbc", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kCodeAES128CFB, Type = String, Dynamic = False, Default = \"aes-128-cfb", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = kCodeAES128ECB, Type = String, Dynamic = False, Default = \"aes-128-ecb", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kCodeAES128OFB, Type = String, Dynamic = False, Default = \"aes-128-ofb", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = kCodeAES192CBC, Type = String, Dynamic = False, Default = \"aes-192-cbc", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kCodeAES192CFB, Type = String, Dynamic = False, Default = \"aes-192-cfb", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = kCodeAES192ECB, Type = String, Dynamic = False, Default = \"aes-192-ecb", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kCodeAES192OFB, Type = String, Dynamic = False, Default = \"aes-192-ofb", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = kCodeAES256CBC, Type = String, Dynamic = False, Default = \"aes-256-cbc", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kCodeAES256CFB, Type = String, Dynamic = False, Default = \"aes-256-cfb", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = kCodeAES256ECB, Type = String, Dynamic = False, Default = \"aes-256-ecb", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kCodeAES256OFB, Type = String, Dynamic = False, Default = \"aes-256-ofb", Scope = Protected
 	#tag EndConstant
 
 	#tag Constant, Name = kCodeBlowfishCBC, Type = String, Dynamic = False, Default = \"bf-cbc", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kCodeBlowfishCFB, Type = String, Dynamic = False, Default = \"bf-cfb", Scope = Protected
+	#tag EndConstant
+
 	#tag Constant, Name = kCodeBlowfishECB, Type = String, Dynamic = False, Default = \"bf-ecb", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = kRxEncryptCode, Type = String, Dynamic = False, Default = \"(\?x)\n\\A\n(\?|\n  (aes) (\?:-\?(\?:(128|192|256)))\?\n  | (bf) \n  | (blowfish)\n)\n\\b \n(\?:-(cbc|ecb))\?\n\\z", Scope = Private
+	#tag Constant, Name = kCodeBlowfishOFB, Type = String, Dynamic = False, Default = \"bf-ofb", Scope = Protected
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.3", Scope = Protected
+	#tag Constant, Name = kRxEncryptCode, Type = String, Dynamic = False, Default = \"(\?x)\n\\A\n(\?|\n  (aes) (\?:-\?(\?:(128|192|256)))\?\n  | (bf) \n  | (blowfish)\n)\n\\b \n(\?:-(cbc|ecb|cfb|ofb))\?\n\\z", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Protected
 	#tag EndConstant
 
 

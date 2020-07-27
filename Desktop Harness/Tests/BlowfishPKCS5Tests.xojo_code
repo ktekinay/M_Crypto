@@ -188,6 +188,46 @@ Inherits EncrypterTestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub EncryptOFBStreamTest()
+		  dim key as string 
+		  dim data as string 
+		  dim expected as string 
+		  dim encrypted as string
+		  dim decrypted as string
+		  dim e as Blowfish_MTC
+		  
+		  key = Crypto.MD5( "password" )
+		  data = "12345678901234567890"
+		  
+		  dim dataSize as integer = data.LenB
+		  Assert.Message "Data size = " + dataSize.ToText
+		  
+		  expected = "0AF78AD07AB67849C4638590AA607A0B3D4B8B18CFF83D26"
+		  
+		  e = GetBF( key )
+		  
+		  dim sw as new Stopwatch_MTC
+		  
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    encrypted = encrypted + e.EncryptOFB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
+		  sw.Reset
+		  sw.Start
+		  for index as integer = 1 to data.LenB step e.BlockSize
+		    decrypted = decrypted + e.DecryptOFB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
+		  next
+		  sw.Stop
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function GetBF(key As String) As Blowfish_MTC
 		  return new Blowfish_MTC( key, Blowfish_MTC.Padding.PKCS )

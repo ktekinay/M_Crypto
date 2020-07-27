@@ -21,6 +21,11 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CloneDuringStreamingTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  
+		  if e is nil then
+		    return
+		  end if
+		  
 		  e.SetInitialVector "1234567890123456"
 		  
 		  dim data as string = kLongData.LeftB( 64 )
@@ -73,6 +78,11 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CloneTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  
+		  if e is nil then
+		    return
+		  end if
+		  
 		  e.UseFunction = M_Crypto.Encrypter.Functions.CBC
 		  
 		  dim clone as M_Crypto.Encrypter = CloneEncrypter( e )
