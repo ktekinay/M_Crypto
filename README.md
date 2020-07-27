@@ -23,6 +23,7 @@ An encryption library for Xojo that implements Blowfish, AES, Bcrypt, Scrypt, SH
 	- [NullsOnly](#nullsonly)
 	- [NullsWithCount](#nullswithcount)
 	- [PKCS](#pkcs)
+	- [None](#no-padding)
 - [Compatibility](#compatibility)
 	- [Postgres](#postgres)
 	- [JavaScript Crypto Module](#javascript-crypto-module)
@@ -275,7 +276,7 @@ Because a pad is always expected, the lack of this pad will raise an M_Crypto.In
 
 The is the default method for AES and Blowfish.
 
-### None
+### <a name='no-padding'></a>None
 
 While ECB and CBC modes require exact block sizes, CFB and OFB modes do not. (They accomplish this by encrypting the initial and subsequent vectors rather than the data directly.) In these modes only, you may specify no padding and the encrypted output will be exactly the size of your data.
 
