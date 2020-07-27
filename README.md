@@ -23,9 +23,11 @@ An encryption library for Xojo that implements Blowfish, AES, Bcrypt, Scrypt, SH
 	- [NullsOnly](#nullsonly)
 	- [NullsWithCount](#nullswithcount)
 	- [PKCS](#pkcs)
+	- [None](#no-padding)
 - [Compatibility](#compatibility)
 	- [Postgres](#postgres)
 	- [JavaScript Crypto Module](#javascript-crypto-module)
+	- [openssl](#openssl)
 - [Other](#other)
 - [A Word About Threads](#about-threads)
 - [License](#license)
@@ -242,19 +244,19 @@ The project includes `SHA256Digest_MTC` and `SHA512Digest_MTC` classes. These wi
 
 If you want to reuse the object for a new hash, use the `Reset` method. See the [example](#hash-example) above in [Examples](#examples).
 
-## <a name='about-ecb-etc'></a>About ECB, CBC, and the Vector
+## <a name='about-ecb-etc'></a>About ECB and the Vector
 
 ECB encryption treats each block of data individually. This means that repeating blocks will be encrypted in the same way. For example, using Blowfish to encrypt the repeating data "12345678ABCDEFGH12345678" will lead to this result as hex: "DA6003664651D153 805D00DD8BF2133B DA6003664651D153". Notice the first 8 bytes are identical the last 8 bytes.
 
-CBC will chain encryption so the result of the each block will affect the next block. Using CBC and no vector in the above example will result in: "DA6003664651D153 2066457C3AE99820 5C937C55EE7EDEF0". Notice that the first block is identical to that produced by ECB but the subsequent blocks are different.
+The other modes (CBC, CFB, and OFB) will chain encryption so the result of the each block will affect the next block. Using CBC and no vector in the above example will result in: "DA6003664651D153 2066457C3AE99820 5C937C55EE7EDEF0". Notice that the first block is identical to that produced by ECB but the subsequent blocks are different.
 
-When using CBC, you can affect the result of the first block by specifying an initial vector, a number of bytes equal to the block size of the Encrypter (8 bytes for Blowfish, 16 bytes for AES). The vector is ignored when using ECB.
+When using the other modes, you can affect the result of the first block by specifying an initial vector, a number of bytes equal to the block size of the Encrypter (8 bytes for Blowfish, 16 bytes for AES). The vector is ignored when using ECB.
 
 ## <a name='about-padding'></a>About Padding
 
-Encryption algorithms require that data be given in multiples of known block sizes (8 bytes for Blowfish, 16 bytes for AES), but because the real world is rarely that neat, data must be padded to the required bytes.
+Block encryption algorithms require that data be given in multiples of known block sizes (8 bytes for Blowfish, 16 bytes for AES), but because the real world is rarely that neat, data must be padded to the required bytes.
 
-M_Crypto offers three methods for padding that come with their own rules.
+M_Crypto offers padding that come with their own rules.
 
 ### NullsOnly
 
@@ -274,6 +276,12 @@ Because a pad is always expected, the lack of this pad will raise an M_Crypto.In
 
 The is the default method for AES and Blowfish.
 
+### <a name='no-padding'></a>None
+
+While ECB and CBC modes require exact block sizes, CFB and OFB modes do not. (They accomplish this by encrypting the initial and subsequent vectors rather than the data directly.) In these modes only, you may specify no padding and the encrypted output will be exactly the size of your data.
+
+Without padding, decrypting with any password produce output and will not result in an exception..
+
 ## Compatibility
 
 The output of the CBC and ECB functions using PKCS padding will be identical to that of other platforms.
@@ -281,10 +289,9 @@ The output of the CBC and ECB functions using PKCS padding will be identical to 
 ### Postgres
 
 ```
-SELECT encrypt('some data', 'password', 'bf-cbc/pad:pkcs')::TEXT;
--- \xd9b0a79853f13960fcee3cae16e27884
 SELECT encrypt_iv('some data', 'password', 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT; -- AES-128
 -- \xddf9f81ff318e5d0596be0b24ce801dd
+
 SELECT encrypt_iv('some data', digest('password', 'SHA256'), 'I need 16 bytes!', 'aes-cbc/pad:pkcs')::TEXT; -- AES-256
 -- \x7d0fd83942c4948081213c8526af8af3
 ```
@@ -300,6 +307,20 @@ AES: Requires a key the size of the specified bits, i.e., AES-128 needs 16 bytes
 Blowfish ECB: Will take any key but it will apply an MD5 hash to it internally.
 
 Blowfish CBC: Will take any key.
+
+### openssl
+
+openssl encrypts and decrypts data using a wide variety of algorithms. In general, to match the output, you will need to specify the exact key as hex. For example:
+
+```
+# Blowfish
+echo -n 'some data' | openssl enc -e -bf-cbc -a -A -nosalt -iv 0001020304050607 -K 000102030405060708090a0b0c0d0e0f
+# HiFnMV4So2mpOl3vqzQaYQ==
+
+# AES-128
+echo -n 'some data' | openssl enc -e -aes-128-cbc -a -A -nosalt -iv 000102030405060708090a0b0c0d0e0f -K 000102030405060708090a0b0c0d0e0f
+# Zzs+Pe2dhMCc1tflDadoaA==
+```
 
 ## Other
 
@@ -328,6 +349,11 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.6__ (___)
+
+- Added CFB and OFB modes.
+- Added `Encrypter.Code` and `.PaddingString` computed properties.
 
 __2.5.3__ (Mar. 22, 2020)
 

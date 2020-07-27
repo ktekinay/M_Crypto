@@ -349,6 +349,206 @@ Inherits EncrypterTestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CompareToOpenSSLTest()
+		  //
+		  // Compares results to openssl
+		  //
+		  
+		  #if TargetWindows then
+		    //
+		    // Need openssl
+		    //
+		    return
+		  #endif
+		  
+		  //
+		  // We are going to use the same key and iv
+		  //
+		  const kKeyHex as string = "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"
+		  const kIVHex as string = "0123456789abcdeffedcba9876543210"
+		  
+		  dim iv as string = DecodeHex( kIVHex )
+		  dim data as string = kLongData
+		  while ( data.Len mod 16 ) <> 0 
+		    data = data + str( data.Len mod 16 )
+		  wend
+		  
+		  //
+		  // Get the openssl tool
+		  //
+		  dim openssl as string = GetCommand( "openssl" )
+		  Assert.IsTrue openssl <> "", "Cannot locate openssl"
+		  if openssl = "" then
+		    return
+		  end if
+		  
+		  Assert.Pass "Using " + openssl.ToText
+		  
+		  dim b64 as string = GetCommand( "base64" )
+		  Assert.IsTrue b64 <> "", "Cannot locate base64"
+		  if b64 = "" then
+		    return
+		  end if
+		  
+		  //
+		  // Set standard switches
+		  //
+		  dim baseCmd as string = _
+		  "echo -n '" + EncodeBase64( data, 0 ) + "' | " + _
+		  b64 + " --decode | " + _
+		  openssl + " enc -nosalt -nopad -a -A "
+		  
+		  //
+		  // Data will be given in Base64, and
+		  // results will be in Base64
+		  //
+		  
+		  dim ciphers() as string = array( _
+		  M_Crypto.kCodeBlowfishCFB, _
+		  M_Crypto.kCodeBlowfishCBC, _
+		  M_Crypto.kCodeBlowfishECB, _
+		  M_Crypto.kCodeBlowfishOFB, _
+		  _
+		  M_Crypto.kCodeAES128CBC, _
+		  M_Crypto.kCodeAES128CFB, _
+		  M_Crypto.kCodeAES128ECB, _
+		  M_Crypto.kCodeAES128OFB, _
+		  _
+		  M_Crypto.kCodeAES192CBC, _
+		  M_Crypto.kCodeAES192CFB, _
+		  M_Crypto.kCodeAES192ECB, _
+		  M_Crypto.kCodeAES192OFB, _
+		  _
+		  M_Crypto.kCodeAES256CBC, _
+		  M_Crypto.kCodeAES256CFB, _
+		  M_Crypto.kCodeAES256ECB, _
+		  M_Crypto.kCodeAES256OFB _
+		  )
+		  
+		  dim sh as new Shell
+		  
+		  for each cipher as string in ciphers
+		    dim e as M_Crypto.Encrypter = M_Crypto.GetEncrypter( cipher )
+		    e.PaddingMethod = M_Crypto.Encrypter.Padding.NullsOnly
+		    
+		    dim cmd as string = baseCmd + "-" + cipher
+		    if cipher.InStr( "ecb" ) = 0 then
+		      iv = kIVHex.Left( e.BLockSize * 2 )
+		      dim ivSwitch as string = " -iv " + iv
+		      cmd = cmd + ivSwitch
+		    else
+		      iv = ""
+		    end if
+		    
+		    dim thisKey as string
+		    if cipher.Left( 3 ) = "bf-" then
+		      thisKey = kKeyHex.Left( 32 )
+		    elseif cipher.InStr( "128" ) <> 0 then
+		      thisKey = kKeyHex.Left( 32 )
+		    elseif cipher.InStr( "192" ) <> 0 then
+		      thisKey = kKeyHex.Left( 48 )
+		    else 
+		      thisKey = kKeyHex
+		    end if
+		    
+		    cmd = cmd + " -K " + thisKey
+		    
+		    sh.Execute cmd
+		    if sh.ErrorCode <> 0 then
+		      Assert.Fail "Could not execute cipher " + cipher.ToText
+		      continue
+		    end if
+		    
+		    dim expected as string = sh.Result.DefineEncoding( Encodings.UTF8 ).Trim
+		    expected = ReplaceLineEndings( expected, "" )
+		    
+		    e.SetKey DecodeHex( thisKey )
+		    e.SetInitialVector iv
+		    
+		    dim actual as string
+		    #pragma BreakOnExceptions false
+		    try
+		      actual = e.Encrypt( data )
+		    catch err as M_Crypto.UnsupportedFunctionException
+		      Assert.Fail cipher.ToText + " not implemented"
+		      #pragma BreakOnExceptions default
+		      continue
+		    end try
+		    #pragma BreakOnExceptions default 
+		    
+		    actual = EncodeBase64( actual, 0 )
+		    
+		    if expected = actual then
+		      Assert.Pass cipher.ToText + " passed"
+		    else
+		      Assert.AreEqual expected.Left( 6 ) + "..." + expected.Right( 6 ), _
+		      actual.Left( 6 ) + "..." + actual.Right( 6), _
+		      cipher.ToText
+		    end if
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CrashTest()
+		  //
+		  // This test runs through the different encrypters with various sizes of data
+		  // just to make sure we don't crash. Just finishing the test is considered a pass.
+		  //
+		  
+		  const kPwd as string = "12345678901234567890"
+		  
+		  dim encrypters() as M_Crypto.Encrypter
+		  
+		  encrypters.Append new AES_MTC( kPwd, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.PKCS )
+		  encrypters( encrypters.Ubound ).UseFunction = AES_MTC.Functions.CBC
+		  encrypters.Append new AES_MTC( kPwd, AES_MTC.EncryptionBits.Bits128, AES_MTC.Padding.None )
+		  encrypters( encrypters.Ubound ).UseFunction = AES_MTC.Functions.OFB
+		  
+		  encrypters.Append new Blowfish_MTC( kPwd, AES_MTC.Padding.PKCS )
+		  encrypters( encrypters.Ubound ).UseFunction = Blowfish_MTC.Functions.CBC
+		  encrypters.Append new Blowfish_MTC( kPwd, Blowfish_MTC.Padding.None )
+		  encrypters( encrypters.Ubound ).UseFunction = Blowfish_MTC.Functions.OFB
+		  
+		  const kRounds as integer = 100
+		  const kMinBytes as integer = 5
+		  const kMaxBytes as integer = 60
+		  
+		  for round as integer = 1 to kRounds
+		    for bytes as integer = kMinBytes to kMaxBytes
+		      dim data as string = Crypto.GenerateRandomBytes( bytes )
+		      dim dataHex as string = EncodeHex( data )
+		      
+		      for each e as M_Crypto.Encrypter in encrypters
+		        Assert.Message "Round: " + round.ToText + ", bytes: " + bytes.ToText + ", " + _
+		        e.Code.ToText + "/" + e.PaddingString.ToText
+		        dim result as string = e.Decrypt( e.Encrypt( data ) )
+		        Assert.AreEqual dataHex, EncodeHex( result ), e.Code.ToText + "/" + e.PaddingString.ToText
+		      next e
+		    next bytes
+		  next round
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetCommand(cmd As String) As String
+		  dim sh as new Shell
+		  sh.Execute "bash -l -c 'which " + cmd + "'"
+		  if sh.ErrorCode <> 0 then
+		    return ""
+		  end if
+		  
+		  dim tool as string = sh.Result.DefineEncoding( Encodings.UTF8 ).Trim
+		  tool = ReplaceLineEndings( tool, &uA )
+		  tool = tool.NthField( &uA, tool.CountFields( &uA ) )
+		  return tool
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub LongBlockEncryptTest()
 		  self.StopTestOnFail = true
 		  

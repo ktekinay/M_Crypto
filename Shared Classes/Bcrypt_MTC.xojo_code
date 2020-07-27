@@ -422,7 +422,7 @@ Protected Module Bcrypt_MTC
 	#tag Constant, Name = kDebug, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.5.3", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Protected
 	#tag EndConstant
 
 
