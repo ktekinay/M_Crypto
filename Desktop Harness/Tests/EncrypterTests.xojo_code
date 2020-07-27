@@ -91,6 +91,7 @@ Inherits TestGroup
 		  for each code as string in expectedCodes
 		    for each pad as pair in expectedPaddings
 		      e = M_Crypto.GetEncrypter( code )
+		      e.PaddingMethod = pad.Right
 		      Assert.AreEqual code, e.Code
 		      Assert.AreEqual pad.Left.StringValue, e.PaddingString
 		    next
