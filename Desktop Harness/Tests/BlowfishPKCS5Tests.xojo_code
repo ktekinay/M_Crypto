@@ -51,7 +51,7 @@ Inherits EncrypterTestGroup
 		  vector = "a2xhcgAA"
 		  
 		  dim dataSize as integer = data.LenB
-		  Assert.Message "Data size = " + dataSize.ToText
+		  Assert.Message "Data size = " + dataSize.ToString
 		  
 		  expected = "9df40c746469090e70bb1f03a0536c4b1c3124ea21cfa09f"
 		  
@@ -66,7 +66,7 @@ Inherits EncrypterTestGroup
 		    encrypted = encrypted + e.EncryptCBC( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
@@ -74,7 +74,7 @@ Inherits EncrypterTestGroup
 		    decrypted = decrypted + e.DecryptCBC( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
@@ -128,7 +128,7 @@ Inherits EncrypterTestGroup
 		  data = "12345678901234567890"
 		  
 		  dim dataSize as integer = data.LenB
-		  Assert.Message "Data size = " + dataSize.ToText
+		  Assert.Message "Data size = " + dataSize.ToString
 		  
 		  expected = "130784f2859d3ddde4a887cc767061be3ef3c57d9a605a32"
 		  
@@ -142,7 +142,7 @@ Inherits EncrypterTestGroup
 		    encrypted = encrypted + e.EncryptECB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
@@ -150,7 +150,7 @@ Inherits EncrypterTestGroup
 		    decrypted = decrypted + e.DecryptECB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
@@ -168,23 +168,23 @@ Inherits EncrypterTestGroup
 		  data = "N"
 		  expectedHex = "e21ec1d9a23d143a"
 		  encrypted = bf.EncryptECB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = bf.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "Nope"
 		  expectedHex = "e1e00849d0cd5eb9"
 		  encrypted = bf.EncryptECB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = bf.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "NopeNopeNo"
 		  expectedHex = "1fa5147ed028840603bb89b28fa91460"
 		  encrypted = bf.EncryptECB( data )
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = bf.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		End Sub
 	#tag EndMethod
 
@@ -201,7 +201,7 @@ Inherits EncrypterTestGroup
 		  data = "12345678901234567890"
 		  
 		  dim dataSize as integer = data.LenB
-		  Assert.Message "Data size = " + dataSize.ToText
+		  Assert.Message "Data size = " + dataSize.ToString
 		  
 		  expected = "0AF78AD07AB67849C4638590AA607A0B3D4B8B18CFF83D26"
 		  
@@ -215,7 +215,7 @@ Inherits EncrypterTestGroup
 		    encrypted = encrypted + e.EncryptOFB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
@@ -223,7 +223,7 @@ Inherits EncrypterTestGroup
 		    decrypted = decrypted + e.DecryptOFB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod

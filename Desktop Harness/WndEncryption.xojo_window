@@ -69,6 +69,7 @@ Begin Window WndEncryption
       Top             =   51
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   752
@@ -117,6 +118,7 @@ Begin Window WndEncryption
       Top             =   295
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   752

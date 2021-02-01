@@ -101,6 +101,7 @@ Begin Window WndLegacy
       Top             =   176
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   654
@@ -329,6 +330,7 @@ Begin Window WndLegacy
       Top             =   46
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   576

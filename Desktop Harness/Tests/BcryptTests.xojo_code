@@ -17,15 +17,15 @@ Inherits TestGroup
 		  end if
 		  
 		  // See if we can compare PHP
-		  Assert.Message "PHP: " + phpHash.ToText
-		  Assert.Message "PHP: " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "PHP: " + phpHash
+		  Assert.Message "PHP: " + sw.ElapsedMilliseconds.ToString + " ms"
 		  sw.Reset
 		  
 		  sw.Start
 		  dim hash as string = Bcrypt_MTC.Hash( key, salt )
 		  sw.Stop
-		  Assert.Message "Hash: " + hash.ToText
-		  Assert.Message "Hash: " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Hash: " + hash
+		  Assert.Message "Hash: " + sw.ElapsedMilliseconds.ToString + " ms"
 		  
 		  
 		  Assert.AreSame phpHash, hash
@@ -69,8 +69,8 @@ Inherits TestGroup
 		    dim expected as string = expectedArr( i )
 		    
 		    dim actual as string = Bcrypt_MTC.Hash( key, salt )
-		    Assert.AreSame( expected, actual, "Hashes differ for " + key.ToText )
-		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected ), "Failed to verify " + key.ToText
+		    Assert.AreSame( expected, actual, "Hashes differ for " + key )
+		    Assert.IsTrue Bcrypt_MTC.Verify( key, expected ), "Failed to verify " + key
 		  next
 		  
 		  dim hash as string = "$2a$12$fEYmH3px9mOdUMQw4mglvubfTSJLb55SK/3wWe3nQ5kpxCLDXtSoG"
@@ -92,19 +92,27 @@ Inherits TestGroup
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FailedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
+			Visible=false
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -112,11 +120,15 @@ Inherits TestGroup
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsRunning"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -124,48 +136,71 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="NotImplementedCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="StopTestOnFail"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -173,6 +208,7 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

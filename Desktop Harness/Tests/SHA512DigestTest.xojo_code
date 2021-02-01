@@ -57,7 +57,7 @@ Inherits TestGroup
 		    
 		    d.Process "h"
 		    dim actual as string = EncodeHex( d.Value ).Lowercase
-		    Assert.AreEqual expected, actual, i.ToText
+		    Assert.AreEqual expected, actual, i.ToString
 		    
 		    t = t + "h"
 		  next
@@ -73,8 +73,8 @@ Inherits TestGroup
 		  
 		  dim chunkSize as integer = 128 * 8 * 1000
 		  
-		  Assert.Message "Data length is " + format( s.LenB, "#,0" ).ToText + " bytes"
-		  Assert.Message "ChunkSize is " + format( chunkSize, "#,0" ).ToText + " bytes"
+		  Assert.Message "Data length is " + format( s.LenB, "#,0" ) + " bytes"
+		  Assert.Message "ChunkSize is " + format( chunkSize, "#,0" ) + " bytes"
 		  
 		  
 		  StartTestTimer "native"
@@ -107,7 +107,7 @@ Inherits TestGroup
 		  for each s as string in strings
 		    d.Reset
 		    d.Process( s )
-		    Assert.AreEqual EncodeHex( Crypto.SHA512( s ) ).Lowercase, EncodeHex( d.Value ).Lowercase, s.ToText
+		    Assert.AreEqual EncodeHex( Crypto.SHA512( s ) ).Lowercase, EncodeHex( d.Value ).Lowercase, s
 		  next
 		  
 		End Sub
@@ -170,19 +170,27 @@ Inherits TestGroup
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FailedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
+			Visible=false
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -190,11 +198,15 @@ Inherits TestGroup
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsRunning"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -202,48 +214,71 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="NotImplementedCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="StopTestOnFail"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TestCount"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -251,6 +286,7 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

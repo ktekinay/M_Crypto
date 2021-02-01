@@ -150,8 +150,8 @@ Inherits EncrypterTestGroup
 		    for i as integer = 0 to passwords.Ubound
 		      dim pw as string = passwords( i )
 		      dim myHash as string = Bcrypt_MTC.Hash( pw, salt )
-		      Assert.IsTrue PHPVerify( pw, myHash ), "PHP does not match pw «" + pw.ToText + "», cost = " + cost.ToText
-		      Assert.IsTrue Bcrypt_MTC.Verify( pw, myHash ), "Internal match failed on «" + pw.ToText + "», cost = " + cost.ToText
+		      Assert.IsTrue PHPVerify( pw, myHash ), "PHP does not match pw «" + pw + "», cost = " + cost.ToString
+		      Assert.IsTrue Bcrypt_MTC.Verify( pw, myHash ), "Internal match failed on «" + pw + "», cost = " + cost.ToString
 		    next
 		  next
 		  
@@ -184,7 +184,7 @@ Inherits EncrypterTestGroup
 		  pwArr.Append kPassword
 		  Assert.AreEqual kRounds, CType( pwArr.Ubound, integer ) + 1, "Password array count does not match"
 		  
-		  Assert.Message "Rounds: " + kRounds.ToText + ", Cost: " + kCost.ToText
+		  Assert.Message "Rounds: " + kRounds.ToString + ", Cost: " + kCost.ToString
 		  
 		  dim phpScript as string = kBcryptTimingScript
 		  phpScript = phpScript.Replace( "%rounds%", str( kRounds ) )
@@ -205,10 +205,10 @@ Inherits EncrypterTestGroup
 		  dim avgMs as double = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  sw.Reset
 		  
-		  Assert.Message "PHP: " + avgMs.ToText + " ms per round"
+		  Assert.Message "PHP: " + avgMs.ToString + " ms per round"
 		  
 		  for i as integer = 0 to phpHashes.Ubound
-		    Assert.IsTrue BCrypt_MTC.Verify( pwArr( i ), phpHashes( i ) ), "Verifying PHP hash on " + pwArr( i ).ToText
+		    Assert.IsTrue BCrypt_MTC.Verify( pwArr( i ), phpHashes( i ) ), "Verifying PHP hash on " + pwArr( i )
 		  next
 		  
 		  dim nativeHash as string
@@ -219,7 +219,7 @@ Inherits EncrypterTestGroup
 		  StopProfiling
 		  sw.Stop
 		  
-		  Assert.Message "Bcrypt_MTC (once) : " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Bcrypt_MTC (once) : " + sw.ElapsedMilliseconds.ToString + " ms"
 		  sw.Reset
 		  
 		  for i as integer = 0 to pwArr.UBound
@@ -231,10 +231,10 @@ Inherits EncrypterTestGroup
 		  
 		  avgMs = sw.ElapsedMilliseconds / CType( kRounds, Double )
 		  
-		  Assert.Message "Bcrypt_MTC: " + avgMs.ToText + " ms per round"
+		  Assert.Message "Bcrypt_MTC: " + avgMs.ToString + " ms per round"
 		  Assert.IsTrue PHPVerify( kPassword, nativeHash )
 		  
-		  Assert.Message "Calculated on: " + &u0A + join( pwArr, EndOfLine ).ToText
+		  Assert.Message "Calculated on: " + &u0A + join( pwArr, EndOfLine )
 		  
 		End Sub
 	#tag EndMethod
@@ -318,7 +318,7 @@ Inherits EncrypterTestGroup
 		      dim nativeEncrypted as string = EncodeHex( bf.EncryptECB( data ) )
 		      dim jsEncrypted as string = sh.Result.Trim
 		      
-		      Assert.AreEqual jsEncrypted, nativeEncrypted, "Encryption doesn't match for key «" + key.ToText + "» and data «" + data.ToText + "»"
+		      Assert.AreEqual jsEncrypted, nativeEncrypted, "Encryption doesn't match for key «" + key + "» and data «" + data + "»"
 		      
 		      //
 		      // Create the Decrypt file
@@ -333,9 +333,9 @@ Inherits EncrypterTestGroup
 		      dim nativeDecrypted as string = bf.DecryptECB( DecodeHex( jsEncrypted ) )
 		      dim jsDecrypted as string = sh.Result.ReplaceAll( EndOfLine, "" )
 		      
-		      Assert.AreEqual data, nativeDecrypted, "Native decryption doesn't match for key «" + key.ToText + "» and data «" + data.ToText + "»"
+		      Assert.AreEqual data, nativeDecrypted, "Native decryption doesn't match for key «" + key + "» and data «" + data + "»"
 		      
-		      Assert.AreEqual data, jsDecrypted, "JS decryption doesn't match for key «" + key.ToText + "» and data «" + data.ToText + "»"
+		      Assert.AreEqual data, jsDecrypted, "JS decryption doesn't match for key «" + key + "» and data «" + data + "»"
 		      
 		      jsEncrypt.Delete
 		      jsDecrypt.Delete
@@ -382,7 +382,7 @@ Inherits EncrypterTestGroup
 		    return
 		  end if
 		  
-		  Assert.Pass "Using " + openssl.ToText
+		  Assert.Pass "Using " + openssl
 		  
 		  dim b64 as string = GetCommand( "base64" )
 		  Assert.IsTrue b64 <> "", "Cannot locate base64"
@@ -455,7 +455,7 @@ Inherits EncrypterTestGroup
 		    
 		    sh.Execute cmd
 		    if sh.ErrorCode <> 0 then
-		      Assert.Fail "Could not execute cipher " + cipher.ToText
+		      Assert.Fail "Could not execute cipher " + cipher
 		      continue
 		    end if
 		    
@@ -470,7 +470,7 @@ Inherits EncrypterTestGroup
 		    try
 		      actual = e.Encrypt( data )
 		    catch err as M_Crypto.UnsupportedFunctionException
-		      Assert.Fail cipher.ToText + " not implemented"
+		      Assert.Fail cipher + " not implemented"
 		      #pragma BreakOnExceptions default
 		      continue
 		    end try
@@ -479,11 +479,11 @@ Inherits EncrypterTestGroup
 		    actual = EncodeBase64( actual, 0 )
 		    
 		    if expected = actual then
-		      Assert.Pass cipher.ToText + " passed"
+		      Assert.Pass cipher + " passed"
 		    else
 		      Assert.AreEqual expected.Left( 6 ) + "..." + expected.Right( 6 ), _
 		      actual.Left( 6 ) + "..." + actual.Right( 6), _
-		      cipher.ToText
+		      cipher
 		    end if
 		  next
 		  
@@ -524,7 +524,7 @@ Inherits EncrypterTestGroup
 		        Assert.Message "Round: " + round.ToText + ", bytes: " + bytes.ToText + ", " + _
 		        e.Code.ToText + "/" + e.PaddingString.ToText
 		        dim result as string = e.Decrypt( e.Encrypt( data ) )
-		        Assert.AreEqual dataHex, EncodeHex( result ), e.Code.ToText + "/" + e.PaddingString.ToText
+		        Assert.AreEqual dataHex, EncodeHex( result ), e.Code + "/" + e.PaddingString
 		      next e
 		    next bytes
 		  next round
@@ -627,9 +627,9 @@ Inherits EncrypterTestGroup
 		          dim decrypted as string = join( DecryptedArr, "" )
 		          decrypted = decrypted.DefineEncoding( original.Encoding )
 		          dim decryptedHex as string = EncodeHex( decrypted )
-		          Assert.AreEqual originalHex, decryptedHex, Xojo.Introspection.GetType( e ).Name + _
-		          if( e isa AES_MTC, "-" +AES_MTC( e ).Bits.ToText, "" ) + _
-		          ", padding: " + Integer( p ).ToText + ", length: " + textLength.ToText
+		          Assert.AreEqual originalHex, decryptedHex, Introspection.GetType( e ).Name + _
+		          if( e isa AES_MTC, "-" +AES_MTC( e ).Bits.ToString, "" ) + _
+		          ", padding: " + Integer( p ).ToString + ", length: " + textLength.ToString
 		        next e
 		      next p
 		      
