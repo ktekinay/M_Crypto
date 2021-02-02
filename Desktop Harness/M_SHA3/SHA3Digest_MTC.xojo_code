@@ -3,7 +3,7 @@ Class SHA3Digest_MTC
 	#tag Method, Flags = &h0
 		Sub Constructor(bits As M_SHA3.Bits)
 		  if KeccakfRndcMB is nil then
-		    KeccakfRndcMB = new MemoryBlock( 25 * 8 )
+		    KeccakfRndcMB = new MemoryBlock( 24 * 8 )
 		    KeccakfRndcPtr = KeccakfRndcMB
 		    
 		    var seed() as UInt64 = array( _
@@ -24,16 +24,10 @@ Class SHA3Digest_MTC
 		  TMB = new MemoryBlock( 5 * 8 )
 		  BcMB = new MemoryBlock( 5 * 8 )
 		  
-		  if NullString.IsEmpty then
-		    NullString = TMB // Nulls to string
-		  end if
-		  
 		  var ibits as integer = integer( bits )
 		  ByteSize = ibits \ 8
 		  BlockSize = 200 - 2 * ByteSize
 		  BlockSizeW = BlockSize \ 8
-		  
-		  Reset
 		  
 		  
 		End Sub
@@ -59,8 +53,10 @@ Class SHA3Digest_MTC
 		    //
 		    // Clear the MemoryBlocks
 		    //
-		    t.StringValue( 0, t.Size ) = NullString
-		    bc.StringValue( 0, bc.Size ) = NullString
+		    for i as integer = 0 to t.Size - 1 step 8
+		      tPtr.UInt64( i ) = 0
+		      bcPtr.UInt64( i ) = 0
+		    next
 		    tt = 0
 		    
 		    //
@@ -72,11 +68,11 @@ Class SHA3Digest_MTC
 		    bcPtr.UInt64( 3 * 8 ) = useState.ST( 3 ) xor useState.ST( 8 ) xor useState.ST( 13 ) xor useState.ST( 18 ) xor useState.ST( 23 )
 		    bcPtr.UInt64( 4 * 8 ) = useState.ST( 4 ) xor useState.ST( 9 ) xor useState.ST( 14 ) xor useState.ST( 19 ) xor useState.ST( 24 )
 		    
-		    tPtr.UInt64( 0 * 8 ) = bcPtr.UInt64( 4 * 8 ) xor Rol64(bcPtr.UInt64( 1 * 8 ), 1)
-		    tPtr.UInt64( 1 * 8 ) = bcPtr.UInt64( 0 * 8 ) xor Rol64(bcPtr.UInt64( 2 * 8 ), 1)
-		    tPtr.UInt64( 2 * 8 ) = bcPtr.UInt64( 1 * 8 ) xor Rol64(bcPtr.UInt64( 3 * 8 ), 1)
-		    tPtr.UInt64( 3 * 8 ) = bcPtr.UInt64( 2 * 8 ) xor Rol64(bcPtr.UInt64( 4 * 8 ), 1)
-		    tPtr.UInt64( 4 * 8 ) = bcPtr.UInt64( 3 * 8 ) xor Rol64(bcPtr.UInt64( 0 * 8 ), 1)
+		    tPtr.UInt64( 0 * 8 ) = bcPtr.UInt64( 4 * 8 ) xor Rol64( bcPtr.UInt64( 1 * 8 ), 1 )
+		    tPtr.UInt64( 1 * 8 ) = bcPtr.UInt64( 0 * 8 ) xor Rol64( bcPtr.UInt64( 2 * 8 ), 1 )
+		    tPtr.UInt64( 2 * 8 ) = bcPtr.UInt64( 1 * 8 ) xor Rol64( bcPtr.UInt64( 3 * 8 ), 1 )
+		    tPtr.UInt64( 3 * 8 ) = bcPtr.UInt64( 2 * 8 ) xor Rol64( bcPtr.UInt64( 4 * 8 ), 1 )
+		    tPtr.UInt64( 4 * 8 ) = bcPtr.UInt64( 3 * 8 ) xor Rol64( bcPtr.UInt64( 0 * 8 ), 1 )
 		    
 		    useState.ST( 0 ) = useState.ST( 0 ) xor tPtr.UInt64( 0 * 8 )
 		    
@@ -84,30 +80,30 @@ Class SHA3Digest_MTC
 		    // Rho Pi
 		    //
 		    tt = useState.ST( 1 )
-		    useState.ST( 1 ) = Rol64(useState.ST( 6 ) xor tPtr.UInt64( 1 * 8 ), 44)
-		    useState.ST( 6 ) = Rol64(useState.ST( 9 ) xor tPtr.UInt64( 4 * 8 ), 20)
-		    useState.ST( 9 ) = Rol64(useState.ST( 22 ) xor tPtr.UInt64( 2 * 8 ), 61)
-		    useState.ST( 22 ) = Rol64(useState.ST( 14 ) xor tPtr.UInt64( 4 * 8 ), 39)
-		    useState.ST( 14 ) = Rol64(useState.ST( 20 ) xor tPtr.UInt64( 0 * 8 ), 18)
-		    useState.ST( 20 ) = Rol64(useState.ST( 2 ) xor tPtr.UInt64( 2 * 8 ), 62)
-		    useState.ST( 2 ) = Rol64(useState.ST( 12 ) xor tPtr.UInt64( 2 * 8 ), 43)
-		    useState.ST( 12 ) = Rol64(useState.ST( 13 ) xor tPtr.UInt64( 3 * 8 ), 25)
-		    useState.ST( 13 ) = Rol64(useState.ST( 19 ) xor tPtr.UInt64( 4 * 8 ), 8)
-		    useState.ST( 19 ) = Rol64(useState.ST( 23 ) xor tPtr.UInt64( 3 * 8 ), 56)
-		    useState.ST( 23 ) = Rol64(useState.ST( 15 ) xor tPtr.UInt64( 0 * 8 ), 41)
-		    useState.ST( 15 ) = Rol64(useState.ST( 4 ) xor tPtr.UInt64( 4 * 8 ), 27)
-		    useState.ST( 4 ) = Rol64(useState.ST( 24 ) xor tPtr.UInt64( 4 * 8 ), 14)
-		    useState.ST( 24 ) = Rol64(useState.ST( 21 ) xor tPtr.UInt64( 1 * 8 ), 2)
-		    useState.ST( 21 ) = Rol64(useState.ST( 8 ) xor tPtr.UInt64( 3 * 8 ), 55)
-		    useState.ST( 8 ) = Rol64(useState.ST( 16 ) xor tPtr.UInt64( 1 * 8 ), 45)
-		    useState.ST( 16 ) = Rol64(useState.ST( 5 ) xor tPtr.UInt64( 0 * 8 ), 36)
-		    useState.ST( 5 ) = Rol64(useState.ST( 3 ) xor tPtr.UInt64( 3 * 8 ), 28)
-		    useState.ST( 3 ) = Rol64(useState.ST( 18 ) xor tPtr.UInt64( 3 * 8 ), 21)
-		    useState.ST( 18 ) = Rol64(useState.ST( 17 ) xor tPtr.UInt64( 2 * 8 ), 15)
-		    useState.ST( 17 ) = Rol64(useState.ST( 11 ) xor tPtr.UInt64( 1 * 8 ), 10)
-		    useState.ST( 11 ) = Rol64(useState.ST( 7 ) xor tPtr.UInt64( 2 * 8 ), 6)
-		    useState.ST( 7 ) = Rol64(useState.ST( 10 ) xor tPtr.UInt64( 0 * 8 ), 3)
-		    useState.ST( 10 ) = Rol64( tt xor tPtr.UInt64( 1 * 8 ), 1)
+		    useState.ST( 1 ) = Rol64( useState.ST( 6 ) xor tPtr.UInt64( 1 * 8 ), 44 )
+		    useState.ST( 6 ) = Rol64( useState.ST( 9 ) xor tPtr.UInt64( 4 * 8 ), 20 )
+		    useState.ST( 9 ) = Rol64( useState.ST( 22 ) xor tPtr.UInt64( 2 * 8 ), 61 )
+		    useState.ST( 22 ) = Rol64( useState.ST( 14 ) xor tPtr.UInt64( 4 * 8 ), 39 )
+		    useState.ST( 14 ) = Rol64( useState.ST( 20 ) xor tPtr.UInt64( 0 * 8 ), 18 )
+		    useState.ST( 20 ) = Rol64( useState.ST( 2 ) xor tPtr.UInt64( 2 * 8 ), 62 )
+		    useState.ST( 2 ) = Rol64( useState.ST( 12 ) xor tPtr.UInt64( 2 * 8 ), 43 )
+		    useState.ST( 12 ) = Rol64( useState.ST( 13 ) xor tPtr.UInt64( 3 * 8 ), 25 )
+		    useState.ST( 13 ) = Rol64( useState.ST( 19 ) xor tPtr.UInt64( 4 * 8 ), 8 )
+		    useState.ST( 19 ) = Rol64( useState.ST( 23 ) xor tPtr.UInt64( 3 * 8 ), 56 )
+		    useState.ST( 23 ) = Rol64( useState.ST( 15 ) xor tPtr.UInt64( 0 * 8 ), 41 )
+		    useState.ST( 15 ) = Rol64( useState.ST( 4 ) xor tPtr.UInt64( 4 * 8 ), 27 )
+		    useState.ST( 4 ) = Rol64( useState.ST( 24 ) xor tPtr.UInt64( 4 * 8 ), 14 )
+		    useState.ST( 24 ) = Rol64( useState.ST( 21 ) xor tPtr.UInt64( 1 * 8 ), 2 )
+		    useState.ST( 21 ) = Rol64( useState.ST( 8 ) xor tPtr.UInt64( 3 * 8 ), 55 )
+		    useState.ST( 8 ) = Rol64( useState.ST( 16 ) xor tPtr.UInt64( 1 * 8 ), 45 )
+		    useState.ST( 16 ) = Rol64( useState.ST( 5 ) xor tPtr.UInt64( 0 * 8 ), 36 )
+		    useState.ST( 5 ) = Rol64( useState.ST( 3 ) xor tPtr.UInt64( 3 * 8 ), 28 )
+		    useState.ST( 3 ) = Rol64( useState.ST( 18 ) xor tPtr.UInt64( 3 * 8 ), 21 )
+		    useState.ST( 18 ) = Rol64( useState.ST( 17 ) xor tPtr.UInt64( 2 * 8 ), 15 )
+		    useState.ST( 17 ) = Rol64( useState.ST( 11 ) xor tPtr.UInt64( 1 * 8 ), 10 )
+		    useState.ST( 11 ) = Rol64( useState.ST( 7 ) xor tPtr.UInt64( 2 * 8 ), 6 )
+		    useState.ST( 7 ) = Rol64( useState.ST( 10 ) xor tPtr.UInt64( 0 * 8 ), 3 )
+		    useState.ST( 10 ) = Rol64( tt xor tPtr.UInt64( 1 * 8 ), 1 )
 		    
 		    //
 		    // Chi
@@ -185,7 +181,9 @@ Class SHA3Digest_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  mbIn.LittleEndian = true
+		  #if not TargetLittleEndian then
+		    mbIn.LittleEndian = true
+		  #endif
 		  
 		  if isFinal then
 		    //
@@ -199,18 +197,21 @@ Class SHA3Digest_MTC
 		    mbIn.Byte( mbIn.Size - 1 ) = &h80
 		  end if
 		  
+		  var mbPtr as ptr = mbIn
+		  
 		  var lastMBByteIndex as integer = mbIn.Size - 1
 		  var lastStateIndex as integer = BlockSizeW - 1
 		  
 		  for byteIndex as integer = 0 to lastMBByteIndex step BlockSize
 		    for stateIndex as integer = 0 to lastStateIndex
-		      //
-		      // Flip the bytes (depends on LittleEndian above)
-		      //
-		      var firstPart as UInt64 = mbIn.UInt32Value( byteIndex + stateIndex * 8 )
-		      var secondPart as UInt64 = mbIn.UInt32Value( byteIndex + stateIndex * 8 + 4 )
-		      secondPart = secondPart * CType( 256 ^ 4, UInt64 )
-		      var unaligned as UInt64 = firstPart or secondPart
+		      var relativeIndex as integer = byteIndex + stateIndex * 8
+		      
+		      var unaligned as UInt64
+		      #if TargetLittleEndian then
+		        unaligned = mbPtr.UInt64( relativeIndex )
+		      #else
+		         unaligned = mbIn.UInt64Value( relativeIndex )
+		      #endif
 		      
 		      useState.ST( stateIndex ) = useState.ST( stateIndex ) xor unaligned
 		    next
@@ -237,7 +238,6 @@ Class SHA3Digest_MTC
 		  
 		  if data <> "" then
 		    Process data, CurrentState, false
-		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
 		End Sub
@@ -248,7 +248,6 @@ Class SHA3Digest_MTC
 		  var newState as StateStruct
 		  CurrentState = newState
 		  
-		  CombinedLength = 0
 		  Buffer = ""
 		  
 		End Sub
@@ -291,10 +290,6 @@ Class SHA3Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private CombinedLength As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private CurrentState As StateStruct
 	#tag EndProperty
 
@@ -307,20 +302,16 @@ Class SHA3Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared NullString As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private TMB As MemoryBlock
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  dim tempState as StateStruct = CurrentState
-			  Process Buffer, tempState, true
+			  dim finalState as StateStruct = CurrentState
+			  Process Buffer, finalState, true
 			  
-			  return tempState.StringValue( true ).LeftBytes( ByteSize )
+			  return finalState.StringValue( true ).LeftBytes( ByteSize )
 			End Get
 		#tag EndGetter
 		Value As String
