@@ -21,40 +21,22 @@ Class SHA3Digest_MTC
 		    next
 		  end if
 		  
+		  TMB = new MemoryBlock( 5 * 8 )
+		  BcMB = new MemoryBlock( 5 * 8 )
+		  
+		  if NullString.IsEmpty then
+		    NullString = TMB // Nulls to string
+		  end if
+		  
 		  var ibits as integer = integer( bits )
 		  ByteSize = ibits \ 8
 		  BlockSize = 200 - 2 * ByteSize
 		  BlockSizeW = BlockSize \ 8
 		  
 		  Reset
+		  
+		  
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function GetUnalignedLE64(val As UInt64) As UInt64
-		  var r as UInt64
-		  
-		  var prefix as UInt64 = val \ CType( 256 ^ 4, UInt64 )
-		  var suffix as UInt64 = val and CType( &hFFFFFFFF, UInt64 )
-		  
-		  
-		  
-		  return r
-		  
-		  
-		  #if false
-		    static inline uint32_t __get_unaligned_le32(const uint8_t *p)
-		    {
-		    return p[0] | p[1] << 8 | p[2] << 16 | p[3] << 24;
-		    }
-		    
-		    static inline uint64_t __get_unaligned_le64(const uint8_t *p)
-		    {
-		    return (uint64_t)__get_unaligned_le32(p + 4) << 32 |
-		    __get_unaligned_le32(p);
-		    }
-		  #endif
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -66,9 +48,9 @@ Class SHA3Digest_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var t as new MemoryBlock( 5 * 8 )
+		  var t as MemoryBlock = TMB
 		  var tt as UInt64
-		  var bc as new MemoryBlock( 5 * 8 )
+		  var bc as MemoryBlock = BcMB
 		  
 		  var tPtr as ptr = t
 		  var bcPtr as ptr = bc
@@ -77,17 +59,9 @@ Class SHA3Digest_MTC
 		    //
 		    // Clear the MemoryBlocks
 		    //
-		    if round <> 0 then
-		      static nullString as string
-		      if nullString.IsEmpty then
-		        var nullMB as new MemoryBlock( t.Size )
-		        nullString = nullMB
-		      end if
-		      
-		      t.StringValue( 0, t.Size ) = nullString
-		      bc.StringValue( 0, bc.Size ) = nullString
-		      tt = 0
-		    end if
+		    t.StringValue( 0, t.Size ) = NullString
+		    bc.StringValue( 0, bc.Size ) = NullString
+		    tt = 0
 		    
 		    //
 		    // Theta
@@ -217,29 +191,24 @@ Class SHA3Digest_MTC
 		    //
 		    // Pad the data
 		    //
-		    var remainder as integer = 8 - ( mbIn.Size mod 8 )
-		    if remainder = 0 then
-		      remainder = 8
-		    end if
+		    var remainder as integer = BlockSize - ( mbIn.Size mod BlockSize )
 		    
-		    mbIn.Size = mbIn.Size + remainder
+		    var nextByteIndex as integer = mbIn.Size
+		    mbIn.Size = nextByteIndex + remainder
+		    mbIn.Byte( nextByteIndex ) = &h06
 		    mbIn.Byte( mbIn.Size - 1 ) = &h80
 		  end if
 		  
 		  var lastMBByteIndex as integer = mbIn.Size - 1
-		  var mbPtr as ptr = mbIn
+		  var lastStateIndex as integer = BlockSizeW - 1
 		  
-		  for firstByteIndex as integer = 0 to lastMBByteIndex step BlockSizeW
-		    var lastByteIndex as integer = firstByteIndex + BlockSizeW - 1
-		    var stateIndex as integer = -1
-		    for byteIndex as integer = firstByteIndex to lastByteIndex step 8
-		      stateIndex = stateIndex + 1
-		      
+		  for byteIndex as integer = 0 to lastMBByteIndex step BlockSize
+		    for stateIndex as integer = 0 to lastStateIndex
 		      //
 		      // Flip the bytes (depends on LittleEndian above)
 		      //
-		      var firstPart as UInt64 = mbIn.UInt32Value( firstByteIndex )
-		      var secondPart as UInt64 = mbIn.UInt32Value( firstByteIndex + 4 )
+		      var firstPart as UInt64 = mbIn.UInt32Value( byteIndex + stateIndex * 8 )
+		      var secondPart as UInt64 = mbIn.UInt32Value( byteIndex + stateIndex * 8 + 4 )
 		      secondPart = secondPart * CType( 256 ^ 4, UInt64 )
 		      var unaligned as UInt64 = firstPart or secondPart
 		      
@@ -302,6 +271,10 @@ Class SHA3Digest_MTC
 
 
 	#tag Property, Flags = &h21
+		Private BcMB As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private BlockSize As Integer
 	#tag EndProperty
 
@@ -333,20 +306,28 @@ Class SHA3Digest_MTC
 		Private Shared KeccakfRndcPtr As Ptr
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private Shared NullString As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private TMB As MemoryBlock
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
 			  dim tempState as StateStruct = CurrentState
 			  Process Buffer, tempState, true
 			  
-			  return tempState.StringValue( false ).LeftBytes( ByteSize )
+			  return tempState.StringValue( true ).LeftBytes( ByteSize )
 			End Get
 		#tag EndGetter
 		Value As String
 	#tag EndComputedProperty
 
 
-	#tag Constant, Name = kKeccakRounds, Type = Double, Dynamic = False, Default = \"24", Scope = Private
+	#tag Constant, Name = kKeccakRounds, Type = Double, Dynamic = False, Default = \"23", Scope = Private
 	#tag EndConstant
 
 

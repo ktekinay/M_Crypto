@@ -50,13 +50,6 @@ Inherits TestGroup
 		    var actual as string = digest.Value
 		    var actualHex as string = EncodeHex( actual ).Uppercase
 		    Assert.AreEqual expectedHex, actualHex, data.Left( 10 ) + if( data.Length > 10, "...", "" ) + " (" + data.Length.ToString + ")"
-		    
-		    var ein as new SHA3( 256 )
-		    ein.Update data
-		    actualHex = ein.FinalAsHex
-		    
-		    Assert.AreEqual expectedHex, actualHex, "Ein: " + data.Left( 10 ) + if( data.Length > 10, "...", "" ) + " (" + data.Length.ToString + ")"
-		    
 		  next
 		End Sub
 	#tag EndMethod
