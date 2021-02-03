@@ -25,6 +25,7 @@ Inherits TestGroup
 		  var dataSet() as pair = array( _
 		  "abc" : "3a985da74fe225b2 045c172d6bd390bd 855f086e3e9d525b 46bfe24511431532", _
 		  "" : "a7ffc6f8bf1ed766 51c14756a061d662 f580ff4de43b49fa 82d80a4b80f8434a", _
+		  "a*135" : "8094bb53c44cfb1e67b7c30447f9a1c33696d2463ecc1d9c92538913392843c9", _
 		  "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" : "41c0dba2a9d62408 49100376a8235e2c 82e1b9998a999e21 db32dd97496d3376", _
 		  "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu" : "916f6061fe879741 ca6469b43971dfdb 28b1a32dc36cb325 4e812be27aad1d18", _
 		  "a*1000000" : "5c8875ae474a3634 ba4fd55ec85bffd6 61f32aca75c6d699 d0cdcb6c115891c1", _

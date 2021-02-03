@@ -163,7 +163,6 @@ Class SHA3Digest_MTC
 		    useState.ST( 23 ) = useState.ST( 23 ) xor bcPtr.UInt64( 3 * 8 )
 		    useState.ST( 24 ) = useState.ST( 24 ) xor bcPtr.UInt64( 4 * 8 )
 		    
-		    
 		    //
 		    // Iota
 		    //
@@ -193,8 +192,12 @@ Class SHA3Digest_MTC
 		    
 		    var nextByteIndex as integer = mbIn.Size
 		    mbIn.Size = nextByteIndex + remainder
-		    mbIn.Byte( nextByteIndex ) = &h06
-		    mbIn.Byte( mbIn.Size - 1 ) = &h80
+		    if remainder = 1 then
+		      mbIn.Byte( nextByteIndex ) = &h86
+		    else
+		      mbIn.Byte( nextByteIndex ) = &h06
+		      mbIn.Byte( mbIn.Size - 1 ) = &h80
+		    end if
 		  end if
 		  
 		  var mbPtr as ptr = mbIn
@@ -210,7 +213,7 @@ Class SHA3Digest_MTC
 		      #if TargetLittleEndian then
 		        unaligned = mbPtr.UInt64( relativeIndex )
 		      #else
-		         unaligned = mbIn.UInt64Value( relativeIndex )
+		        unaligned = mbIn.UInt64Value( relativeIndex )
 		      #endif
 		      
 		      useState.ST( stateIndex ) = useState.ST( stateIndex ) xor unaligned
