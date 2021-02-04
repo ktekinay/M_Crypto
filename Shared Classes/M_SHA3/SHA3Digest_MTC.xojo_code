@@ -49,11 +49,13 @@ Class SHA3Digest_MTC
 		  var tPtr as ptr = t
 		  var bcPtr as ptr = bc
 		  
+		  var lastTByte as integer = t.Size - 1
+		  
 		  for round as integer = 0  to kKeccakRounds
 		    //
 		    // Clear the MemoryBlocks
 		    //
-		    for i as integer = 0 to t.Size - 1 step 8
+		    for i as integer = 0 to lastTByte step 8
 		      tPtr.UInt64( i ) = 0
 		      bcPtr.UInt64( i ) = 0
 		    next
@@ -266,7 +268,10 @@ Class SHA3Digest_MTC
 		  #endif
 		  
 		  var rightShift as integer = 64 - shift
-		  var r as UInt64 = ( val * CType( 2 ^ shift, UInt64 ) ) or ( val \ CType( 2 ^ rightShift, UInt64 ) ) 
+		  
+		  var prefix as UInt64 = BitWise.ShiftLeft( val, shift, 64 )
+		  var suffix as Uint64 = BitWise.ShiftRight( val, rightShift, 64 )
+		  var r as Uint64 = prefix or suffix
 		  return r
 		End Function
 	#tag EndMethod
