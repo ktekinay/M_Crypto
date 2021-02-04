@@ -66,7 +66,9 @@ Inherits TestGroup
 		  "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno*16777216" : "235ffd53504ef836 a1342b488f483b39 6eabbfe642cf78ee 0d31feec788b23d0 d18d5c339550dd59 58a500d4b95363da 1b5fa18affc1bab2 292dc63b7d85097c" _
 		  )
 		  
+		  StartProfiling
 		  TestDigest kBits, dataSet
+		  StopProfiling
 		End Sub
 	#tag EndMethod
 
