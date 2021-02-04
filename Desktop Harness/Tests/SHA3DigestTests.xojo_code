@@ -70,6 +70,46 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub CompareToOpenSSLTest()
+		  var openssl as string = OpenSSLPath
+		  if openssl = kUnknown then
+		    Assert.Message "Could not locate a suitable version of openssl"
+		    return
+		  end if
+		  
+		  var rx as new RegEx
+		  rx.SearchPattern = "\b[[:xdigit:]]{32,}\b"
+		  
+		  var sh as new Shell
+		  
+		  for each bits as integer in array( 224, 256, 384, 512 )
+		    
+		    var data as string
+		    for i as integer = 0 to 289 // Will cover all block sizes * 2 + 1
+		      var cmd as string = "echo -n '" + data + "' | " + openssl + " sha3-" + bits.ToString + " -hex"
+		      sh.Execute cmd
+		      Assert.AreEqual 0, sh.ErrorCode, cmd
+		      if Assert.Failed then
+		        return
+		      end if
+		      
+		      var expected as string = sh.Result.DefineEncoding( Encodings.UTF8 ).Trim
+		      var match as RegExMatch = rx.Search( expected )
+		      expected = match.SubExpressionString( 0 )
+		      
+		      var d as new SHA3Digest_MTC( M_SHA3.Bits( bits ) )
+		      d.Process data
+		      var actual as string = EncodeHex( d.Value )
+		      
+		      Assert.AreEqual expected, actual, "Bits: " + bits.ToString + ", Data Length: " + data.Bytes.ToString
+		      
+		      data = data + "a"
+		    next
+		  next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub TestDigest(bits As M_SHA3.Bits, dataSet() As Pair)
 		  for each p as pair in dataSet
@@ -120,6 +160,49 @@ Inherits TestGroup
 		  next
 		End Sub
 	#tag EndMethod
+
+
+	#tag Property, Flags = &h21
+		Private Shared mOpenSSLPath As String
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mOpenSSLPath = "" then
+			    mOpenSSLPath = kUnknown // Default
+			    
+			    var cmd as string = "bash -lc 'which -a openssl'"
+			    var sh as new Shell
+			    sh.Execute cmd
+			    var possibilities() as string = _
+			    sh.Result _
+			    .DefineEncoding( Encodings.UTF8 ) _
+			    .Trim _
+			    .ReplaceLineEndings( &uA ) _
+			    .Split( &uA )
+			    
+			    for each openssl as string in possibilities
+			      if openssl.IndexOf( "/openssl" ) <> -1 then
+			        cmd = openssl + " sha3-256 --help"
+			        sh.Execute cmd
+			        if sh.ErrorCode = 0 then
+			          mOpenSSLPath = openssl
+			          exit
+			        end if
+			      end if
+			    next
+			  end if
+			  
+			  return mOpenSSLPath
+			End Get
+		#tag EndGetter
+		Private Shared OpenSSLPath As String
+	#tag EndComputedProperty
+
+
+	#tag Constant, Name = kUnknown, Type = String, Dynamic = False, Default = \"unknown", Scope = Private
+	#tag EndConstant
 
 
 	#tag ViewBehavior
