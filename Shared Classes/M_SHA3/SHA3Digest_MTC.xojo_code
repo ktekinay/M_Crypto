@@ -267,12 +267,159 @@ Class SHA3Digest_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var rightShift as integer = 64 - shift
+		  const kShift1 as UInt64 =  &b10
+		  const kShift2 as UInt64 =  &b100
+		  const kShift3 as UInt64 =  &b1000
+		  const kShift4 as UInt64 =  &b10000
+		  const kShift5 as UInt64 =  &b100000
+		  const kShift6 as UInt64 =  &b1000000
+		  const kShift7 as UInt64 =  &b10000000
+		  const kShift8 as UInt64 =  &b100000000
+		  const kShift9 as UInt64 =  &b1000000000
+		  const kShift10 as UInt64 = &b10000000000
+		  const kShift11 as UInt64 = &b100000000000
+		  const kShift12 as UInt64 = &b1000000000000
+		  const kShift13 as UInt64 = &b10000000000000
+		  const kShift14 as UInt64 = &b100000000000000
+		  const kShift15 as UInt64 = &b1000000000000000
+		  const kShift16 as UInt64 = &b10000000000000000
+		  const kShift17 as UInt64 = &b100000000000000000
+		  const kShift18 as UInt64 = &b1000000000000000000
+		  const kShift19 as UInt64 = &b10000000000000000000
+		  const kShift20 as UInt64 = &b100000000000000000000
+		  const kShift21 as UInt64 = &b1000000000000000000000
+		  const kShift22 as UInt64 = &b10000000000000000000000
+		  const kShift23 as UInt64 = &b100000000000000000000000
+		  const kShift24 as UInt64 = &b1000000000000000000000000
+		  const kShift25 as UInt64 = &b10000000000000000000000000
+		  const kShift26 as UInt64 = &b100000000000000000000000000
+		  const kShift27 as UInt64 = &b1000000000000000000000000000
+		  const kShift28 as UInt64 = &b10000000000000000000000000000
+		  const kShift29 as UInt64 = &b100000000000000000000000000000
+		  const kShift30 as UInt64 = &b1000000000000000000000000000000
+		  const kShift31 as UInt64 = &b10000000000000000000000000000000
+		  const kShift32 as UInt64 = &b100000000000000000000000000000000
+		  const kShift33 as UInt64 = &b1000000000000000000000000000000000
+		  const kShift34 as UInt64 = &b10000000000000000000000000000000000
+		  const kShift35 as UInt64 = &b100000000000000000000000000000000000
+		  const kShift36 as UInt64 = &b1000000000000000000000000000000000000
+		  const kShift37 as UInt64 = &b10000000000000000000000000000000000000
+		  const kShift38 as UInt64 = &b100000000000000000000000000000000000000
+		  const kShift39 as UInt64 = &b1000000000000000000000000000000000000000
+		  const kShift40 as UInt64 = &b10000000000000000000000000000000000000000
+		  const kShift41 as UInt64 = &b100000000000000000000000000000000000000000
+		  const kShift42 as UInt64 = &b1000000000000000000000000000000000000000000
+		  const kShift43 as UInt64 = &b10000000000000000000000000000000000000000000
+		  const kShift44 as UInt64 = &b100000000000000000000000000000000000000000000
+		  const kShift45 as UInt64 = &b1000000000000000000000000000000000000000000000
+		  const kShift46 as UInt64 = &b10000000000000000000000000000000000000000000000
+		  const kShift47 as UInt64 = &b100000000000000000000000000000000000000000000000
+		  const kShift48 as UInt64 = &b1000000000000000000000000000000000000000000000000
+		  const kShift49 as UInt64 = &b10000000000000000000000000000000000000000000000000
+		  const kShift50 as UInt64 = &b100000000000000000000000000000000000000000000000000
+		  const kShift51 as UInt64 = &b1000000000000000000000000000000000000000000000000000
+		  const kShift52 as UInt64 = &b10000000000000000000000000000000000000000000000000000
+		  const kShift53 as UInt64 = &b100000000000000000000000000000000000000000000000000000
+		  const kShift54 as UInt64 = &b1000000000000000000000000000000000000000000000000000000
+		  const kShift55 as UInt64 = &b10000000000000000000000000000000000000000000000000000000
+		  const kShift56 as UInt64 = &b100000000000000000000000000000000000000000000000000000000
+		  const kShift57 as UInt64 = &b1000000000000000000000000000000000000000000000000000000000
+		  const kShift58 as UInt64 = &b10000000000000000000000000000000000000000000000000000000000
+		  const kShift59 as UInt64 = &b100000000000000000000000000000000000000000000000000000000000
+		  const kShift60 as UInt64 = &b1000000000000000000000000000000000000000000000000000000000000
+		  const kShift61 as UInt64 = &b10000000000000000000000000000000000000000000000000000000000000
+		  const kShift62 as UInt64 = &b100000000000000000000000000000000000000000000000000000000000000
+		  const kShift63 as UInt64 = &b1000000000000000000000000000000000000000000000000000000000000000
 		  
-		  var prefix as UInt64 = BitWise.ShiftLeft( val, shift, 64 )
-		  var suffix as Uint64 = BitWise.ShiftRight( val, rightShift, 64 )
-		  var r as Uint64 = prefix or suffix
-		  return r
+		  select case shift
+		  case 0
+		    return val
+		    
+		  case 1
+		    return ( val * kShift1 ) or ( val \ kShift63 )
+		    
+		  case 2
+		    return ( val * kShift2 ) or ( val \ kShift62 )
+		    
+		  case 3
+		    return ( val * kShift3 ) or ( val \ kShift61 )
+		    
+		  case 4
+		    return ( val * kShift4 ) or ( val \ kShift60 )
+		    
+		  case 6
+		    return ( val * kShift6 ) or ( val \ kShift58 )
+		    
+		  case 8
+		    return ( val * kShift8 ) or ( val \ kShift56 )
+		    
+		  case 10
+		    return ( val * kShift10 ) or ( val \ kShift54 )
+		    
+		  case 14
+		    return ( val * kShift14 ) or ( val \ kShift50 )
+		    
+		  case 15
+		    return ( val * kShift15 ) or ( val \ kShift49 )
+		    
+		  case 18
+		    return ( val * kShift18 ) or ( val \ kShift46 )
+		    
+		  case 20
+		    return ( val * kShift20 ) or ( val \ kShift44 )
+		    
+		  case 21
+		    return ( val * kShift21 ) or ( val \ kShift43 )
+		    
+		  case 25
+		    return ( val * kShift25 ) or ( val \ kShift39 )
+		    
+		  case 27
+		    return ( val * kShift27 ) or ( val \ kShift37 )
+		    
+		  case 28
+		    return ( val * kShift28 ) or ( val \ kShift36 )
+		    
+		  case 36
+		    return ( val * kShift36 ) or ( val \ kShift28 )
+		    
+		  case 39
+		    return ( val * kShift39 ) or ( val \ kShift25 )
+		    
+		  case 41
+		    return ( val * kShift41 ) or ( val \ kShift23 )
+		    
+		  case 43
+		    return ( val * kShift43 ) or ( val \ kShift21 )
+		    
+		  case 44
+		    return ( val * kShift44 ) or ( val \ kShift20 )
+		    
+		  case 45
+		    return ( val * kShift45 ) or ( val \ kShift19 )
+		    
+		  case 47
+		    return ( val * kShift47 ) or ( val \ kShift17 )
+		    
+		  case 51
+		    return ( val * kShift51 ) or ( val \ kShift13 )
+		    
+		  case 55
+		    return ( val * kShift55 ) or ( val \ kShift9 )
+		    
+		  case 56
+		    return ( val * kShift56 ) or ( val \ kShift8 )
+		    
+		  case 61
+		    return ( val * kShift61 ) or ( val \ kShift3 )
+		    
+		  case 62
+		    return ( val * kShift62 ) or ( val \ kShift2 )
+		    
+		  case else
+		    break
+		    
+		  end select
 		End Function
 	#tag EndMethod
 
