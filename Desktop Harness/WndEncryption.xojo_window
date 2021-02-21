@@ -69,6 +69,7 @@ Begin Window WndEncryption
       Top             =   51
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   752
@@ -117,6 +118,7 @@ Begin Window WndEncryption
       Top             =   295
       Transparent     =   False
       Underline       =   False
+      UnicodeMode     =   0
       UseFocusRing    =   True
       Visible         =   True
       Width           =   752
@@ -939,6 +941,12 @@ End
 		  case kLabelSHA512
 		    key = Crypto.SHA512( key )
 		    
+		  case kLabelSHA3_256, kLabelSHA3_512
+		    dim bits as integer = mnuKeyHash.Text.Right( 3 ).Val
+		    dim hasher as new SHA3Digest_MTC( M_SHA3.Bits( bits ) )
+		    hasher.Process( key )
+		    key = hasher.Value
+		    
 		  end select
 		  e.SetKey key
 		  
@@ -1048,6 +1056,12 @@ End
 	#tag EndConstant
 
 	#tag Constant, Name = kLabelSHA256, Type = String, Dynamic = False, Default = \"SHA256", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kLabelSHA3_256, Type = String, Dynamic = False, Default = \"SHA3-256", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kLabelSHA3_512, Type = String, Dynamic = False, Default = \"SHA3-512", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kLabelSHA512, Type = String, Dynamic = False, Default = \"SHA512", Scope = Private
@@ -1223,7 +1237,7 @@ End
 #tag Events mnuKeyHash
 	#tag Event
 		Sub Open()
-		  me.AddRows array( kLabelNone, kLabelMD5, kLabelSHA1, kLabelSHA256, kLabelSHA512 )
+		  me.AddRows array( kLabelNone, kLabelMD5, kLabelSHA1, kLabelSHA256, kLabelSHA512, kLabelSHA3_256, kLabelSHA3_512 )
 		  me.ListIndex = 0
 		  
 		End Sub

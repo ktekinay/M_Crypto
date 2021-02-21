@@ -2246,7 +2246,7 @@ Inherits M_Crypto.Encrypter
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
 	#tag EndConstant
 
 
@@ -2258,6 +2258,22 @@ Inherits M_Crypto.Encrypter
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Code"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="PaddingString"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Bits"
 			Visible=false

@@ -18,9 +18,9 @@ Inherits TestGroup
 		  dim arr() as string
 		  for i as integer = 1 to 1000
 		    uuid = M_Crypto.GenerateUUID
-		    Assert.IsNotNil rx.Search( uuid ), uuid.ToText + " doesn't match pattern"
+		    Assert.IsNotNil rx.Search( uuid ), uuid + " doesn't match pattern"
 		    if arr.IndexOf( uuid ) <> -1 then
-		      Assert.Fail uuid.ToText + " is a duplicate"
+		      Assert.Fail uuid + " is a duplicate"
 		    else
 		      arr.Append uuid
 		    end if

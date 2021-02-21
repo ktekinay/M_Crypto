@@ -109,34 +109,34 @@ Inherits EncrypterTestGroup
 		  data = "N"
 		  expectedHex = "7d818b61b7cb9856bab74d9018cd0c33"
 		  encrypted = e.EncryptCBC( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptCBC( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "Nop"
 		  expectedHex = "c420a4bb11203dc3a3052cfb5ae2356c"
 		  encrypted = e.EncryptCBC( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptCBC( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "NopeNop"
 		  expectedHex = "0ccf92a2bfa4cae5ae33fefd2253a958"
 		  encrypted = e.EncryptCBC( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptCBC( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "12345678901234567"
 		  expectedHex = "468f781dbfabbebe639ff6cfd4e8ae930b431c63db29306e6d3eb1c8c40424ef"
 		  encrypted = e.EncryptCBC( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptCBC( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		End Sub
 	#tag EndMethod
 
@@ -225,34 +225,34 @@ Inherits EncrypterTestGroup
 		  data = "N"
 		  expectedHex = "119f9e14c2a0ed78062d18a4f8ed8e7b"
 		  encrypted = e.EncryptECB( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "Nop"
 		  expectedHex = "65111dcc5195f23f510bb6dec75faff8"
 		  encrypted = e.EncryptECB( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "NopeNop"
 		  expectedHex = "ba8299305f24e80fd1b8476c912a6d47"
 		  encrypted = e.EncryptECB( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		  
 		  data = "12345678901234567"
 		  expectedHex = "f82a423a97a79ebb97401e7052ece73a6de53b0bff0914b3d430e961c056e02c"
 		  encrypted = e.EncryptECB( data )
-		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data.ToText
-		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data.ToText
+		  Assert.AreEqual expectedHex.LenB, EncodeHex( encrypted ).LenB, "Encrypted size of " + data
+		  Assert.AreEqual expectedHex, EncodeHex( encrypted ), "Encryption of " + data
 		  decrypted = e.DecryptECB( encrypted ).DefineEncoding( data.Encoding )
-		  Assert.AreSame data, decrypted, "Decryption of " + data.ToText
+		  Assert.AreSame data, decrypted, "Decryption of " + data
 		End Sub
 	#tag EndMethod
 

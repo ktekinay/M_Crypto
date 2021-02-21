@@ -14,7 +14,7 @@ Inherits TestGroup
 		  data = "12345678901234567890"
 		  
 		  dim dataSize as integer = data.LenB
-		  Assert.Message "Data size = " + dataSize.ToText
+		  Assert.Message "Data size = " + dataSize.ToString
 		  
 		  expected = "0AF78AD07AB67849216CBD8606C24AA4423325CD"
 		  
@@ -28,7 +28,7 @@ Inherits TestGroup
 		    encrypted = encrypted + e.EncryptCFB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
@@ -36,7 +36,7 @@ Inherits TestGroup
 		    decrypted = decrypted + e.DecryptCFB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod
@@ -54,7 +54,7 @@ Inherits TestGroup
 		  data = "12345678901234567890"
 		  
 		  dim dataSize as integer = data.LenB
-		  Assert.Message "Data size = " + dataSize.ToText
+		  Assert.Message "Data size = " + dataSize.ToString
 		  
 		  expected = "0AF78AD07AB67849C4638590AA607A0B3D4B8B18"
 		  
@@ -68,7 +68,7 @@ Inherits TestGroup
 		    encrypted = encrypted + e.EncryptOFB( data.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
@@ -76,7 +76,7 @@ Inherits TestGroup
 		    decrypted = decrypted + e.DecryptOFB( encrypted.MidB( index, e.BlockSize ), index >= ( data.LenB - e.BlockSize ) )
 		  next
 		  sw.Stop
-		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToText + " ms"
+		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
 		End Sub
 	#tag EndMethod

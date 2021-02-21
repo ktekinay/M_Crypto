@@ -402,7 +402,7 @@ Protected Module Scrypt_MTC
 	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.6", Scope = Protected
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Protected
 	#tag EndConstant
 
 

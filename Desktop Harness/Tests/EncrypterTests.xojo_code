@@ -113,112 +113,112 @@ Inherits TestGroup
 		  actual.SetKey key
 		  expected = new AES_MTC( 128 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES128ECB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 128 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES128CFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 128 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES128OFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 128 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES192CBC
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 192 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES192ECB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 192 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES192CFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 192 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES192OFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 192 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES256CBC
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 256 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES256ECB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 256 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES256CFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 256 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeAES256OFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new AES_MTC( 256 )
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeBlowfishCBC
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new Blowfish_MTC
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCBC( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeBlowfishECB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new Blowfish_MTC
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptECB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeBlowfishCFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new Blowfish_MTC
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptCFB( data ), actual.Encrypt( data ), code
 		  
 		  code = M_Crypto.kCodeBlowfishOFB
 		  actual = M_Crypto.GetEncrypter( code )
 		  actual.SetKey key
 		  expected = new Blowfish_MTC
 		  expected.SetKey key
-		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code.ToText
+		  Assert.AreSame expected.EncryptOFB( data ), actual.Encrypt( data ), code
 		  
 		End Sub
 	#tag EndMethod
@@ -230,7 +230,7 @@ Inherits TestGroup
 		  dim pad as string
 		  dim encrypted as string
 		  dim decrypted as string
-		  dim description as text
+		  dim description as string
 		  
 		  description = "Nonsense padding"
 		  pad = "ABCDEF01"
