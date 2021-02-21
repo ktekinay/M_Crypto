@@ -311,7 +311,8 @@ Inherits ConsoleApplication
 		  end if
 		  
 		  key = Decode( key, KeyEncoding )
-		  select case Parser.StringValue( kOptionKeyHash, "" )
+		  dim hashType as string = Parser.StringValue( kOptionKeyHash, "" )
+		  select case hashType
 		  case "", "N", "None"
 		    //
 		    // Do nothing
@@ -328,6 +329,16 @@ Inherits ConsoleApplication
 		    
 		  case "SHA512", "S512"
 		    key = Crypto.SHA512( key )
+		    
+		  case else
+		    dim hashLeft4 as string = hashType.Left( 4 )
+		    dim hashLeft2 as string = hashType.Left( 2 )
+		    if hashLeft4 = "SHA3" or hashLeft2 = "S3" then
+		      dim bits as integer = hashType.Right( 3 ).Val
+		      dim hasher as new SHA3Digest_MTC( M_SHA3.Bits( bits ) )
+		      hasher.Process( key )
+		      key = hasher.Value
+		    end if
 		    
 		  end select
 		  
@@ -642,7 +653,14 @@ Inherits ConsoleApplication
 			    parser.AddOption o
 			    
 			    o = new Option( "H", kOptionKeyHash, "The hash to apply to the key [default None]", Option.OptionType.String )
-			    o.AddAllowedValue "None", "N", "MD5", "M", "SHA1", "S1", "SHA256", "S256", "SHA512", "S512"
+			    o.AddAllowedValue _
+			    "None", "N",  _
+			    "MD5", "M",  _
+			    "SHA1", "S1",  _
+			    "SHA256", "S256",  _
+			    "SHA512", "S512",  _
+			    "SHA3-256", "S3256",  _
+			    "SHA3-512", "S3512"
 			    parser.AddOption o
 			    
 			    o = new Option( "p", kOptionPadding, "The padding to use [default PKCS]", Option.OptionType.String )
