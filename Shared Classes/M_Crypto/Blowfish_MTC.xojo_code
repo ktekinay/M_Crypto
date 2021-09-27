@@ -84,7 +84,7 @@ Implements BcryptInterface
 		  // Test Expand0State
 		  //
 		  if returnErrorMessage = "" then
-		    Expand0State 1, mbData, mbKey
+		    Expand0State 1, kData, kKey
 		    result = SelfTestMemoryBlockHash( P, 18 * 4 )
 		    System.DebugLog "Expand0State P = " + result
 		    if result <> "88D7DA0BA674E47208673DD308D731D3D299A1E3746D7D4A8AED88325B08E70C" then
@@ -176,9 +176,7 @@ Implements BcryptInterface
 		Sub KeyChanged(key As String)
 		  InitKeyValues
 		  
-		  dim temp as MemoryBlock = key
-		  dim keyMB as new Xojo.Core.MutableMemoryBlock( temp, temp.Size )
-		  Expand0State 1, keyMB
+		  Expand0State 1, key
 		End Sub
 	#tag EndEvent
 
@@ -537,6 +535,14 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub EncryptMb(data As MemoryBlock)
+		  var dataPtr as ptr = data
+		  var temp as new Xojo.Core.MutableMemoryBlock( dataPtr, data.Size )
+		  EncryptMb( temp )
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub EncryptMb(data As Xojo.Core.MutableMemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
@@ -783,7 +789,7 @@ Implements BcryptInterface
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Expand0State(repetitions As Integer, ParamArray keys() As Xojo.Core.MutableMemoryBlock)
+		Private Sub Expand0State(repetitions As Integer, ParamArray keys() As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -827,26 +833,26 @@ Implements BcryptInterface
 		    startMs = Microseconds
 		  #endif
 		  for keyIndex as integer = 0 to keys.Ubound
-		    dim key as Xojo.Core.MutableMemoryBlock = keys( keyIndex )
-		    dim keySize as integer = key.Size
+		    dim key as string = keys( keyIndex )
+		    dim keySize as integer = key.Bytes
 		    
 		    if keySize = 0 then
 		      RaiseErrorIf( true, kErrorKeyCannotBeEmpty )
 		    end if
 		    WasKeySet = true
 		    
-		    dim streamKey as Xojo.Core.MutableMemoryBlock
+		    dim streamKey as MemoryBlock
 		    dim streamKeySize as integer = keySize
 		    if ( keySize mod kStreamWordSize ) = 0 then
-		      streamKey = new Xojo.Core.MutableMemoryBlock( keySize )
-		      streamKey.Left( keySize ) = key
+		      streamKey = new MemoryBlock( keySize )
+		      streamKey.StringValue( 0, keySize ) = key
 		    else
 		      streamKeySize = streamKeySize * kStreamWordSize
 		      
-		      streamKey = new Xojo.Core.MutableMemoryBlock( streamKeySize )
+		      streamKey = new MemoryBlock( streamKeySize )
 		      dim lastByte as integer = streamKeySize - 1
 		      for thisByte as integer = 0 to lastByte step keySize
-		        streamKey.Mid( thisByte, keySize ) = key
+		        streamKey.StringValue( thisByte, keySize ) = key
 		      next
 		    end if
 		    
@@ -854,7 +860,7 @@ Implements BcryptInterface
 		      //
 		      // Swap the bytes
 		      //
-		      dim streamKeyPtr as ptr = streamKey.Data
+		      dim streamKeyPtr as ptr = streamKey
 		      dim swapIndex as integer
 		      while swapIndex < streamKeySize
 		        dim temp as UInt32 = streamKeyPtr.UInt32( swapIndex )
@@ -889,7 +895,7 @@ Implements BcryptInterface
 		  dim barrier as integer
 		  dim pptrEncoderIndex as integer
 		  
-		  dim key as Xojo.Core.MutableMemoryBlock
+		  dim key as MemoryBlock
 		  dim keyPtr as ptr
 		  dim keySize as integer
 		  
@@ -899,14 +905,14 @@ Implements BcryptInterface
 		  
 		  for rep as integer = 1 to repetitions
 		    
-		    for keyIndex = 0 to keys.Ubound
+		    for keyIndex = 0 to keys.LastRowIndex
 		      
 		      #if kDebug then
 		        startMs = Microseconds
 		      #endif
 		      
 		      key = keys( keyIndex )
-		      keyPtr = key.Data
+		      keyPtr = key
 		      keySize = key.Size
 		      
 		      barrier = keySize - kStreamWordSize
@@ -1049,6 +1055,16 @@ Implements BcryptInterface
 		      #endif
 		    next keyIndex
 		  next rep
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ExpandState(data As MemoryBlock, key As String)
+		  var dataMb as new Xojo.Core.MutableMemoryBlock( data, data.Size )
+		  var keyMb as new Xojo.Core.MutableMemoryBlock( key.Bytes )
+		  CopyStringToMutableMemoryBlock( key, keyMb )
+		  ExpandState dataMb, keyMb
 		  
 		End Sub
 	#tag EndMethod

@@ -1,19 +1,19 @@
 #tag Interface
 Protected Interface BcryptInterface
 	#tag Method, Flags = &h0
-		Sub EncryptMb(data As Xojo.Core.MutableMemoryBlock)
+		Sub EncryptMb(data As MemoryBlock)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Expand0State(repetitions As Integer, ParamArray keys() As Xojo.Core.MutableMemoryBlock)
+		Sub Expand0State(repetitions As Integer, ParamArray keys() As MemoryBlock)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub ExpandState(data As Xojo.Core.MutableMemoryBlock, key As Xojo.Core.MutableMemoryBlock)
+		Sub ExpandState(data As MemoryBlock, key As String)
 		  
 		End Sub
 	#tag EndMethod
@@ -26,6 +26,7 @@ Protected Interface BcryptInterface
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -33,18 +34,23 @@ Protected Interface BcryptInterface
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -52,6 +58,7 @@ Protected Interface BcryptInterface
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Interface
