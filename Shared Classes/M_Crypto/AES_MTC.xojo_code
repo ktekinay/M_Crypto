@@ -994,6 +994,8 @@ Inherits M_Crypto.Encrypter
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
+		    var roundKeyIndex as integer = 0 // Incremented within the loop below
+		    
 		    for round = 1 to NumberOfRounds
 		      
 		      //
@@ -1074,8 +1076,9 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
+		        dataIndex = startAt - 4
 		        for i As integer = 0 to 3
-		          dataIndex = ( i * 4 ) + startAt
+		          dataIndex = dataIndex + 4
 		          
 		          dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
 		          dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
@@ -1101,8 +1104,9 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
+		      roundKeyIndex = roundKeyIndex + 16
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( roundKeyIndex )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
 		    next
 		    
 		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
@@ -1125,7 +1129,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var xtimePtr as ptr =XtimeMB
+		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1177,6 +1181,8 @@ Inherits M_Crypto.Encrypter
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
+		    var roundKeyIndex as integer = 0 // Incremented within the loop below
+		    
 		    for round = 1 to NumberOfRounds
 		      
 		      //
@@ -1257,8 +1263,9 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
+		        dataIndex = startAt - 4
 		        for i As integer = 0 to 3
-		          dataIndex = ( i * 4 ) + startAt
+		          dataIndex = dataIndex + 4
 		          
 		          dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
 		          dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
@@ -1284,8 +1291,9 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( round * kNb * 4 )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
+		      roundKeyIndex = roundKeyIndex + 16
+		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( roundKeyIndex )
+		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
 		    next
 		  next
 		  
@@ -1366,6 +1374,7 @@ Inherits M_Crypto.Encrypter
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
+		    var roundKeyIndex as integer = 0 // Incremented within the loop below
 		    for round = 1 to NumberOfRounds
 		      
 		      //
@@ -1446,8 +1455,9 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
-		        for i As integer = 0 to 3
-		          dataIndex = ( i * 4 )
+		        dataIndex = -4
+		        for i as integer = 0 to 3
+		          dataIndex = dataIndex + 4
 		          
 		          dim byte0 as byte = vectorPtr.Byte( dataIndex + 0 )
 		          dim byte1 as byte = vectorPtr.Byte( dataIndex + 1 )
@@ -1473,8 +1483,9 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // AddRoundKey
 		      //
-		      vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( round * kNb * 4 )
-		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( round * kNb * 4 + 8 )
+		      roundKeyIndex = roundKeyIndex + 16
+		      vectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( roundKeyIndex )
+		      vectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
 		    next
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
