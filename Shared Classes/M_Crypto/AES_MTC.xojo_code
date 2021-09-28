@@ -248,7 +248,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(bits As Integer, paddingMethod As Padding=Padding.PKCS)
+		Sub Constructor(bits As Integer, paddingMethod As Padding = Padding.PKCS)
 		  Constructor "", EncryptionBits( bits ), paddingMethod
 		End Sub
 	#tag EndMethod
@@ -1536,13 +1536,25 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  //
+		  // Example values are given for 192-bit
+		  //
+		  
+		  //
 		  // The first round key is the key itself.
 		  //
-		  RoundKey = new MemoryBlock( KeyExpSize )
-		  if key.LenB > KeyLen then
-		    RoundKey.StringValue( 0, KeyLen ) = key.LeftB( KeyLen )
+		  RoundKey = new MemoryBlock( KeyExpSize ) // e.g., KeyExpSize = 208
+		  
+		  #if DebugBuild
+		    //
+		    // For debugging
+		    //
+		    var roundKey as MemoryBlock = self.RoundKey
+		  #endif
+		  
+		  if key.Bytes > KeyLen then // e.g., KeyLen = 24
+		    RoundKey.StringValue( 0, KeyLen ) = key.LeftBytes( KeyLen )
 		  else
-		    RoundKey.StringValue( 0, key.LenB ) = key
+		    RoundKey.StringValue( 0, key.Bytes ) = key
 		  end if
 		  
 		  dim roundKeyPtr as Ptr = RoundKey
@@ -1551,47 +1563,68 @@ Inherits M_Crypto.Encrypter
 		  // All other round keys are found from the previous round keys.
 		  //
 		  dim tempa as new MemoryBlock( 5 ) // Padding to make rotating easier
-		  dim ptrTempa as ptr = tempa
+		  dim tempaPtr as ptr = tempa
 		  dim sboxPtr as ptr = Sbox
-		  dim ptrRcon as ptr = Rcon
+		  dim rconPtr as ptr = Rcon
 		  
-		  dim iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1
-		  for i As integer = Nk to iLast
-		    ptrTempa.UInt32( 0 ) = roundKeyPtr.UInt32( ( i - 1 ) * 4 )
+		  var is256 as boolean = Bits = 256
+		  
+		  //
+		  // Variables that would otherwise be incremented within
+		  // the loop with costlier operations than simple addition;
+		  // we start with lower values since they will be incremented
+		  // at the top of the loop
+		  //
+		  var iTimes4 as integer = Nk * 4 - 4
+		  var iMinusNk as integer = 0 - 4
+		  var iMod as integer = 0 - 1
+		  var roundKeyIndex as integer = ( Nk - 1 ) * 4 - 4
+		  
+		  var iLast As integer = kNb * ( NumberOfRounds + 1 ) - 1 // e.g., NumberOfRounds = 12, iLast = 51
+		  
+		  for i As integer = Nk to iLast // e.g., Nk = 6
+		    //
+		    // Increment the indexes
+		    //
+		    roundKeyIndex = roundKeyIndex + 4
+		    iTimes4 = iTimes4 + 4
+		    iMinusNk = iMinusNk + 4
 		    
-		    if ( i mod Nk ) = 0 then
+		    iMod = iMod + 1
+		    if iMod = Nk then
+		      iMod = 0
+		    end if
+		    
+		    tempaPtr.UInt32( 0 ) = roundKeyPtr.UInt32( roundKeyIndex )
+		    
+		    if iMod = 0 then
 		      // This function shifts the 4 bytes in a word to the left once.
 		      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 		      
 		      // Function RotWord()
-		      ptrTempa.Byte( 4 ) = ptrTempa.Byte( 0 )
-		      ptrTempa.UInt32( 0 ) = ptrTempa.UInt32( 1 )
+		      tempaPtr.Byte( 4 ) = tempaPtr.Byte( 0 )
+		      tempaPtr.UInt32( 0 ) = tempaPtr.UInt32( 1 )
 		      
 		      // SubWord() is a function that takes a four-byte input word and 
 		      // applies the S-box to each of the four bytes to produce an output word.
 		      
 		      // Function Subword()
-		      ptrTempa.Byte( 0 ) = sboxPtr.Byte( ptrTempa.Byte( 0 ) )
-		      ptrTempa.Byte( 1 ) = sboxPtr.Byte( ptrTempa.Byte( 1 ) )
-		      ptrTempa.Byte( 2 ) = sboxPtr.Byte( ptrTempa.Byte( 2 ) )
-		      ptrTempa.Byte( 3 ) = sboxPtr.Byte( ptrTempa.Byte( 3 ) )
+		      tempaPtr.Byte( 0 ) = sboxPtr.Byte( tempaPtr.Byte( 0 ) )
+		      tempaPtr.Byte( 1 ) = sboxPtr.Byte( tempaPtr.Byte( 1 ) )
+		      tempaPtr.Byte( 2 ) = sboxPtr.Byte( tempaPtr.Byte( 2 ) )
+		      tempaPtr.Byte( 3 ) = sboxPtr.Byte( tempaPtr.Byte( 3 ) )
 		      
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 0 ) xor ptrRcon.Byte( i \ Nk )
+		      tempaPtr.Byte( 0 ) = tempaPtr.Byte( 0 ) xor rconPtr.Byte( i \ Nk )
+		      
+		    elseif is256 and iMod = 4 then
+		      tempaPtr.Byte( 0 ) = sboxPtr.Byte( tempaPtr.Byte( 0 ) )
+		      tempaPtr.Byte( 1 ) = sboxPtr.Byte( tempaPtr.Byte( 1 ) )
+		      tempaPtr.Byte( 2 ) = sboxPtr.Byte( tempaPtr.Byte( 2 ) )
+		      tempaPtr.Byte( 3 ) = sboxPtr.Byte( tempaPtr.Byte( 3 ) )
 		      
 		    end if
 		    
-		    if Bits = 256 then
-		      if ( i mod Nk ) = 4 then
-		        ptrTempa.Byte( 0 ) = sboxPtr.Byte( ptrTempa.Byte( 0 ) )
-		        ptrTempa.Byte( 1 ) = sboxPtr.Byte( ptrTempa.Byte( 1 ) )
-		        ptrTempa.Byte( 2 ) = sboxPtr.Byte( ptrTempa.Byte( 2 ) )
-		        ptrTempa.Byte( 3 ) = sboxPtr.Byte( ptrTempa.Byte( 3 ) )
-		      end if
-		    end if
-		    
-		    dim iTimes4 As integer = i * 4
-		    dim iMinusNk As integer = ( i - Nk ) * 4
-		    roundKeyPtr.UInt32( iTimes4 ) = roundKeyPtr.UInt32( iMinusNk ) xor ptrTempa.UInt32( 0 )
+		    roundKeyPtr.UInt32( iTimes4 ) = roundKeyPtr.UInt32( iMinusNk ) xor tempaPtr.UInt32( 0 )
 		  next
 		  
 		End Sub
