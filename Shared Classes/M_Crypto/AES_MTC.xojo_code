@@ -17,7 +17,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 	#tag Event
-		Sub Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Sub Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
 		    DecryptMbECB data
@@ -36,7 +36,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndEvent
 
 	#tag Event
-		Sub Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Sub Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  select case type
 		  case Functions.Default, Functions.ECB
 		    EncryptMbECB data
@@ -301,7 +301,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub DecryptMbCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -309,7 +309,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim invSboxPtr as ptr = InvSbox
 		  
@@ -319,17 +319,19 @@ Inherits M_Crypto.Encrypter
 		  // Copy the original data so we have source
 		  // for the vector
 		  //
-		  dim originalData as new Xojo.Core.MemoryBlock( data.Left( data.Size ) )
-		  dim originalDataPtr as ptr = originalData.Data
+		  dim originalData as MemoryBlock = data.LeftB( data.Size )
+		  dim originalDataPtr as ptr = originalData
 		  
-		  dim vectorMB as new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		  dim vectorMB as MemoryBlock
 		  if zCurrentVector isa object then
-		    vectorMB.Left( vectorMB.Size ) = zCurrentVector
-		  elseif InitialVector isa object then
-		    vectorMB.Left( kBlockLen ) = InitialVector
+		    vectorMB = zCurrentVector.LeftB( kBlockLen )
+		  elseif InitialVector <> "" then
+		    vectorMB = InitialVector
+		  else 
+		    vectorMB = new MemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorPtr as ptr = vectorMB.Data
+		  dim vectorPtr as ptr = vectorMB
 		  
 		  dim dataIndex as integer
 		  dim lastByte As integer = data.Size - 1
@@ -484,7 +486,7 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB.Left( kBlockLen ) = originalData.Right( kBlockLen )
+		    vectorMB = originalData.RightB( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  
@@ -493,7 +495,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptMbECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DecryptMbECB(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -501,7 +503,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim invSboxPtr as ptr = InvSbox
 		  
@@ -657,7 +659,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DecryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		Private Sub DecryptMbVector(data As MemoryBlock, type As Functions, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -665,22 +667,22 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim sboxPtr as ptr = Sbox
 		  
-		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  dim vectorMB as MemoryBlock = zCurrentVector
 		  
-		  if vectorMB is nil and InitialVector isa object then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  if vectorMB is nil and InitialVector <> "" then
+		    vectorMB = InitialVector
 		  end if
 		  if vectorMB is nil then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorPtr as ptr = vectorMB.Data
+		  dim vectorPtr as ptr = vectorMB
 		  
-		  dim saveVectorPtr as ptr = zSaveVector.Data
+		  dim saveVectorPtr as ptr = zSaveVector
 		  
 		  dim temp As byte 
 		  dim temp2 as byte
@@ -897,7 +899,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptMbCBC(data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean = True)
+		Private Sub EncryptMbCBC(data As MemoryBlock, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -905,20 +907,20 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim sboxPtr as ptr = Sbox
 		  
-		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  dim vectorMB as MemoryBlock = zCurrentVector
 		  
-		  if vectorMB is nil and InitialVector isa object then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  if vectorMB is nil and InitialVector <> "" then
+		    vectorMB = InitialVector
 		  end if
 		  if vectorMB is nil then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorPtr as ptr = vectorMB.Data
+		  dim vectorPtr as ptr = vectorMB
 		  
 		  dim temp As byte 
 		  dim temp2 as byte
@@ -1085,7 +1087,7 @@ Inherits M_Crypto.Encrypter
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB.Left( kBlockLen ) = data.Right( kBlockLen )
+		    vectorMB = data.RightB( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  
@@ -1093,7 +1095,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptMbECB(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub EncryptMbECB(data As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -1101,7 +1103,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim sboxPtr as ptr = Sbox
 		  
@@ -1267,7 +1269,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub EncryptMbVector(data As Xojo.Core.MutableMemoryBlock, type As Functions, isFinalBlock As Boolean = True)
+		Private Sub EncryptMbVector(data As MemoryBlock, type As Functions, isFinalBlock As Boolean = True)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -1275,20 +1277,20 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim sboxPtr as ptr = Sbox
 		  
-		  dim vectorMB as Xojo.Core.MutableMemoryBlock = zCurrentVector
+		  dim vectorMB as MemoryBlock = zCurrentVector
 		  
-		  if vectorMB is nil and InitialVector isa object then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( InitialVector )
+		  if vectorMB is nil and InitialVector <> "" then
+		    vectorMB = InitialVector
 		  end if
 		  if vectorMB is nil then
-		    vectorMB = new Xojo.Core.MutableMemoryBlock( kBlockLen )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		  end if
 		  
-		  dim vectorPtr as ptr = vectorMB.Data
+		  dim vectorPtr as ptr = vectorMB
 		  
 		  dim temp As byte 
 		  dim temp2 as byte

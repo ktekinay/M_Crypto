@@ -1,12 +1,5 @@
 #tag Module
 Protected Module M_Crypto
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Sub CopyStringToMutableMemoryBlock(s As MemoryBlock, mb As Xojo.Core.MutableMemoryBlock)
-		  dim temp as new Xojo.Core.MemoryBlock( s, s.Size )
-		  mb.Left( s.size ) = temp.Left( s.Size )
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Protected Function GenerateUUID() As String
 		  // Tries to use declares to let the native system functions handle this.
@@ -193,26 +186,6 @@ Protected Module M_Crypto
 		  end if
 		  
 		  return result
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function MemoryBlockToString(mb As Xojo.Core.MemoryBlock) As String
-		  if mb is nil or mb.Size = 0 then
-		    return ""
-		  end if
-		  
-		  dim temp as MemoryBlock = mb.Data
-		  return temp.StringValue( 0, mb.Size )
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function StringToMutableMemoryBlock(s As MemoryBlock) As Xojo.Core.MutableMemoryBlock
-		  dim temp as new Xojo.Core.MemoryBlock( s, s.Size )
-		  dim mb as new Xojo.Core.MutableMemoryBlock( s.Size )
-		  mb.Left( s.Size ) = temp.Left( s.Size )
-		  return mb
 		End Function
 	#tag EndMethod
 
