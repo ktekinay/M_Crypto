@@ -314,10 +314,10 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Dereference pointers
 		  //
-		  var multiplyH9Ptr as ptr = self.MultiplyH9MB
-		  var multiplyHBPtr as ptr = self.MultiplyHBMB
-		  var multiplyHDPtr as ptr = self.MultiplyHDMB
-		  var multiplyHEPtr as ptr = self.MultiplyHEMB
+		  var multiplyH9Ptr as ptr = MultiplyH9MB
+		  var multiplyHBPtr as ptr = MultiplyHBMB
+		  var multiplyHDPtr as ptr = MultiplyHDMB
+		  var multiplyHEPtr as ptr = MultiplyHEMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -474,10 +474,10 @@ Inherits M_Crypto.Encrypter
 		        for i As integer = 0 to 3
 		          dataIndex = ( i * 4 ) + startAt
 		          
-		          dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
-		          dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
-		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
-		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
+		          dim byte0 as integer = dataPtr.Byte( dataIndex + 0 )
+		          dim byte1 as integer = dataPtr.Byte( dataIndex + 1 )
+		          dim byte2 as integer = dataPtr.Byte( dataIndex + 2 )
+		          dim byte3 as integer = dataPtr.Byte( dataIndex + 3 )
 		          
 		          dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
 		          dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
@@ -516,10 +516,10 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Dereference pointers
 		  //
-		  var multiplyH9Ptr as ptr = self.MultiplyH9MB
-		  var multiplyHBPtr as ptr = self.MultiplyHBMB
-		  var multiplyHDPtr as ptr = self.MultiplyHDMB
-		  var multiplyHEPtr as ptr = self.MultiplyHEMB
+		  var multiplyH9Ptr as ptr = MultiplyH9MB
+		  var multiplyHBPtr as ptr = MultiplyHBMB
+		  var multiplyHDPtr as ptr = MultiplyHDMB
+		  var multiplyHEPtr as ptr = MultiplyHEMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -659,10 +659,10 @@ Inherits M_Crypto.Encrypter
 		        for i As integer = 0 to 3
 		          dataIndex = ( i * 4 ) + startAt
 		          
-		          dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
-		          dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
-		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
-		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
+		          dim byte0 as integer = dataPtr.Byte( dataIndex + 0 )
+		          dim byte1 as integer = dataPtr.Byte( dataIndex + 1 )
+		          dim byte2 as integer = dataPtr.Byte( dataIndex + 2 )
+		          dim byte3 as integer = dataPtr.Byte( dataIndex + 3 )
 		          
 		          dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
 		          dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
@@ -685,7 +685,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var xtimePtr as ptr = self.XtimeMB
+		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -927,7 +927,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var xtimePtr as ptr = self.XtimeMB
+		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1125,7 +1125,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var xtimePtr as ptr = self.XtimeMB
+		  var xtimePtr as ptr =XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1301,7 +1301,7 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  var xtimePtr as ptr = self.XtimeMB
+		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
