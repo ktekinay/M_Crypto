@@ -94,6 +94,8 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  var xtimePtr as ptr = XtimeMB
+		  
 		  //
 		  // Used for ShiftRows
 		  //
@@ -206,20 +208,20 @@ Inherits M_Crypto.Encrypter
 		        dim tm As integer
 		        
 		        tm = byte0 xor byte1
-		        tm = XtimePtr.Byte( tm )
+		        tm = xtimePtr.Byte( tm )
 		        
 		        dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
 		        
 		        tm = byte1 xor byte2
-		        tm = XtimePtr.Byte( tm )
+		        tm = xtimePtr.Byte( tm )
 		        dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
 		        
 		        tm = byte2 xor byte3
-		        tm = XtimePtr.Byte( tm )
+		        tm = xtimePtr.Byte( tm )
 		        dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
 		        
 		        tm = byte3 xor byte0
-		        tm = XtimePtr.Byte( tm )
+		        tm = xtimePtr.Byte( tm )
 		        dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
 		      next
 		    end if
@@ -308,6 +310,14 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  //
+		  // Dereference pointers
+		  //
+		  var multiplyH9Ptr as ptr = self.MultiplyH9MB
+		  var multiplyHBPtr as ptr = self.MultiplyHBMB
+		  var multiplyHDPtr as ptr = self.MultiplyHDMB
+		  var multiplyHEPtr as ptr = self.MultiplyHEMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -469,10 +479,10 @@ Inherits M_Crypto.Encrypter
 		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
 		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		          
-		          dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
 		        next
 		      end if
 		    next
@@ -502,6 +512,14 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  //
+		  // Dereference pointers
+		  //
+		  var multiplyH9Ptr as ptr = self.MultiplyH9MB
+		  var multiplyHBPtr as ptr = self.MultiplyHBMB
+		  var multiplyHDPtr as ptr = self.MultiplyHDMB
+		  var multiplyHEPtr as ptr = self.MultiplyHEMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -646,10 +664,10 @@ Inherits M_Crypto.Encrypter
 		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
 		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		          
-		          dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex + 3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
 		        next
 		      end if
 		    next
@@ -666,6 +684,8 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  var xtimePtr as ptr = self.XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -822,16 +842,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
 		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
 		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
 		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
 		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
@@ -906,6 +926,8 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  var xtimePtr as ptr = self.XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1062,16 +1084,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
 		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
 		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
 		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
 		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
@@ -1102,6 +1124,8 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  var xtimePtr as ptr = self.XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1243,16 +1267,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
 		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
 		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
 		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
 		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
@@ -1276,6 +1300,8 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
+		  
+		  var xtimePtr as ptr = self.XtimeMB
 		  
 		  dim dataPtr as ptr = data
 		  dim roundKeyPtr as ptr = RoundKey
@@ -1430,16 +1456,16 @@ Inherits M_Crypto.Encrypter
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
-		          temp2 = XtimePtr.Byte( byte0 xor byte1 )
+		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
 		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte1 xor byte2 )
+		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
 		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte2 xor byte3 )
+		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
 		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
 		          
-		          temp2 = XtimePtr.Byte( byte3 xor byte0 )
+		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
 		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
@@ -1524,7 +1550,7 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // All other round keys are found from the previous round keys.
 		  //
-		  dim tempa as new MemoryBlock( 4 )
+		  dim tempa as new MemoryBlock( 5 ) // Padding to make rotating easier
 		  dim ptrTempa as ptr = tempa
 		  dim sboxPtr as ptr = Sbox
 		  dim ptrRcon as ptr = Rcon
@@ -1538,11 +1564,8 @@ Inherits M_Crypto.Encrypter
 		      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 		      
 		      // Function RotWord()
-		      dim firstByte As byte = ptrTempa.Byte( 0 )
-		      ptrTempa.Byte( 0 ) = ptrTempa.Byte( 1 )
-		      ptrTempa.Byte( 1 ) = ptrTempa.Byte( 2 )
-		      ptrTempa.Byte( 2 ) = ptrTempa.Byte( 3 )
-		      ptrTempa.Byte( 3 ) = firstByte
+		      ptrTempa.Byte( 4 ) = ptrTempa.Byte( 0 )
+		      ptrTempa.UInt32( 0 ) = ptrTempa.UInt32( 1 )
 		      
 		      // SubWord() is a function that takes a four-byte input word and 
 		      // applies the S-box to each of the four bytes to produce an output word.
@@ -1597,44 +1620,10 @@ Inherits M_Crypto.Encrypter
 	#tag Method, Flags = &h21
 		Private Shared Sub InitMultiplyTables()
 		  if MultiplyH9MB is nil then
-		    'const kH9 As integer = &h09
-		    'const kHB As integer = &h0B
-		    'const kHD As integer = &h0D
-		    'const kHE As integer = &h0E
-		    '
-		    'MultiplyH9MB = new MemoryBlock( 256 )
-		    'MultiplyH9Ptr = MultiplyH9MB
-		    '
-		    'MultiplyHBMB = new MemoryBlock( 256 )
-		    'MultiplyHBPtr = MultiplyHBMB
-		    '
-		    'MultiplyHDMB = new MemoryBlock( 256 )
-		    'MultiplyHDPtr = MultiplyHDMB
-		    '
-		    'MultiplyHEMB = new MemoryBlock( 256 )
-		    'MultiplyHEPtr = MultiplyHEMB
-		    '
-		    'dim ptrs() as ptr = array( MultiplyH9Ptr, MultiplyHBPtr, MultiplyHDPtr, MultiplyHEPtr )
-		    'dim values() as integer = array( kH9, kHB, kHD, kHE )
-		    '
-		    'for i as integer = 0 to ptrs.Ubound
-		    'dim p as ptr = ptrs( i )
-		    'dim v as integer = values( i )
-		    '
-		    'for x as integer = 0 to 255
-		    'p.Byte( x ) = Multiply( x, v )
-		    'next
-		    'next
-		    
 		    MultiplyH9MB = DecodeHex( kMultiplyH9Hex )
 		    MultiplyHBMB = DecodeHex( kMultiplyHBHex )
 		    MultiplyHDMB = DecodeHex( kMultiplyHDHex )
 		    MultiplyHEMB = DecodeHex( kMultiplyHEHex )
-		    
-		    MultiplyH9Ptr = MultiplyH9MB
-		    MultiplyHBPtr = MultiplyHBMB
-		    MultiplyHDPtr = MultiplyHDMB
-		    MultiplyHEPtr = MultiplyHEMB
 		  end if
 		  
 		  
@@ -1686,13 +1675,12 @@ Inherits M_Crypto.Encrypter
 		    "dbd9dfddd3d1d7d5cbc9cfcdc3c1c7c5sfbf9fffdf3f1f7f5ebe9efede3e1e7e5"
 		    
 		    XtimeMB = DecodeHex( kHex )
-		    XtimePtr = XtimeMB
 		    
 		    //
 		    // The data is a result of this calculation
 		    //
 		    'XtimeMB = new MemoryBlock( 256 )
-		    'XtimePtr = XtimeMB
+		    'var xtimePtr as ptr = XtimeMB
 		    '
 		    'for x as integer = 0 to 255
 		    '
@@ -1701,7 +1689,7 @@ Inherits M_Crypto.Encrypter
 		    'const kShift7 As integer = 128
 		    'const kXtimeMult As integer = &h1B
 		    '
-		    'XtimePtr.Byte( x ) = ( x * kShift1 ) xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
+		    'xtimePtr.Byte( x ) = ( x * kShift1 ) xor ( ( ( x \ kShift7 ) and kOne ) * kXtimeMult )
 		    '
 		    'next
 		    
@@ -1838,10 +1826,10 @@ Inherits M_Crypto.Encrypter
 		        dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
 		        dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
 		        
-		        dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
-		        dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
-		        dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
-		        dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
+		        dataPtr.Byte( dataIndex + 3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
 		      next
 		    end if
 		  next
@@ -1869,10 +1857,10 @@ Inherits M_Crypto.Encrypter
 		    'dataPtr.Byte( dataIndex + 2 ) = Multiply( byte0, kHD ) xor Multiply( byte1, kH9 ) xor Multiply( byte2, kHE ) xor Multiply( byte3, kHB )
 		    'dataPtr.Byte( dataIndex + 3 ) = Multiply( byte0, kHB ) xor Multiply( byte1, kHD ) xor Multiply( byte2, kH9 ) xor Multiply( byte3, kHE )
 		    
-		    dataPtr.Byte( dataIndex + 0 ) = MultiplyHEPtr.Byte( byte0 ) xor MultiplyHBPtr.Byte( byte1 ) xor MultiplyHDPtr.Byte( byte2 ) xor MultiplyH9Ptr.Byte( byte3 )
-		    dataPtr.Byte( dataIndex + 1 ) = MultiplyH9Ptr.Byte( byte0 ) xor MultiplyHEPtr.Byte( byte1 ) xor MultiplyHBPtr.Byte( byte2 ) xor MultiplyHDPtr.Byte( byte3 )
-		    dataPtr.Byte( dataIndex + 2 ) = MultiplyHDPtr.Byte( byte0 ) xor MultiplyH9Ptr.Byte( byte1 ) xor MultiplyHEPtr.Byte( byte2 ) xor MultiplyHBPtr.Byte( byte3 )
-		    dataPtr.Byte( dataIndex + 3 ) = MultiplyHBPtr.Byte( byte0 ) xor MultiplyHDPtr.Byte( byte1 ) xor MultiplyH9Ptr.Byte( byte2 ) xor MultiplyHEPtr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
+		    dataPtr.Byte( dataIndex + 3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
 		  next
 		  
 		End Sub
@@ -1969,6 +1957,8 @@ Inherits M_Crypto.Encrypter
 		  const kShift7 As integer = 128
 		  const kXtimeMult As integer = &h1B
 		  
+		  var xtimePtr as ptr = XtimeMB
+		  
 		  for i As integer = 0 to 3
 		    dim dataIndex As integer = ( i * 4 ) + startAt
 		    
@@ -1984,26 +1974,26 @@ Inherits M_Crypto.Encrypter
 		    tm = byte0 xor byte1
 		    'tm = Xtime( tm )
 		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
-		    tm = XtimePtr.Byte( tm )
+		    tm = xtimePtr.Byte( tm )
 		    
 		    dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( tm xor tmp )
 		    
 		    tm = byte1 xor byte2
 		    'tm = Xtime( tm )
 		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
-		    tm = XtimePtr.Byte( tm )
+		    tm = xtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( tm xor tmp )
 		    
 		    tm = byte2 xor byte3
 		    'tm = Xtime( tm )
 		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
-		    tm = XtimePtr.Byte( tm )
+		    tm = xtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( tm xor tmp )
 		    
 		    tm = byte3 xor byte0
 		    'tm = Xtime( tm )
 		    'tm = ( tm * kShift1 )  xor ( ( ( tm \ kShift7 ) and kOne ) * kXtimeMult )
-		    tm = XtimePtr.Byte( tm )
+		    tm = xtimePtr.Byte( tm )
 		    dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( tm xor tmp )
 		  next
 		  
@@ -2024,10 +2014,10 @@ Inherits M_Crypto.Encrypter
 		  const kShift7 As integer = 128
 		  const kXtimeMult As integer = &h1B
 		  
-		  dim xtimex1 As integer = XtimePtr.Byte( x )
-		  dim xtimex2 As integer = XtimePtr.Byte( xtimex1 )
-		  dim xtimex3 As integer = XtimePtr.Byte( xtimex2 )
-		  dim xtimex4 As integer = XtimePtr.Byte( xtimex3 )
+		  dim xtimex1 As integer = xtimePtr.Byte( x )
+		  dim xtimex2 As integer = xtimePtr.Byte( xtimex1 )
+		  dim xtimex3 As integer = xtimePtr.Byte( xtimex2 )
+		  dim xtimex4 As integer = xtimePtr.Byte( xtimex3 )
 		  
 		  return ( ( y and kOne ) * x ) xor _
 		  ( ( ( y \ kShift1 ) and kOne ) * xtimex1 ) xor _
@@ -2170,15 +2160,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared MultiplyH9Ptr As Ptr
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private Shared MultiplyHBMB As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared MultiplyHBPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -2186,15 +2168,7 @@ Inherits M_Crypto.Encrypter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared MultiplyHDPtr As Ptr
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private Shared MultiplyHEMB As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared MultiplyHEPtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -2219,10 +2193,6 @@ Inherits M_Crypto.Encrypter
 
 	#tag Property, Flags = &h21
 		Private Shared XtimeMB As MemoryBlock
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared XtimePtr As Ptr
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
