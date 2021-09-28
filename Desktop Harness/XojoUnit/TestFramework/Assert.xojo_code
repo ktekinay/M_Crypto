@@ -644,21 +644,23 @@ Protected Class Assert
 		  actualSize = actual.LastIndex
 		  
 		  If expectedSize <> actualSize Then
-		    Fail( "Expected Text array Ubound [" + expectedSize.ToString + _
+		    Fail( "Expected String array LastIndex [" + expectedSize.ToString + _
 		    "] but was [" + actualSize.ToString + "].", _
 		    message)
 		    Return
 		  End If
 		  
 		  For i As Integer = 0 To expectedSize
-		    If expected(i).Compare(actual(i), ComparisonOptions.CaseSensitive) <> 0 Then
+		    If Not AreSameBytes(expected(i), actual(i)) Then
 		      Fail(FailEqualMessage("Array(" + i.ToString + ") = '" + expected(i) + "'", _
 		      "Array(" + i.ToString + ") = '" + actual(i) + "'"), _
 		      message)
 		      Return
+		      
 		    ElseIf expected(i).Encoding <> actual(i).Encoding Then
 		      Fail("The text encoding of item " + i.ToString + " ('" + expected(i) + "') differs", message)
 		      Return
+		      
 		    End If
 		  Next
 		  
@@ -668,14 +670,15 @@ Protected Class Assert
 
 	#tag Method, Flags = &h0
 		Sub AreSame(expected As String, actual As String, message As String = "")
-		  If expected.Compare(actual, ComparisonOptions.CaseSensitive) = 0 Then
-		    If expected.Encoding <> actual.Encoding Then
-		      Fail("The bytes match but the text encoding does not", message)
-		    Else
-		      Pass()
-		    End If
-		  Else
+		  If Not AreSameBytes(expected, actual) Then
 		    Fail(FailEqualMessage(expected, actual), message )
+		    
+		  ElseIf Not expected.IsEmpty And expected.Encoding <> actual.Encoding Then
+		    Fail("The bytes match but the text encoding does not", message)
+		    
+		  Else
+		    Pass()
+		    
 		  End If
 		  
 		End Sub
@@ -719,6 +722,25 @@ Protected Class Assert
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function AreSameBytes(s1 As String, s2 As String) As Boolean
+		  If s1.IsEmpty And s2.IsEmpty Then
+		    Return True
+		    
+		  ElseIf s1.Bytes <> s2.Bytes Then
+		    Return False
+		    
+		  Else
+		    Var mb1 As MemoryBlock = s1
+		    Var mb2 As MemoryBlock = s2
+		    
+		    Return mb1 = mb2
+		    
+		  End If
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Destructor()
 		  Group = Nil
@@ -729,7 +751,7 @@ Protected Class Assert
 		Sub DoesNotMatch(regExPattern As String, actual As String, message As String = "")
 		  If regExPattern = "" Then
 		    Var err As New RegExException
-		    err.Reason = "No pattern was specified"
+		    err.Message = "No pattern was specified"
 		    Raise err
 		  End If
 		  
@@ -759,8 +781,16 @@ Protected Class Assert
 
 	#tag Method, Flags = &h0
 		Sub Fail(failMessage As String, message As String = "")
+		  If Group Is Nil Or Group.CurrentTestResult Is Nil Then
+		    //
+		    // Don't do anything
+		    //
+		    Return
+		  End If
+		  
 		  Failed = True
 		  Group.CurrentTestResult.Result = TestResult.Failed
+		  FailCount = FailCount + 1
 		  
 		  Message(message + ": " + failMessage)
 		  
@@ -828,7 +858,7 @@ Protected Class Assert
 		Sub Matches(regExPattern As String, actual As String, message As String = "")
 		  If regExPattern = "" Then
 		    Var err As New RegExException
-		    err.Reason = "No pattern was specified"
+		    err.Message = "No pattern was specified"
 		    Raise err
 		  End If
 		  
@@ -845,6 +875,13 @@ Protected Class Assert
 
 	#tag Method, Flags = &h0
 		Sub Message(msg As String)
+		  If Group Is Nil Or Group.CurrentTestResult Is Nil Then
+		    //
+		    // Don't do anything
+		    //
+		    Return
+		  End If
+		  
 		  msg = msg.Trim
 		  If msg.IsEmpty Then
 		    Return
@@ -860,6 +897,13 @@ Protected Class Assert
 
 	#tag Method, Flags = &h0
 		Sub Pass(message As String = "")
+		  If Group Is Nil Or Group.CurrentTestResult Is Nil Then
+		    //
+		    // Don't do anything
+		    //
+		    Return
+		  End If
+		  
 		  Failed = False
 		  If Group.CurrentTestResult.Result <> TestResult.Failed Then
 		    Group.CurrentTestResult.Result = TestResult.Passed
@@ -870,6 +914,10 @@ Protected Class Assert
 		End Sub
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h0
+		FailCount As Integer
+	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		Failed As Boolean
@@ -948,6 +996,14 @@ Protected Class Assert
 			Visible=true
 			Group="Position"
 			InitialValue="0"
+			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="FailCount"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
 			EditorType=""
 		#tag EndViewProperty

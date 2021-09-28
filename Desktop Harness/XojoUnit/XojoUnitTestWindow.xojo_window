@@ -804,7 +804,9 @@ Begin Window XojoUnitTestWindow
       InitialParent   =   ""
       LockedInPosition=   False
       Scope           =   0
+      TabIndex        =   2
       TabPanelIndex   =   0
+      TabStop         =   True
       Visible         =   True
    End
    Begin DesktopTestController Controller
@@ -965,6 +967,11 @@ End
 		      Controller.FilterTests(Nil, patterns)
 		    End Select
 		  End If
+		  
+		  //
+		  // Force a resize to accommodate the toolbar
+		  //
+		  Self.Height = Self.Height
 		  
 		End Sub
 	#tag EndEvent
