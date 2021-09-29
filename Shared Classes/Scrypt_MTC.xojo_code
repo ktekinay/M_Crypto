@@ -19,13 +19,7 @@ Protected Module Scrypt_MTC
 		  dim xPtr as ptr = x
 		  var xSize as integer = x.Size
 		  
-		  #if kUseLinuxTools
-		    memcpy_l xPtr, ptr( integer( mbPtr ) + mbSize - kBlockSize ), kBlockSize
-		  #elseif kUseWindowsTools
-		    memcpy_w xPtr, ptr( integer( mbPtr ) + mbSize - kBlockSize ), kBlockSize
-		  #else
-		    x.StringValue( 0, kBlockSize ) = mb.StringValue( mbSize - kBlockSize, kBlockSize )
-		  #endif
+		  CopyBytes xPtr, 0, mbPtr, mbSize - kBlockSize, kBlockSize
 		  
 		  dim arrPtr as ptr = ptr( integer( xPtr ) + kBlockSize )
 		  
@@ -47,13 +41,7 @@ Protected Module Scrypt_MTC
 		    // Salsa is inlined here as an optimization
 		    //
 		    
-		    #if kUseLinuxTools then
-		      memcpy_l ptr( integer( xPtr ) + xSize - kBlockSize ), xPtr, kBlockSize
-		    #elseif kUseWindowsTools
-		      memcpy_w ptr( integer( xPtr ) + xSize - kBlockSize ), xPtr, kBlockSize
-		    #else
-		      x.StringValue( xSize - kBlockSize, kBlockSize ) = x.StringValue( 0, kBlockSize )
-		    #endif
+		    CopyBytes xPtr, xSize - kBlockSize, xPtr, 0, kBlockSize
 		    
 		    for i as integer = 1 to 4
 		      arrPtr.UInt32( 4 * 4 ) = arrPtr.UInt32( 4 * 4 ) xor ( ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
@@ -107,23 +95,11 @@ Protected Module Scrypt_MTC
 		    // 1, 3, 5, ..., 2, 4, 6, ...
 		    //
 		    if resultIsEven then
-		      #if kUseLinuxTools
-		        memcpy_l ptr( integer( resultPtr ) + resultEvenIndex ), xPtr, kBlockSize
-		      #elseif kUseWindowsTools
-		        memcpy_w ptr( integer( resultPtr ) + resultEvenIndex ), xPtr, kBlockSize
-		      #else
-		        result.StringValue( resultEvenIndex, kBlockSize ) = x.StringValue( 0, kBlockSize )
-		      #endif
+		      CopyBytes resultPtr, resultEvenIndex, xPtr, 0, kBlockSize
 		      resultEvenIndex = resultEvenIndex + kBlockSize
 		      resultIsEven = false
 		    else
-		      #if kUseLinuxTools
-		        memcpy_l ptr( integer( resultPtr ) + resultOddIndex ), xPtr, kBlockSize
-		      #elseif kUseWindowsTools
-		        memcpy_w ptr( integer( resultPtr ) + resultOddIndex ), xPtr, kBlockSize
-		      #else
-		        result.StringValue( resultOddIndex, kBlockSize ) = x.StringValue( 0, kBlockSize )
-		      #endif
+		      CopyBytes resultPtr, resultOddIndex, xPtr, 0, kBlockSize
 		      resultOddIndex = resultOddIndex + kBlockSize
 		      resultIsEven = true
 		    end if
@@ -149,6 +125,62 @@ Protected Module Scrypt_MTC
 		  '
 		  '3. B' = (Y[0], Y[2], ..., Y[2 * r - 2],
 		  'Y[1], Y[3], ..., Y[2 * r - 1])
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub CopyBytes(toPtr As Ptr, toOffset As Integer, fromPtr As Ptr, fromOffset As Integer, count As Integer)
+		  //
+		  // For small chunks, this is significantly faster
+		  // than using StringValue
+		  //
+		  
+		  //**********************************************************/
+		  //*                                                        */
+		  //*        No error or bounds checking, so be sure         */
+		  //*                                                        */
+		  //**********************************************************/
+		  
+		  
+		  #if not DebugBuild
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
+		  var copiedCount as integer
+		  
+		  do until count <= 0
+		    select case count
+		    case is >= 8
+		      toPtr.UInt64( toOffset ) = fromPtr.UInt64( fromOffset )
+		      copiedCount = 8
+		      
+		    case is >= 4
+		      toPtr.UInt32( toOffset ) = fromPtr.UInt32( fromOffset )
+		      copiedCount = 4
+		      
+		    case is >= 2
+		      toPtr.UInt16( toOffset ) = fromPtr.UInt16( fromOffset )
+		      copiedCount = 2
+		      
+		    case 1
+		      toPtr.UInt8( toOffset ) = fromPtr.UInt8( fromOffset )
+		      
+		      //
+		      // And we're done
+		      //
+		      return
+		      
+		    end select
+		    
+		    count = count - copiedCount
+		    toOffset = toOffset + copiedCount
+		    fromOffset = fromOffset + copiedCount
+		    
+		  loop
 		  
 		End Sub
 	#tag EndMethod
@@ -202,9 +234,9 @@ Protected Module Scrypt_MTC
 		  
 		  for i as integer = 0 to lastPIndex
 		    dim mainIndex as integer = i * mfLen
-		    block.StringValue( 0, mfLen ) = mainB.StringValue( mainIndex, mfLen )
+		    CopyBytes block, 0, mainB, mainIndex, mfLen
 		    ROMix( block, n, blockBuffer, chunkBuffer, vBuffer )
-		    mainB.StringValue( mainIndex, mfLen ) = block
+		    CopyBytes mainB, mainIndex, block, 0, mfLen
 		  next
 		  
 		  dim outMB as MemoryBlock = Crypto.PBKDF2( mainB, key, 1, outputLength, Crypto.HashAlgorithms.SHA256 )
@@ -251,14 +283,6 @@ Protected Module Scrypt_MTC
 		End Function
 	#tag EndMethod
 
-	#tag ExternalMethod, Flags = &h21
-		Private Declare Sub memcpy_l Lib "system" Alias "memcpy" (dest As Ptr, source As Ptr, size As Integer)
-	#tag EndExternalMethod
-
-	#tag ExternalMethod, Flags = &h21
-		Private Declare Sub memcpy_w Lib "Ntdll" Alias "RtlCopyMemory" (dest As Ptr, src As Ptr, size As UInteger)
-	#tag EndExternalMethod
-
 	#tag Method, Flags = &h21
 		Private Sub ROMix(ByRef mb As MemoryBlock, n As UInt32, ByRef blockBuffer As MemoryBlock, chunkBuffer As MemoryBlock, vBuffer As MemoryBlock)
 		  #if not DebugBuild
@@ -276,13 +300,7 @@ Protected Module Scrypt_MTC
 		  
 		  dim lastNIndex as integer = n - 1
 		  for i as integer = 0 to lastNIndex
-		    #if kUseLinuxTools
-		      memcpy_l ptr( integer( vPtr ) + ( i * mbSize ) ), mb, mbSize
-		    #elseif kUseWindowsTools
-		      memcpy_w ptr( integer( vPtr ) + ( i * mbSize ) ), mb, mbSize
-		    #else
-		      v.StringValue( i * mbSize, mbSize ) = mb
-		    #endif
+		    CopyBytes vPtr, i * mbSize, mbPtr, 0, mbSize
 		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
@@ -415,15 +433,6 @@ Protected Module Scrypt_MTC
 
 
 	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kUseLinuxTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
-		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"True"
-		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"False"
-	#tag EndConstant
-
-	#tag Constant, Name = kUseWindowsTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
-		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"False"
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Protected
