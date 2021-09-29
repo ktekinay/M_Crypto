@@ -1,7 +1,7 @@
 #tag Module
 Protected Module Scrypt_MTC
 	#tag Method, Flags = &h21
-		Private Sub BlockMix(ByRef mb As Xojo.Core.MutableMemoryBlock, ByRef mbPtr As Ptr, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock)
+		Private Sub BlockMix(ByRef mb As MemoryBlock, ByRef mbPtr As Ptr, ByRef blockBuffer As MemoryBlock, chunkBuffer As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -15,12 +15,22 @@ Protected Module Scrypt_MTC
 		  
 		  dim mbSize as integer = mb.Size
 		  dim mbMidpoint as integer = mbSize \ 2
-		  dim x as Xojo.Core.MutableMemoryBlock = chunkBuffer
-		  x.Left( kBlockSize ) = mb.Right( kBlockSize )
-		  dim xPtr as ptr = x.Data
+		  dim x as MemoryBlock = chunkBuffer
+		  dim xPtr as ptr = x
+		  var xSize as integer = x.Size
+		  
+		  #if kUseLinuxTools
+		    memcpy_l xPtr, ptr( integer( mbPtr ) + mbSize - kBlockSize ), kBlockSize
+		  #elseif kUseWindowsTools
+		    memcpy_w xPtr, ptr( integer( mbPtr ) + mbSize - kBlockSize ), kBlockSize
+		  #else
+		    x.StringValue( 0, kBlockSize ) = mb.StringValue( mbSize - kBlockSize, kBlockSize )
+		  #endif
+		  
 		  dim arrPtr as ptr = ptr( integer( xPtr ) + kBlockSize )
 		  
-		  dim result as Xojo.Core.MutableMemoryBlock = blockBuffer
+		  dim result as MemoryBlock = blockBuffer
+		  var resultPtr as ptr = result
 		  dim resultEvenIndex as integer = 0
 		  dim resultOddIndex as integer = mbMidpoint
 		  dim resultIsEven as boolean = true
@@ -37,7 +47,13 @@ Protected Module Scrypt_MTC
 		    // Salsa is inlined here as an optimization
 		    //
 		    
-		    x.Right( kBlockSize ) = x.Left( kBlockSize )
+		    #if kUseLinuxTools then
+		      memcpy_l ptr( integer( xPtr ) + xSize - kBlockSize ), xPtr, kBlockSize
+		    #elseif kUseWindowsTools
+		      memcpy_w ptr( integer( xPtr ) + xSize - kBlockSize ), xPtr, kBlockSize
+		    #else
+		      x.StringValue( xSize - kBlockSize, kBlockSize ) = x.StringValue( 0, kBlockSize )
+		    #endif
 		    
 		    for i as integer = 1 to 4
 		      arrPtr.UInt32( 4 * 4 ) = arrPtr.UInt32( 4 * 4 ) xor ( ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) * CType( 2 ^ 7, UInt32 ) ) or ( ( arrPtr.UInt32( 4 * 0 ) + arrPtr.UInt32( 4 * 12 ) ) \ CType( 2 ^ ( 32 - 7 ), UInt32 ) ) )
@@ -91,11 +107,23 @@ Protected Module Scrypt_MTC
 		    // 1, 3, 5, ..., 2, 4, 6, ...
 		    //
 		    if resultIsEven then
-		      result.Mid( resultEvenIndex, kBlockSize ) = x.Left( kBlockSize )
+		      #if kUseLinuxTools
+		        memcpy_l ptr( integer( resultPtr ) + resultEvenIndex ), xPtr, kBlockSize
+		      #elseif kUseWindowsTools
+		        memcpy_w ptr( integer( resultPtr ) + resultEvenIndex ), xPtr, kBlockSize
+		      #else
+		        result.StringValue( resultEvenIndex, kBlockSize ) = x.StringValue( 0, kBlockSize )
+		      #endif
 		      resultEvenIndex = resultEvenIndex + kBlockSize
 		      resultIsEven = false
 		    else
-		      result.Mid( resultOddIndex, kBlockSize ) = x.Left( kBlockSize )
+		      #if kUseLinuxTools
+		        memcpy_l ptr( integer( resultPtr ) + resultOddIndex ), xPtr, kBlockSize
+		      #elseif kUseWindowsTools
+		        memcpy_w ptr( integer( resultPtr ) + resultOddIndex ), xPtr, kBlockSize
+		      #else
+		        result.StringValue( resultOddIndex, kBlockSize ) = x.StringValue( 0, kBlockSize )
+		      #endif
 		      resultOddIndex = resultOddIndex + kBlockSize
 		      resultIsEven = true
 		    end if
@@ -106,9 +134,9 @@ Protected Module Scrypt_MTC
 		  // which will become the new buffer. We can do this
 		  // since they are the same size.
 		  //
-		  dim orig as Xojo.Core.MutableMemoryBlock = mb
+		  dim orig as MemoryBlock = mb
 		  mb = result
-		  mbPtr = result.Data
+		  mbPtr = resultPtr
 		  blockBuffer = orig
 		  
 		  '1. X = B[2 * r - 1]
@@ -125,38 +153,13 @@ Protected Module Scrypt_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Protected Function Hash(key As String, salt As MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As String
-		  if key.Encoding is nil then
-		    if Encodings.UTF8.IsValidData( key ) then
-		      key = key.DefineEncoding( Encodings.UTF8 )
-		    else
-		      key = key.DefineEncoding( Encodings.SystemDefault )
-		    end if
-		  end if
-		  
-		  dim mbSalt as new Xojo.Core.MemoryBlock( salt, salt.Size )
-		  
-		  dim result as Xojo.Core.MemoryBlock = Hash( key.ToText, mbSalt, cost, outputLength, blocks, parallelization )
-		  
-		  dim mb as MemoryBlock = result.Data
-		  return mb.StringValue( 0, result.Size )
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Protected Function Hash(key As Text, salt As Text, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
-		  return Hash( key, Xojo.Core.TextEncoding.UTF8.ConvertTextToData( salt ), cost, outputLength, blocks, parallelization )
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
-		Protected Function Hash(key As Text, salt As Xojo.Core.MemoryBlock, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As Xojo.Core.MemoryBlock
+		Protected Function Hash(key As MemoryBlock, salt As String, cost As Integer = 4, outputLength As Integer = 64, blocks As Integer = 8, parallelization As Integer = 4) As MemoryBlock
 		  if key = "" then
 		    return nil
 		  end if
 		  
-		  if salt.Size = 0 then
+		  if salt = "" then
 		    dim err as new BadInputException
 		    err.Message = "Salt must be specified"
 		    raise err
@@ -185,15 +188,13 @@ Protected Module Scrypt_MTC
 		    raise err
 		  end if
 		  
-		  dim mbKey as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( key )
-		  dim mainB as new Xojo.Core.MutableMemoryBlock( _
-		  Xojo.Crypto.PBKDF2( salt, mbKey, 1, p * mfLen, Xojo.Crypto.HashAlgorithms.SHA256 ) )
+		  dim mainB as MemoryBlock = Crypto.PBKDF2( salt, key, 1, p * mfLen, Crypto.HashAlgorithms.SHA256 )
 		  
 		  dim lastPIndex as integer = p - 1
-		  dim block as new Xojo.Core.MutableMemoryBlock( mfLen )
-		  dim blockBuffer as new Xojo.Core.MutableMemoryBlock( mfLen )
-		  dim chunkBuffer as new Xojo.Core.MutableMemoryBlock( kBlockSize * 2 )
-		  dim vBuffer as new Xojo.Core.MutableMemoryBlock( mfLen * n )
+		  dim block as new MemoryBlock( mfLen )
+		  dim blockBuffer as new MemoryBlock( mfLen )
+		  dim chunkBuffer as new MemoryBlock( kBlockSize * 2 )
+		  dim vBuffer as new MemoryBlock( mfLen * n )
 		  vBuffer.LittleEndian = true
 		  chunkBuffer.LittleEndian = vBuffer.LittleEndian
 		  blockBuffer.LittleEndian = vBuffer.LittleEndian
@@ -201,12 +202,12 @@ Protected Module Scrypt_MTC
 		  
 		  for i as integer = 0 to lastPIndex
 		    dim mainIndex as integer = i * mfLen
-		    block.Left( mfLen ) = mainB.Mid( mainIndex, mfLen )
+		    block.StringValue( 0, mfLen ) = mainB.StringValue( mainIndex, mfLen )
 		    ROMix( block, n, blockBuffer, chunkBuffer, vBuffer )
-		    mainB.Mid( mainIndex, mfLen ) = block
+		    mainB.StringValue( mainIndex, mfLen ) = block
 		  next
 		  
-		  dim outMB as Xojo.Core.MemoryBlock = Xojo.Crypto.PBKDF2( mainB, mbKey, 1, outputLength, Xojo.Crypto.HashAlgorithms.SHA256 )
+		  dim outMB as MemoryBlock = Crypto.PBKDF2( mainB, key, 1, outputLength, Crypto.HashAlgorithms.SHA256 )
 		  return outMB
 		  
 		  'The PBKDF2-HMAC-SHA-256 function used below denotes the PBKDF2
@@ -250,8 +251,16 @@ Protected Module Scrypt_MTC
 		End Function
 	#tag EndMethod
 
+	#tag ExternalMethod, Flags = &h21
+		Private Declare Sub memcpy_l Lib "system" Alias "memcpy" (dest As Ptr, source As Ptr, size As Integer)
+	#tag EndExternalMethod
+
+	#tag ExternalMethod, Flags = &h21
+		Private Declare Sub memcpy_w Lib "Ntdll" Alias "RtlCopyMemory" (dest As Ptr, src As Ptr, size As UInteger)
+	#tag EndExternalMethod
+
 	#tag Method, Flags = &h21
-		Private Sub ROMix(ByRef mb As Xojo.Core.MutableMemoryBlock, n As UInt32, ByRef blockBuffer As Xojo.Core.MutableMemoryBlock, chunkBuffer As Xojo.Core.MutableMemoryBlock, vBuffer As Xojo.Core.MutableMemoryBlock)
+		Private Sub ROMix(ByRef mb As MemoryBlock, n As UInt32, ByRef blockBuffer As MemoryBlock, chunkBuffer As MemoryBlock, vBuffer As MemoryBlock)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks False
 		    #pragma BoundsChecking False
@@ -260,14 +269,20 @@ Protected Module Scrypt_MTC
 		  #endif
 		  
 		  dim mbSize as integer = mb.Size
-		  dim mbPtr as ptr = mb.Data
+		  dim mbPtr as ptr = mb
 		  
-		  dim v as Xojo.Core.MutableMemoryBlock = vBuffer
-		  dim vPtr as ptr = v.Data
+		  dim v as MemoryBlock = vBuffer
+		  dim vPtr as ptr = v
 		  
 		  dim lastNIndex as integer = n - 1
 		  for i as integer = 0 to lastNIndex
-		    v.Mid( i * mbSize, mbSize ) = mb
+		    #if kUseLinuxTools
+		      memcpy_l ptr( integer( vPtr ) + ( i * mbSize ) ), mb, mbSize
+		    #elseif kUseWindowsTools
+		      memcpy_w ptr( integer( vPtr ) + ( i * mbSize ) ), mb, mbSize
+		    #else
+		      v.StringValue( i * mbSize, mbSize ) = mb
+		    #endif
 		    BlockMix( mb, mbPtr, blockBuffer, chunkBuffer )
 		  next
 		  
@@ -400,6 +415,15 @@ Protected Module Scrypt_MTC
 
 
 	#tag Constant, Name = kBlockSize, Type = Double, Dynamic = False, Default = \"64", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kUseLinuxTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
+		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"True"
+		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"True"
+	#tag EndConstant
+
+	#tag Constant, Name = kUseWindowsTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
+		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"False"
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Protected
