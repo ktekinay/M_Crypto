@@ -419,7 +419,7 @@ Protected Module Scrypt_MTC
 
 	#tag Constant, Name = kUseLinuxTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
 		#Tag Instance, Platform = Mac OS, Language = Default, Definition  = \"True"
-		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"True"
+		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"False"
 	#tag EndConstant
 
 	#tag Constant, Name = kUseWindowsTools, Type = Boolean, Dynamic = False, Default = \"False", Scope = Private
