@@ -709,6 +709,7 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim temp as byte 
 		  dim temp2 as byte
+		  
 		  dim diff as integer
 		  dim vectorIndex as integer
 		  
@@ -736,12 +737,18 @@ Inherits M_Crypto.Encrypter
 		  const row3col3 as integer = row0col3 + 3
 		  
 		  dim dataIndex as integer
+		  var dataIndex0 as integer
+		  var dataIndex1 as integer
+		  var dataIndex2 as integer
+		  var dataIndex3 as integer
+		  
+		  var round as integer
+		  var roundKeyIndex as integer
+		  
 		  dim lastByte as integer = data.Size - 1
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
 		    'Cipher vectorPtr, startAt
-		    
-		    dim round as integer = 0
 		    
 		    //
 		    // AddRoundKey
@@ -755,7 +762,7 @@ Inherits M_Crypto.Encrypter
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
-		    var roundKeyIndex as integer = 0
+		    roundKeyIndex = 0
 		    for round = 1 to NumberOfRounds
 		      
 		      //
@@ -766,38 +773,22 @@ Inherits M_Crypto.Encrypter
 		      'for dataIndex = startAt to endAt
 		      'vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
 		      'next
-		      dataIndex = 0
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      vectorPtr.Byte(  0 ) = sboxPtr.Byte( vectorPtr.Byte(  0 ) )
+		      vectorPtr.Byte(  1 ) = sboxPtr.Byte( vectorPtr.Byte(  1 ) )
+		      vectorPtr.Byte(  2 ) = sboxPtr.Byte( vectorPtr.Byte(  2 ) )
+		      vectorPtr.Byte(  3 ) = sboxPtr.Byte( vectorPtr.Byte(  3 ) )
+		      vectorPtr.Byte(  4 ) = sboxPtr.Byte( vectorPtr.Byte(  4 ) )
+		      vectorPtr.Byte(  5 ) = sboxPtr.Byte( vectorPtr.Byte(  5 ) )
+		      vectorPtr.Byte(  6 ) = sboxPtr.Byte( vectorPtr.Byte(  6 ) )
+		      vectorPtr.Byte(  7 ) = sboxPtr.Byte( vectorPtr.Byte(  7 ) )
+		      vectorPtr.Byte(  8 ) = sboxPtr.Byte( vectorPtr.Byte(  8 ) )
+		      vectorPtr.Byte(  9 ) = sboxPtr.Byte( vectorPtr.Byte(  9 ) )
+		      vectorPtr.Byte( 10 ) = sboxPtr.Byte( vectorPtr.Byte( 10 ) )
+		      vectorPtr.Byte( 11 ) = sboxPtr.Byte( vectorPtr.Byte( 11 ) )
+		      vectorPtr.Byte( 12 ) = sboxPtr.Byte( vectorPtr.Byte( 12 ) )
+		      vectorPtr.Byte( 13 ) = sboxPtr.Byte( vectorPtr.Byte( 13 ) )
+		      vectorPtr.Byte( 14 ) = sboxPtr.Byte( vectorPtr.Byte( 14 ) )
+		      vectorPtr.Byte( 15 ) = sboxPtr.Byte( vectorPtr.Byte( 15 ) )
 		      
 		      //
 		      // ShiftRows
@@ -840,24 +831,29 @@ Inherits M_Crypto.Encrypter
 		        for i as integer = 0 to 3
 		          dataIndex = dataIndex + 4
 		          
-		          dim byte0 as byte = vectorPtr.Byte( dataIndex + 0 )
-		          dim byte1 as byte = vectorPtr.Byte( dataIndex + 1 )
-		          dim byte2 as byte = vectorPtr.Byte( dataIndex + 2 )
-		          dim byte3 as byte = vectorPtr.Byte( dataIndex + 3 )
+		          dataIndex0 = dataIndex
+		          dataIndex1 = dataIndex + 1
+		          dataIndex2 = dataIndex + 2
+		          dataIndex3 = dataIndex + 3
+		          
+		          dim byte0 as byte = vectorPtr.Byte( dataIndex0 )
+		          dim byte1 as byte = vectorPtr.Byte( dataIndex1 )
+		          dim byte2 as byte = vectorPtr.Byte( dataIndex2 )
+		          dim byte3 as byte = vectorPtr.Byte( dataIndex3 )
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
 		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
-		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex0 ) = byte0 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
-		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex1 ) = byte1 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
-		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex2 ) = byte2 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
-		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
 		      
@@ -1323,8 +1319,12 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim vectorPtr as ptr = vectorMB
 		  
+		  var round as integer
+		  var roundKeyIndex as integer
+		  
 		  dim temp as byte 
 		  dim temp2 as byte
+		  
 		  dim vectorIndex as integer
 		  dim diff as integer
 		  
@@ -1352,12 +1352,15 @@ Inherits M_Crypto.Encrypter
 		  const row3col3 as integer = row0col3 + 3
 		  
 		  dim dataIndex as integer
+		  var dataIndex0 as integer
+		  var dataIndex1 as integer
+		  var dataIndex2 as integer
+		  var dataIndex3 as integer
+		  
 		  dim lastByte as integer = data.Size - 1
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
 		    'Cipher vectorPtr, startAt
-		    
-		    dim round as integer = 0
 		    
 		    //
 		    // AddRoundKey
@@ -1371,7 +1374,7 @@ Inherits M_Crypto.Encrypter
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
-		    var roundKeyIndex as integer = 0 // Incremented within the loop below
+		    roundKeyIndex = 0 // Incremented within the loop below
 		    for round = 1 to NumberOfRounds
 		      
 		      //
@@ -1379,41 +1382,25 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Unroll this loop
 		      //
-		      'for dataIndex = startAt to endAt
+		      'for dataIndex = 0 to 15
 		      'vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
 		      'next
-		      dataIndex = 0
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      vectorPtr.Byte( dataIndex ) = sboxPtr.Byte( vectorPtr.Byte( dataIndex ) )
+		      vectorPtr.Byte(  0 ) = sboxPtr.Byte( vectorPtr.Byte(  0 ) )
+		      vectorPtr.Byte(  1 ) = sboxPtr.Byte( vectorPtr.Byte(  1 ) )
+		      vectorPtr.Byte(  2 ) = sboxPtr.Byte( vectorPtr.Byte(  2 ) )
+		      vectorPtr.Byte(  3 ) = sboxPtr.Byte( vectorPtr.Byte(  3 ) )
+		      vectorPtr.Byte(  4 ) = sboxPtr.Byte( vectorPtr.Byte(  4 ) )
+		      vectorPtr.Byte(  5 ) = sboxPtr.Byte( vectorPtr.Byte(  5 ) )
+		      vectorPtr.Byte(  6 ) = sboxPtr.Byte( vectorPtr.Byte(  6 ) )
+		      vectorPtr.Byte(  7 ) = sboxPtr.Byte( vectorPtr.Byte(  7 ) )
+		      vectorPtr.Byte(  8 ) = sboxPtr.Byte( vectorPtr.Byte(  8 ) )
+		      vectorPtr.Byte(  9 ) = sboxPtr.Byte( vectorPtr.Byte(  9 ) )
+		      vectorPtr.Byte( 10 ) = sboxPtr.Byte( vectorPtr.Byte( 10 ) )
+		      vectorPtr.Byte( 11 ) = sboxPtr.Byte( vectorPtr.Byte( 11 ) )
+		      vectorPtr.Byte( 12 ) = sboxPtr.Byte( vectorPtr.Byte( 12 ) )
+		      vectorPtr.Byte( 13 ) = sboxPtr.Byte( vectorPtr.Byte( 13 ) )
+		      vectorPtr.Byte( 14 ) = sboxPtr.Byte( vectorPtr.Byte( 14 ) )
+		      vectorPtr.Byte( 15 ) = sboxPtr.Byte( vectorPtr.Byte( 15 ) )
 		      
 		      //
 		      // ShiftRows
@@ -1456,24 +1443,29 @@ Inherits M_Crypto.Encrypter
 		        for i as integer = 0 to 3
 		          dataIndex = dataIndex + 4
 		          
-		          dim byte0 as byte = vectorPtr.Byte( dataIndex + 0 )
-		          dim byte1 as byte = vectorPtr.Byte( dataIndex + 1 )
-		          dim byte2 as byte = vectorPtr.Byte( dataIndex + 2 )
-		          dim byte3 as byte = vectorPtr.Byte( dataIndex + 3 )
+		          dataIndex0 = dataIndex
+		          dataIndex1 = dataIndex + 1
+		          dataIndex2 = dataIndex + 2
+		          dataIndex3 = dataIndex + 3
+		          
+		          dim byte0 as byte = vectorPtr.Byte( dataIndex0 )
+		          dim byte1 as byte = vectorPtr.Byte( dataIndex1 )
+		          dim byte2 as byte = vectorPtr.Byte( dataIndex2 )
+		          dim byte3 as byte = vectorPtr.Byte( dataIndex3 )
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
 		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
-		          vectorPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex0 ) = byte0 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
-		          vectorPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex1 ) = byte1 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
-		          vectorPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex2 ) = byte2 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
-		          vectorPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
+		          vectorPtr.Byte( dataIndex3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
 		      
