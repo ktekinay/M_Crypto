@@ -312,6 +312,29 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  //
+		  // Used for ShiftRows
+		  //
+		  const row0col0 as integer = 0
+		  const row0col1 as integer = 4
+		  const row0col2 as integer = 8
+		  const row0col3 as integer = 12
+		  
+		  const row1col0 as integer = row0col0 + 1
+		  const row1col1 as integer = row0col1 + 1
+		  const row1col2 as integer = row0col2 + 1
+		  const row1col3 as integer = row0col3 + 1
+		  
+		  const row2col0 as integer = row0col0 + 2
+		  const row2col1 as integer = row0col1 + 2
+		  const row2col2 as integer = row0col2 + 2
+		  const row2col3 as integer = row0col3 + 2
+		  
+		  const row3col0 as integer = row0col0 + 3
+		  const row3col1 as integer = row0col1 + 3
+		  const row3col2 as integer = row0col2 + 3
+		  const row3col3 as integer = row0col3 + 3
+		  
+		  //
 		  // Dereference pointers
 		  //
 		  var multiplyH9Ptr as ptr = MultiplyH9MB
@@ -344,52 +367,35 @@ Inherits M_Crypto.Encrypter
 		  dim vectorPtr as ptr = vectorMB
 		  
 		  dim dataIndex as integer
+		  var dataIndex0 as integer
+		  var dataIndex1 as integer
+		  var dataIndex2 as integer
+		  var dataIndex3 as integer
+		  
 		  var firstRoundKeyIndex as integer = NumberOfRounds * kNb * 4
 		  var lastRound as integer = NumberOfRounds - 1
+		  var round as integer
+		  var roundKeyIndex as integer
 		  
 		  dim lastByte as integer = data.Size - 1
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
 		    'InvCipher dataPtr, startAt
-		    //
-		    // Used for InvShiftRows
-		    //
-		    dim row0col0 as integer = startAt + 0
-		    dim row0col1 as integer = startAt + 4
-		    dim row0col2 as integer = startAt + 8
-		    dim row0col3 as integer = startAt + 12
-		    
-		    dim row1col0 as integer = row0col0 + 1
-		    dim row1col1 as integer = row0col1 + 1
-		    dim row1col2 as integer = row0col2 + 1
-		    dim row1col3 as integer = row0col3 + 1
-		    
-		    dim row2col0 as integer = row0col0 + 2
-		    dim row2col1 as integer = row0col1 + 2
-		    dim row2col2 as integer = row0col2 + 2
-		    dim row2col3 as integer = row0col3 + 2
-		    
-		    dim row3col0 as integer = row0col0 + 3
-		    dim row3col1 as integer = row0col1 + 3
-		    dim row3col2 as integer = row0col2 + 3
-		    dim row3col3 as integer = row0col3 + 3
-		    
-		    dim round as integer = NumberOfRounds
 		    
 		    //
 		    // AddRoundKey
 		    // Add the First round key to the state before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( firstRoundKeyIndex )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( firstRoundKeyIndex + 8 )
+		    dataPtr.UInt64( 0 ) = dataPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( firstRoundKeyIndex )
+		    dataPtr.UInt64( 8 ) = dataPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( firstRoundKeyIndex + 8 )
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
-		    var roundKeyIndex as integer = ( lastRound + 1 ) * kNb * 4
-		    for round = lastRound downto 0
+		    roundKeyIndex = ( lastRound + 1 ) * kNb * 4
+		    for round = 0 to lastRound
 		      //
 		      // InvShiftRows
 		      //
@@ -428,80 +434,71 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Unroll this loop
 		      //
-		      'for dataIndex = startAt to endAt
+		      'for dataIndex = 0 to 15
 		      'dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      'next
-		      dataIndex = startAt
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = invSboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataPtr.Byte( 0 ) = invSboxPtr.Byte( dataPtr.Byte( 0 ) )
+		      dataPtr.Byte( 1 ) = invSboxPtr.Byte( dataPtr.Byte( 1 ) )
+		      dataPtr.Byte( 2 ) = invSboxPtr.Byte( dataPtr.Byte( 2 ) )
+		      dataPtr.Byte( 3 ) = invSboxPtr.Byte( dataPtr.Byte( 3 ) )
+		      dataPtr.Byte( 4 ) = invSboxPtr.Byte( dataPtr.Byte( 4 ) )
+		      dataPtr.Byte( 5 ) = invSboxPtr.Byte( dataPtr.Byte( 5 ) )
+		      dataPtr.Byte( 6 ) = invSboxPtr.Byte( dataPtr.Byte( 6 ) )
+		      dataPtr.Byte( 7 ) = invSboxPtr.Byte( dataPtr.Byte( 7 ) )
+		      dataPtr.Byte( 8 ) = invSboxPtr.Byte( dataPtr.Byte( 8 ) )
+		      dataPtr.Byte( 9 ) = invSboxPtr.Byte( dataPtr.Byte( 9 ) )
+		      dataPtr.Byte( 10 ) = invSboxPtr.Byte( dataPtr.Byte( 10 ) )
+		      dataPtr.Byte( 11 ) = invSboxPtr.Byte( dataPtr.Byte( 11 ) )
+		      dataPtr.Byte( 12 ) = invSboxPtr.Byte( dataPtr.Byte( 12 ) )
+		      dataPtr.Byte( 13 ) = invSboxPtr.Byte( dataPtr.Byte( 13 ) )
+		      dataPtr.Byte( 14 ) = invSboxPtr.Byte( dataPtr.Byte( 14 ) )
+		      dataPtr.Byte( 15 ) = invSboxPtr.Byte( dataPtr.Byte( 15 ) )
 		      
 		      //
 		      // AddRoundKey
 		      //
 		      roundKeyIndex = roundKeyIndex - 16
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( roundKeyIndex )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
+		      dataPtr.UInt64( 0 ) = dataPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( roundKeyIndex )
+		      dataPtr.UInt64( 8 ) = dataPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
 		      
-		      if round <> 0 then
+		      if round <> lastRound then
 		        //
 		        // InvMixColumns (not for last round)
 		        //
-		        dataIndex = startAt - 4
+		        dataIndex = -4
 		        for i as integer = 0 to 3
 		          dataIndex = dataIndex + 4
 		          
-		          dim byte0 as integer = dataPtr.Byte( dataIndex + 0 )
-		          dim byte1 as integer = dataPtr.Byte( dataIndex + 1 )
-		          dim byte2 as integer = dataPtr.Byte( dataIndex + 2 )
-		          dim byte3 as integer = dataPtr.Byte( dataIndex + 3 )
+		          dataIndex0 = dataIndex
+		          dataIndex1 = dataIndex + 1
+		          dataIndex2 = dataIndex + 2
+		          dataIndex3 = dataIndex + 3
 		          
-		          dataPtr.Byte( dataIndex + 0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
-		          dataPtr.Byte( dataIndex + 3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
-		        next
+		          dim byte0 as integer = dataPtr.Byte( dataIndex0 )
+		          dim byte1 as integer = dataPtr.Byte( dataIndex1 )
+		          dim byte2 as integer = dataPtr.Byte( dataIndex2 )
+		          dim byte3 as integer = dataPtr.Byte( dataIndex3 )
+		          
+		          dataPtr.Byte( dataIndex0 ) = multiplyHEPtr.Byte( byte0 ) xor multiplyHBPtr.Byte( byte1 ) xor multiplyHDPtr.Byte( byte2 ) xor multiplyH9Ptr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex1 ) = multiplyH9Ptr.Byte( byte0 ) xor multiplyHEPtr.Byte( byte1 ) xor multiplyHBPtr.Byte( byte2 ) xor multiplyHDPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex2 ) = multiplyHDPtr.Byte( byte0 ) xor multiplyH9Ptr.Byte( byte1 ) xor multiplyHEPtr.Byte( byte2 ) xor multiplyHBPtr.Byte( byte3 )
+		          dataPtr.Byte( dataIndex3 ) = multiplyHBPtr.Byte( byte0 ) xor multiplyHDPtr.Byte( byte1 ) xor multiplyH9Ptr.Byte( byte2 ) xor multiplyHEPtr.Byte( byte3 )
+		        next i
 		      end if
 		    next
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
-		    dataIndex = startAt + 8
-		    dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
+		    dataPtr.UInt64( 0 ) = dataPtr.UInt64( 0 ) xor vectorPtr.UInt64( 0 )
+		    dataPtr.UInt64( 8 ) = dataPtr.UInt64( 8 ) xor vectorPtr.UInt64( 8 )
 		    
 		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
+		    dataPtr = ptr( integer( dataPtr ) + kBlockLen )
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = originalData.RightB( kBlockLen )
+		    var trueVectorPtr as ptr = vectorMB
+		    trueVectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 )
+		    trueVectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 )
 		    zCurrentVector = vectorMB
 		  end if
 		  
@@ -936,6 +933,29 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
+		  //
+		  // Used for ShiftRows
+		  //
+		  const row0col0 as integer = 0
+		  const row0col1 as integer = 4
+		  const row0col2 as integer = 8
+		  const row0col3 as integer = 12
+		  
+		  const row1col0 as integer = row0col0 + 1
+		  const row1col1 as integer = row0col1 + 1
+		  const row1col2 as integer = row0col2 + 1
+		  const row1col3 as integer = row0col3 + 1
+		  
+		  const row2col0 as integer = row0col0 + 2
+		  const row2col1 as integer = row0col1 + 2
+		  const row2col2 as integer = row0col2 + 2
+		  const row2col3 as integer = row0col3 + 2
+		  
+		  const row3col0 as integer = row0col0 + 3
+		  const row3col1 as integer = row0col1 + 3
+		  const row3col2 as integer = row0col2 + 3
+		  const row3col3 as integer = row0col3 + 3
+		  
 		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
@@ -953,57 +973,37 @@ Inherits M_Crypto.Encrypter
 		  
 		  dim vectorPtr as ptr = vectorMB
 		  
+		  var round as integer
+		  var roundKeyIndex as integer
+		  
 		  dim temp as byte 
 		  dim temp2 as byte
 		  
 		  dim dataIndex as integer
+		  var dataIndex0 as integer
+		  var dataIndex1 as integer
+		  var dataIndex2 as integer
+		  var dataIndex3 as integer
+		  
 		  dim lastByte as integer = data.Size - 1
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
-		    'XorWithVector dataPtr, startAt, vectorPtr
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor vectorPtr.UInt64( 0 )
-		    dataIndex = startAt + 8
-		    dataPtr.UInt64( dataIndex ) = dataPtr.UInt64( dataIndex ) xor vectorPtr.UInt64( 8 )
-		    
-		    'Cipher dataPtr, startAt
 		    //
-		    // Used for ShiftRows
-		    //
-		    dim row0col0 as integer = startAt + 0
-		    dim row0col1 as integer = startAt + 4
-		    dim row0col2 as integer = startAt + 8
-		    dim row0col3 as integer = startAt + 12
-		    
-		    dim row1col0 as integer = row0col0 + 1
-		    dim row1col1 as integer = row0col1 + 1
-		    dim row1col2 as integer = row0col2 + 1
-		    dim row1col3 as integer = row0col3 + 1
-		    
-		    dim row2col0 as integer = row0col0 + 2
-		    dim row2col1 as integer = row0col1 + 2
-		    dim row2col2 as integer = row0col2 + 2
-		    dim row2col3 as integer = row0col3 + 2
-		    
-		    dim row3col0 as integer = row0col0 + 3
-		    dim row3col1 as integer = row0col1 + 3
-		    dim row3col2 as integer = row0col2 + 3
-		    dim row3col3 as integer = row0col3 + 3
-		    
-		    dim round as integer = 0
-		    
-		    //
-		    // AddRoundKey
+		    // Apply vector and RoundKey
 		    // Add the First round key to the dataPtr, startAt before starting the rounds.
 		    //
-		    dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( 0 )
-		    dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( 8 )
+		    'XorWithVector dataPtr, startAt, vectorPtr
+		    dataPtr.UInt64( 0 ) = ( dataPtr.UInt64( 0 ) xor vectorPtr.UInt64( 0 ) ) xor roundKeyPtr.UInt64( 0 )
+		    dataPtr.UInt64( 8 ) = ( dataPtr.UInt64( 8 ) xor vectorPtr.UInt64( 8 ) ) xor roundKeyPtr.UInt64( 8 )
+		    
+		    'Cipher dataPtr, startAt
 		    
 		    //
 		    // There will be NumberOfRounds rounds.
 		    // The first NumberOfRounds-1 rounds are identical.
 		    // These NumberOfRounds-1 rounds are executed in the loop below.
 		    //
-		    var roundKeyIndex as integer = 0 // Incremented within the loop below
+		    roundKeyIndex = 0 // Incremented within the loop below
 		    
 		    for round = 1 to NumberOfRounds
 		      
@@ -1012,41 +1012,25 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Unroll this loop
 		      //
-		      'for dataIndex = startAt to endAt
+		      'for dataIndex = 0 to 15
 		      'dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
 		      'next
-		      dataIndex = startAt
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
-		      dataIndex = dataIndex + 1
-		      dataPtr.Byte( dataIndex ) = sboxPtr.Byte( dataPtr.Byte( dataIndex ) )
+		      dataPtr.Byte(  0 ) = sboxPtr.Byte( dataPtr.Byte(  0 ) )
+		      dataPtr.Byte(  1 ) = sboxPtr.Byte( dataPtr.Byte(  1 ) )
+		      dataPtr.Byte(  2 ) = sboxPtr.Byte( dataPtr.Byte(  2 ) )
+		      dataPtr.Byte(  3 ) = sboxPtr.Byte( dataPtr.Byte(  3 ) )
+		      dataPtr.Byte(  4 ) = sboxPtr.Byte( dataPtr.Byte(  4 ) )
+		      dataPtr.Byte(  5 ) = sboxPtr.Byte( dataPtr.Byte(  5 ) )
+		      dataPtr.Byte(  6 ) = sboxPtr.Byte( dataPtr.Byte(  6 ) )
+		      dataPtr.Byte(  7 ) = sboxPtr.Byte( dataPtr.Byte(  7 ) )
+		      dataPtr.Byte(  8 ) = sboxPtr.Byte( dataPtr.Byte(  8 ) )
+		      dataPtr.Byte(  9 ) = sboxPtr.Byte( dataPtr.Byte(  9 ) )
+		      dataPtr.Byte( 10 ) = sboxPtr.Byte( dataPtr.Byte( 10 ) )
+		      dataPtr.Byte( 11 ) = sboxPtr.Byte( dataPtr.Byte( 11 ) )
+		      dataPtr.Byte( 12 ) = sboxPtr.Byte( dataPtr.Byte( 12 ) )
+		      dataPtr.Byte( 13 ) = sboxPtr.Byte( dataPtr.Byte( 13 ) )
+		      dataPtr.Byte( 14 ) = sboxPtr.Byte( dataPtr.Byte( 14 ) )
+		      dataPtr.Byte( 15 ) = sboxPtr.Byte( dataPtr.Byte( 15 ) )
 		      
 		      //
 		      // ShiftRows
@@ -1085,44 +1069,52 @@ Inherits M_Crypto.Encrypter
 		        //
 		        // MixColumns (not for last round)
 		        //
-		        dataIndex = startAt - 4
+		        dataIndex = 0 - 4
 		        for i as integer = 0 to 3
 		          dataIndex = dataIndex + 4
 		          
-		          dim byte0 as byte = dataPtr.Byte( dataIndex + 0 )
-		          dim byte1 as byte = dataPtr.Byte( dataIndex + 1 )
-		          dim byte2 as byte = dataPtr.Byte( dataIndex + 2 )
-		          dim byte3 as byte = dataPtr.Byte( dataIndex + 3 )
+		          dataIndex0 = dataIndex
+		          dataIndex1 = dataIndex + 1
+		          dataIndex2 = dataIndex + 2
+		          dataIndex3 = dataIndex + 3
+		          
+		          dim byte0 as byte = dataPtr.Byte( dataIndex0 )
+		          dim byte1 as byte = dataPtr.Byte( dataIndex1 )
+		          dim byte2 as byte = dataPtr.Byte( dataIndex2 )
+		          dim byte3 as byte = dataPtr.Byte( dataIndex3 )
 		          
 		          temp = byte0 xor byte1 xor byte2 xor byte3
 		          
 		          temp2 = xtimePtr.Byte( byte0 xor byte1 )
-		          dataPtr.Byte( dataIndex + 0 ) = byte0 xor ( temp2 xor temp )
+		          dataPtr.Byte( dataIndex0 ) = byte0 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte1 xor byte2 )
-		          dataPtr.Byte( dataIndex + 1 ) = byte1 xor ( temp2 xor temp )
+		          dataPtr.Byte( dataIndex1 ) = byte1 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte2 xor byte3 )
-		          dataPtr.Byte( dataIndex + 2 ) = byte2 xor ( temp2 xor temp )
+		          dataPtr.Byte( dataIndex2 ) = byte2 xor ( temp2 xor temp )
 		          
 		          temp2 = xtimePtr.Byte( byte3 xor byte0 )
-		          dataPtr.Byte( dataIndex + 3 ) = byte3 xor ( temp2 xor temp )
+		          dataPtr.Byte( dataIndex3 ) = byte3 xor ( temp2 xor temp )
 		        next
 		      end if
 		      
 		      //
 		      // AddRoundKey
 		      //
-		      roundKeyIndex = roundKeyIndex + 16
-		      dataPtr.UInt64( startAt ) = dataPtr.UInt64( startAt ) xor roundKeyPtr.UInt64( roundKeyIndex )
-		      dataPtr.UInt64( startAt + 8 ) = dataPtr.UInt64( startAt + 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
+		      roundKeyIndex = roundKeyIndex + kBlockLen
+		      dataPtr.UInt64( 0 ) = dataPtr.UInt64( 0 ) xor roundKeyPtr.UInt64( roundKeyIndex )
+		      dataPtr.UInt64( 8 ) = dataPtr.UInt64( 8 ) xor roundKeyPtr.UInt64( roundKeyIndex + 8 )
 		    next
 		    
-		    vectorPtr = Ptr( integer( dataPtr ) + startAt )
+		    vectorPtr = dataPtr
+		    dataPtr = ptr( integer( dataPtr ) + kBlockLen )
 		  next
 		  
 		  if not isFinalBlock then
-		    vectorMB = data.RightB( kBlockLen )
+		    var trueVectorPtr as ptr = vectorMB
+		    trueVectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 )
+		    trueVectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 )
 		    zCurrentVector = vectorMB
 		  end if
 		  
