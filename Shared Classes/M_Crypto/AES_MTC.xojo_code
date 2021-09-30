@@ -96,29 +96,6 @@ Inherits M_Crypto.Encrypter
 		  
 		  var xtimePtr as ptr = XtimeMB
 		  
-		  //
-		  // Used for ShiftRows
-		  //
-		  dim row0col0 as integer = startAt + 0
-		  dim row0col1 as integer = startAt + 4
-		  dim row0col2 as integer = startAt + 8
-		  dim row0col3 as integer = startAt + 12
-		  
-		  dim row1col0 as integer = row0col0 + 1
-		  dim row1col1 as integer = row0col1 + 1
-		  dim row1col2 as integer = row0col2 + 1
-		  dim row1col3 as integer = row0col3 + 1
-		  
-		  dim row2col0 as integer = row0col0 + 2
-		  dim row2col1 as integer = row0col1 + 2
-		  dim row2col2 as integer = row0col2 + 2
-		  dim row2col3 as integer = row0col3 + 2
-		  
-		  dim row3col0 as integer = row0col0 + 3
-		  dim row3col1 as integer = row0col1 + 3
-		  dim row3col2 as integer = row0col2 + 3
-		  dim row3col3 as integer = row0col3 + 3
-		  
 		  dim sboxPtr as ptr = Sbox
 		  dim round as integer = 0
 		  
@@ -160,31 +137,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 column to left  
 		    //
-		    temp = dataPtr.Byte( row1col0 )
-		    dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
-		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
-		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
-		    dataPtr.Byte( row1col3 ) = temp
+		    temp = dataPtr.Byte( kRow1Col0 )
+		    dataPtr.Byte( kRow1Col0 ) = dataPtr.Byte( kRow1Col1 )
+		    dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col2 )
+		    dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col3 )
+		    dataPtr.Byte( kRow1Col3 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to left  
 		    //
-		    temp = dataPtr.Byte( row2col0 )
-		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		    dataPtr.Byte( row2col2 ) = temp
+		    temp = dataPtr.Byte( kRow2Col0 )
+		    dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		    dataPtr.Byte( kRow2Col2 ) = temp
 		    
-		    temp = dataPtr.Byte( row2col1 )
-		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		    dataPtr.Byte( row2col3 ) = temp
+		    temp = dataPtr.Byte( kRow2Col1 )
+		    dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		    dataPtr.Byte( kRow2Col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to left
 		    //
-		    temp = dataPtr.Byte( row3col0 )
-		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
-		    dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
-		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
-		    dataPtr.Byte( row3col1 ) = temp
+		    temp = dataPtr.Byte( kRow3Col0 )
+		    dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col3 )
+		    dataPtr.Byte( kRow3Col3 ) = dataPtr.Byte( kRow3Col2 )
+		    dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col1 )
+		    dataPtr.Byte( kRow3Col1 ) = temp
 		    
 		    if round <> NumberOfRounds then
 		      //
@@ -312,29 +289,6 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
-		  
-		  //
 		  // Dereference pointers
 		  //
 		  var multiplyH9Ptr as ptr = MultiplyH9MB
@@ -403,31 +357,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 columns to right
 		      //
-		      temp = dataPtr.Byte( row1col3 )
-		      dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
-		      dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
-		      dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
-		      dataPtr.Byte( row1col0 ) = temp
+		      temp = dataPtr.Byte( kRow1Col3 )
+		      dataPtr.Byte( kRow1Col3 ) = dataPtr.Byte( kRow1Col2 )
+		      dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col1 )
+		      dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col0 )
+		      dataPtr.Byte( kRow1Col0 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to right 
 		      //
-		      temp = dataPtr.Byte( row2col0 )
-		      dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		      dataPtr.Byte( row2col2 ) = temp
+		      temp = dataPtr.Byte( kRow2Col0 )
+		      dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		      dataPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = dataPtr.Byte( row2col1 )
-		      dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		      dataPtr.Byte( row2col3 ) = temp
+		      temp = dataPtr.Byte( kRow2Col1 )
+		      dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		      dataPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to right
 		      //
-		      temp = dataPtr.Byte( row3col0 )
-		      dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
-		      dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
-		      dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
-		      dataPtr.Byte( row3col3 ) = temp
+		      temp = dataPtr.Byte( kRow3Col0 )
+		      dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col1 )
+		      dataPtr.Byte( kRow3Col1 ) = dataPtr.Byte( kRow3Col2 )
+		      dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col3 )
+		      dataPtr.Byte( kRow3Col3 ) = temp
 		      
 		      //
 		      // InvSubBytes
@@ -516,29 +470,6 @@ Inherits M_Crypto.Encrypter
 		  #endif
 		  
 		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
-		  
-		  //
 		  // Dereference pointers
 		  //
 		  var multiplyH9Ptr as ptr = MultiplyH9MB
@@ -589,31 +520,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 columns to right
 		      //
-		      temp = dataPtr.Byte( row1col3 )
-		      dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
-		      dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
-		      dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
-		      dataPtr.Byte( row1col0 ) = temp
+		      temp = dataPtr.Byte( kRow1Col3 )
+		      dataPtr.Byte( kRow1Col3 ) = dataPtr.Byte( kRow1Col2 )
+		      dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col1 )
+		      dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col0 )
+		      dataPtr.Byte( kRow1Col0 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to right 
 		      //
-		      temp = dataPtr.Byte( row2col0 )
-		      dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		      dataPtr.Byte( row2col2 ) = temp
+		      temp = dataPtr.Byte( kRow2Col0 )
+		      dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		      dataPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = dataPtr.Byte( row2col1 )
-		      dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		      dataPtr.Byte( row2col3 ) = temp
+		      temp = dataPtr.Byte( kRow2Col1 )
+		      dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		      dataPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to right
 		      //
-		      temp = dataPtr.Byte( row3col0 )
-		      dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
-		      dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
-		      dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
-		      dataPtr.Byte( row3col3 ) = temp
+		      temp = dataPtr.Byte( kRow3Col0 )
+		      dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col1 )
+		      dataPtr.Byte( kRow3Col1 ) = dataPtr.Byte( kRow3Col2 )
+		      dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col3 )
+		      dataPtr.Byte( kRow3Col3 ) = temp
 		      
 		      //
 		      // InvSubBytes
@@ -713,29 +644,6 @@ Inherits M_Crypto.Encrypter
 		  dim diff as integer
 		  dim vectorIndex as integer
 		  
-		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
-		  
 		  dim dataIndex as integer
 		  var dataIndex0 as integer
 		  var dataIndex1 as integer
@@ -797,31 +705,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 column to left  
 		      //
-		      temp = vectorPtr.Byte( row1col0 )
-		      vectorPtr.Byte( row1col0 ) = vectorPtr.Byte( row1col1 )
-		      vectorPtr.Byte( row1col1 ) = vectorPtr.Byte( row1col2 )
-		      vectorPtr.Byte( row1col2 ) = vectorPtr.Byte( row1col3 )
-		      vectorPtr.Byte( row1col3 ) = temp
+		      temp = vectorPtr.Byte( kRow1Col0 )
+		      vectorPtr.Byte( kRow1Col0 ) = vectorPtr.Byte( kRow1Col1 )
+		      vectorPtr.Byte( kRow1Col1 ) = vectorPtr.Byte( kRow1Col2 )
+		      vectorPtr.Byte( kRow1Col2 ) = vectorPtr.Byte( kRow1Col3 )
+		      vectorPtr.Byte( kRow1Col3 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to left  
 		      //
-		      temp = vectorPtr.Byte( row2col0 )
-		      vectorPtr.Byte( row2col0 ) = vectorPtr.Byte( row2col2 )
-		      vectorPtr.Byte( row2col2 ) = temp
+		      temp = vectorPtr.Byte( kRow2Col0 )
+		      vectorPtr.Byte( kRow2Col0 ) = vectorPtr.Byte( kRow2Col2 )
+		      vectorPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = vectorPtr.Byte( row2col1 )
-		      vectorPtr.Byte( row2col1 ) = vectorPtr.Byte( row2col3 )
-		      vectorPtr.Byte( row2col3 ) = temp
+		      temp = vectorPtr.Byte( kRow2Col1 )
+		      vectorPtr.Byte( kRow2Col1 ) = vectorPtr.Byte( kRow2Col3 )
+		      vectorPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to left
 		      //
-		      temp = vectorPtr.Byte( row3col0 )
-		      vectorPtr.Byte( row3col0 ) = vectorPtr.Byte( row3col3 )
-		      vectorPtr.Byte( row3col3 ) = vectorPtr.Byte( row3col2 )
-		      vectorPtr.Byte( row3col2 ) = vectorPtr.Byte( row3col1 )
-		      vectorPtr.Byte( row3col1 ) = temp
+		      temp = vectorPtr.Byte( kRow3Col0 )
+		      vectorPtr.Byte( kRow3Col0 ) = vectorPtr.Byte( kRow3Col3 )
+		      vectorPtr.Byte( kRow3Col3 ) = vectorPtr.Byte( kRow3Col2 )
+		      vectorPtr.Byte( kRow3Col2 ) = vectorPtr.Byte( kRow3Col1 )
+		      vectorPtr.Byte( kRow3Col1 ) = temp
 		      
 		      if round <> NumberOfRounds then
 		        //
@@ -929,29 +837,6 @@ Inherits M_Crypto.Encrypter
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
-		  
 		  var xtimePtr as ptr = XtimeMB
 		  
 		  dim dataPtr as ptr = data
@@ -1035,31 +920,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 column to left  
 		      //
-		      temp = dataPtr.Byte( row1col0 )
-		      dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
-		      dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
-		      dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
-		      dataPtr.Byte( row1col3 ) = temp
+		      temp = dataPtr.Byte( kRow1Col0 )
+		      dataPtr.Byte( kRow1Col0 ) = dataPtr.Byte( kRow1Col1 )
+		      dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col2 )
+		      dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col3 )
+		      dataPtr.Byte( kRow1Col3 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to left  
 		      //
-		      temp = dataPtr.Byte( row2col0 )
-		      dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		      dataPtr.Byte( row2col2 ) = temp
+		      temp = dataPtr.Byte( kRow2Col0 )
+		      dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		      dataPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = dataPtr.Byte( row2col1 )
-		      dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		      dataPtr.Byte( row2col3 ) = temp
+		      temp = dataPtr.Byte( kRow2Col1 )
+		      dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		      dataPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to left
 		      //
-		      temp = dataPtr.Byte( row3col0 )
-		      dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
-		      dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
-		      dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
-		      dataPtr.Byte( row3col1 ) = temp
+		      temp = dataPtr.Byte( kRow3Col0 )
+		      dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col3 )
+		      dataPtr.Byte( kRow3Col3 ) = dataPtr.Byte( kRow3Col2 )
+		      dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col1 )
+		      dataPtr.Byte( kRow3Col1 ) = temp
 		      
 		      if round <> NumberOfRounds then
 		        //
@@ -1125,29 +1010,6 @@ Inherits M_Crypto.Encrypter
 		    #pragma NilObjectChecking False
 		    #pragma StackOverflowChecking False
 		  #endif
-		  
-		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
 		  
 		  var xtimePtr as ptr = XtimeMB
 		  
@@ -1219,31 +1081,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 column to left  
 		      //
-		      temp = dataPtr.Byte( row1col0 )
-		      dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
-		      dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
-		      dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
-		      dataPtr.Byte( row1col3 ) = temp
+		      temp = dataPtr.Byte( kRow1Col0 )
+		      dataPtr.Byte( kRow1Col0 ) = dataPtr.Byte( kRow1Col1 )
+		      dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col2 )
+		      dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col3 )
+		      dataPtr.Byte( kRow1Col3 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to left  
 		      //
-		      temp = dataPtr.Byte( row2col0 )
-		      dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		      dataPtr.Byte( row2col2 ) = temp
+		      temp = dataPtr.Byte( kRow2Col0 )
+		      dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		      dataPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = dataPtr.Byte( row2col1 )
-		      dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		      dataPtr.Byte( row2col3 ) = temp
+		      temp = dataPtr.Byte( kRow2Col1 )
+		      dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		      dataPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to left
 		      //
-		      temp = dataPtr.Byte( row3col0 )
-		      dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
-		      dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
-		      dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
-		      dataPtr.Byte( row3col1 ) = temp
+		      temp = dataPtr.Byte( kRow3Col0 )
+		      dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col3 )
+		      dataPtr.Byte( kRow3Col3 ) = dataPtr.Byte( kRow3Col2 )
+		      dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col1 )
+		      dataPtr.Byte( kRow3Col1 ) = temp
 		      
 		      if round <> NumberOfRounds then
 		        //
@@ -1328,29 +1190,6 @@ Inherits M_Crypto.Encrypter
 		  dim vectorIndex as integer
 		  dim diff as integer
 		  
-		  //
-		  // Used for ShiftRows
-		  //
-		  const row0col0 as integer = 0
-		  const row0col1 as integer = 4
-		  const row0col2 as integer = 8
-		  const row0col3 as integer = 12
-		  
-		  const row1col0 as integer = row0col0 + 1
-		  const row1col1 as integer = row0col1 + 1
-		  const row1col2 as integer = row0col2 + 1
-		  const row1col3 as integer = row0col3 + 1
-		  
-		  const row2col0 as integer = row0col0 + 2
-		  const row2col1 as integer = row0col1 + 2
-		  const row2col2 as integer = row0col2 + 2
-		  const row2col3 as integer = row0col3 + 2
-		  
-		  const row3col0 as integer = row0col0 + 3
-		  const row3col1 as integer = row0col1 + 3
-		  const row3col2 as integer = row0col2 + 3
-		  const row3col3 as integer = row0col3 + 3
-		  
 		  dim dataIndex as integer
 		  var dataIndex0 as integer
 		  var dataIndex1 as integer
@@ -1409,31 +1248,31 @@ Inherits M_Crypto.Encrypter
 		      //
 		      // Rotate first row 1 column to left  
 		      //
-		      temp = vectorPtr.Byte( row1col0 )
-		      vectorPtr.Byte( row1col0 ) = vectorPtr.Byte( row1col1 )
-		      vectorPtr.Byte( row1col1 ) = vectorPtr.Byte( row1col2 )
-		      vectorPtr.Byte( row1col2 ) = vectorPtr.Byte( row1col3 )
-		      vectorPtr.Byte( row1col3 ) = temp
+		      temp = vectorPtr.Byte( kRow1Col0 )
+		      vectorPtr.Byte( kRow1Col0 ) = vectorPtr.Byte( kRow1Col1 )
+		      vectorPtr.Byte( kRow1Col1 ) = vectorPtr.Byte( kRow1Col2 )
+		      vectorPtr.Byte( kRow1Col2 ) = vectorPtr.Byte( kRow1Col3 )
+		      vectorPtr.Byte( kRow1Col3 ) = temp
 		      
 		      //
 		      // Rotate second row 2 columns to left  
 		      //
-		      temp = vectorPtr.Byte( row2col0 )
-		      vectorPtr.Byte( row2col0 ) = vectorPtr.Byte( row2col2 )
-		      vectorPtr.Byte( row2col2 ) = temp
+		      temp = vectorPtr.Byte( kRow2Col0 )
+		      vectorPtr.Byte( kRow2Col0 ) = vectorPtr.Byte( kRow2Col2 )
+		      vectorPtr.Byte( kRow2Col2 ) = temp
 		      
-		      temp = vectorPtr.Byte( row2col1 )
-		      vectorPtr.Byte( row2col1 ) = vectorPtr.Byte( row2col3 )
-		      vectorPtr.Byte( row2col3 ) = temp
+		      temp = vectorPtr.Byte( kRow2Col1 )
+		      vectorPtr.Byte( kRow2Col1 ) = vectorPtr.Byte( kRow2Col3 )
+		      vectorPtr.Byte( kRow2Col3 ) = temp
 		      
 		      //
 		      // Rotate third row 3 columns to left
 		      //
-		      temp = vectorPtr.Byte( row3col0 )
-		      vectorPtr.Byte( row3col0 ) = vectorPtr.Byte( row3col3 )
-		      vectorPtr.Byte( row3col3 ) = vectorPtr.Byte( row3col2 )
-		      vectorPtr.Byte( row3col2 ) = vectorPtr.Byte( row3col1 )
-		      vectorPtr.Byte( row3col1 ) = temp
+		      temp = vectorPtr.Byte( kRow3Col0 )
+		      vectorPtr.Byte( kRow3Col0 ) = vectorPtr.Byte( kRow3Col3 )
+		      vectorPtr.Byte( kRow3Col3 ) = vectorPtr.Byte( kRow3Col2 )
+		      vectorPtr.Byte( kRow3Col2 ) = vectorPtr.Byte( kRow3Col1 )
+		      vectorPtr.Byte( kRow3Col1 ) = temp
 		      
 		      if round <> NumberOfRounds then
 		        //
@@ -1750,25 +1589,25 @@ Inherits M_Crypto.Encrypter
 		  //
 		  // Used for InvShiftRows
 		  //
-		  dim row0col0 as integer = startAt + 0
-		  dim row0col1 as integer = startAt + 4
-		  dim row0col2 as integer = startAt + 8
-		  dim row0col3 as integer = startAt + 12
+		  dim kRow0Col0 as integer = startAt + 0
+		  dim kRow0Col1 as integer = startAt + 4
+		  dim kRow0Col2 as integer = startAt + 8
+		  dim kRow0Col3 as integer = startAt + 12
 		  
-		  dim row1col0 as integer = row0col0 + 1
-		  dim row1col1 as integer = row0col1 + 1
-		  dim row1col2 as integer = row0col2 + 1
-		  dim row1col3 as integer = row0col3 + 1
+		  dim kRow1Col0 as integer = kRow0Col0 + 1
+		  dim kRow1Col1 as integer = kRow0Col1 + 1
+		  dim kRow1Col2 as integer = kRow0Col2 + 1
+		  dim kRow1Col3 as integer = kRow0Col3 + 1
 		  
-		  dim row2col0 as integer = row0col0 + 2
-		  dim row2col1 as integer = row0col1 + 2
-		  dim row2col2 as integer = row0col2 + 2
-		  dim row2col3 as integer = row0col3 + 2
+		  dim kRow2Col0 as integer = kRow0Col0 + 2
+		  dim kRow2Col1 as integer = kRow0Col1 + 2
+		  dim kRow2Col2 as integer = kRow0Col2 + 2
+		  dim kRow2Col3 as integer = kRow0Col3 + 2
 		  
-		  dim row3col0 as integer = row0col0 + 3
-		  dim row3col1 as integer = row0col1 + 3
-		  dim row3col2 as integer = row0col2 + 3
-		  dim row3col3 as integer = row0col3 + 3
+		  dim kRow3Col0 as integer = kRow0Col0 + 3
+		  dim kRow3Col1 as integer = kRow0Col1 + 3
+		  dim kRow3Col2 as integer = kRow0Col2 + 3
+		  dim kRow3Col3 as integer = kRow0Col3 + 3
 		  
 		  dim invSboxPtr as ptr = InvSbox
 		  dim round as integer = NumberOfRounds
@@ -1801,31 +1640,31 @@ Inherits M_Crypto.Encrypter
 		    //
 		    // Rotate first row 1 columns to right
 		    //
-		    temp = dataPtr.Byte( row1col3 )
-		    dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
-		    dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
-		    dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
-		    dataPtr.Byte( row1col0 ) = temp
+		    temp = dataPtr.Byte( kRow1Col3 )
+		    dataPtr.Byte( kRow1Col3 ) = dataPtr.Byte( kRow1Col2 )
+		    dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col1 )
+		    dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col0 )
+		    dataPtr.Byte( kRow1Col0 ) = temp
 		    
 		    //
 		    // Rotate second row 2 columns to right 
 		    //
-		    temp = dataPtr.Byte( row2col0 )
-		    dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		    dataPtr.Byte( row2col2 ) = temp
+		    temp = dataPtr.Byte( kRow2Col0 )
+		    dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		    dataPtr.Byte( kRow2Col2 ) = temp
 		    
-		    temp = dataPtr.Byte( row2col1 )
-		    dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		    dataPtr.Byte( row2col3 ) = temp
+		    temp = dataPtr.Byte( kRow2Col1 )
+		    dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		    dataPtr.Byte( kRow2Col3 ) = temp
 		    
 		    //
 		    // Rotate third row 3 columns to right
 		    //
-		    temp = dataPtr.Byte( row3col0 )
-		    dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
-		    dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
-		    dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
-		    dataPtr.Byte( row3col3 ) = temp
+		    temp = dataPtr.Byte( kRow3Col0 )
+		    dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col1 )
+		    dataPtr.Byte( kRow3Col1 ) = dataPtr.Byte( kRow3Col2 )
+		    dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col3 )
+		    dataPtr.Byte( kRow3Col3 ) = temp
 		    
 		    //
 		    // InvSubBytes
@@ -1906,56 +1745,36 @@ Inherits M_Crypto.Encrypter
 		  // This was manually inlined into InvCipher
 		  //
 		  
-		  dim row0col0 as integer = startAt + 0
-		  dim row0col1 as integer = startAt + 4
-		  dim row0col2 as integer = startAt + 8
-		  dim row0col3 as integer = startAt + 12
-		  
-		  dim row1col0 as integer = row0col0 + 1
-		  dim row1col1 as integer = row0col1 + 1
-		  dim row1col2 as integer = row0col2 + 1
-		  dim row1col3 as integer = row0col3 + 1
-		  
-		  dim row2col0 as integer = row0col0 + 2
-		  dim row2col1 as integer = row0col1 + 2
-		  dim row2col2 as integer = row0col2 + 2
-		  dim row2col3 as integer = row0col3 + 2
-		  
-		  dim row3col0 as integer = row0col0 + 3
-		  dim row3col1 as integer = row0col1 + 3
-		  dim row3col2 as integer = row0col2 + 3
-		  dim row3col3 as integer = row0col3 + 3
-		  
 		  dim temp as integer 
 		  
 		  //
 		  // Rotate first row 1 columns to right
 		  //
-		  temp = dataPtr.Byte( row1col3 )
-		  dataPtr.Byte( row1col3 ) = dataPtr.Byte( row1col2 )
-		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col1 )
-		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col0 )
-		  dataPtr.Byte( row1col0 ) = temp
+		  temp = dataPtr.Byte( kRow1Col3 )
+		  dataPtr.Byte( kRow1Col3 ) = dataPtr.Byte( kRow1Col2 )
+		  dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col1 )
+		  dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col0 )
+		  dataPtr.Byte( kRow1Col0 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to right 
 		  //
-		  temp = dataPtr.Byte( row2col0 )
-		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		  dataPtr.Byte( row2col2 ) = temp
+		  temp = dataPtr.Byte( kRow2Col0 )
+		  dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		  dataPtr.Byte( kRow2Col2 ) = temp
 		  
-		  temp = dataPtr.Byte( row2col1 )
-		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		  dataPtr.Byte( row2col3 ) = temp
+		  temp = dataPtr.Byte( kRow2Col1 )
+		  dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		  dataPtr.Byte( kRow2Col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to right
 		  //
-		  temp = dataPtr.Byte( row3col0 )
-		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col1 )
-		  dataPtr.Byte( row3col1 ) = dataPtr.Byte( row3col2 )
-		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col3 )
-		  dataPtr.Byte( row3col3 ) = temp
+		  temp = dataPtr.Byte( kRow3Col0 )
+		  dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col1 )
+		  dataPtr.Byte( kRow3Col1 ) = dataPtr.Byte( kRow3Col2 )
+		  dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col3 )
+		  dataPtr.Byte( kRow3Col3 ) = temp
 		  
 		End Sub
 	#tag EndMethod
@@ -2079,56 +1898,36 @@ Inherits M_Crypto.Encrypter
 		  // This was manually inlined into Cipher
 		  //
 		  
-		  dim row0col0 as integer = startAt + 0
-		  dim row0col1 as integer = startAt + 4
-		  dim row0col2 as integer = startAt + 8
-		  dim row0col3 as integer = startAt + 12
-		  
-		  dim row1col0 as integer = row0col0 + 1
-		  dim row1col1 as integer = row0col1 + 1
-		  dim row1col2 as integer = row0col2 + 1
-		  dim row1col3 as integer = row0col3 + 1
-		  
-		  dim row2col0 as integer = row0col0 + 2
-		  dim row2col1 as integer = row0col1 + 2
-		  dim row2col2 as integer = row0col2 + 2
-		  dim row2col3 as integer = row0col3 + 2
-		  
-		  dim row3col0 as integer = row0col0 + 3
-		  dim row3col1 as integer = row0col1 + 3
-		  dim row3col2 as integer = row0col2 + 3
-		  dim row3col3 as integer = row0col3 + 3
-		  
 		  dim temp as integer 
 		  
 		  //
 		  // Rotate first row 1 columns to left  
 		  //
-		  temp = dataPtr.Byte( row1col0 )
-		  dataPtr.Byte( row1col0 ) = dataPtr.Byte( row1col1 )
-		  dataPtr.Byte( row1col1 ) = dataPtr.Byte( row1col2 )
-		  dataPtr.Byte( row1col2 ) = dataPtr.Byte( row1col3 )
-		  dataPtr.Byte( row1col3 ) = temp
+		  temp = dataPtr.Byte( kRow1Col0 )
+		  dataPtr.Byte( kRow1Col0 ) = dataPtr.Byte( kRow1Col1 )
+		  dataPtr.Byte( kRow1Col1 ) = dataPtr.Byte( kRow1Col2 )
+		  dataPtr.Byte( kRow1Col2 ) = dataPtr.Byte( kRow1Col3 )
+		  dataPtr.Byte( kRow1Col3 ) = temp
 		  
 		  //
 		  // Rotate second row 2 columns to left  
 		  //
-		  temp = dataPtr.Byte( row2col0 )
-		  dataPtr.Byte( row2col0 ) = dataPtr.Byte( row2col2 )
-		  dataPtr.Byte( row2col2 ) = temp
+		  temp = dataPtr.Byte( kRow2Col0 )
+		  dataPtr.Byte( kRow2Col0 ) = dataPtr.Byte( kRow2Col2 )
+		  dataPtr.Byte( kRow2Col2 ) = temp
 		  
-		  temp = dataPtr.Byte( row2col1 )
-		  dataPtr.Byte( row2col1 ) = dataPtr.Byte( row2col3 )
-		  dataPtr.Byte( row2col3 ) = temp
+		  temp = dataPtr.Byte( kRow2Col1 )
+		  dataPtr.Byte( kRow2Col1 ) = dataPtr.Byte( kRow2Col3 )
+		  dataPtr.Byte( kRow2Col3 ) = temp
 		  
 		  //
 		  // Rotate third row 3 columns to left
 		  //
-		  temp = dataPtr.Byte( row3col0 )
-		  dataPtr.Byte( row3col0 ) = dataPtr.Byte( row3col3 )
-		  dataPtr.Byte( row3col3 ) = dataPtr.Byte( row3col2 )
-		  dataPtr.Byte( row3col2 ) = dataPtr.Byte( row3col1 )
-		  dataPtr.Byte( row3col1 ) = temp
+		  temp = dataPtr.Byte( kRow3Col0 )
+		  dataPtr.Byte( kRow3Col0 ) = dataPtr.Byte( kRow3Col3 )
+		  dataPtr.Byte( kRow3Col3 ) = dataPtr.Byte( kRow3Col2 )
+		  dataPtr.Byte( kRow3Col2 ) = dataPtr.Byte( kRow3Col1 )
+		  dataPtr.Byte( kRow3Col1 ) = temp
 		  
 		  
 		End Sub
@@ -2249,6 +2048,54 @@ Inherits M_Crypto.Encrypter
 	#tag EndConstant
 
 	#tag Constant, Name = kNb, Type = Double, Dynamic = False, Default = \"4", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow0Col0, Type = Double, Dynamic = False, Default = \"0", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow0Col1, Type = Double, Dynamic = False, Default = \"4", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow0Col2, Type = Double, Dynamic = False, Default = \"8", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow0Col3, Type = Double, Dynamic = False, Default = \"12", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow1Col0, Type = Double, Dynamic = False, Default = \"1", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow1Col1, Type = Double, Dynamic = False, Default = \"5", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow1Col2, Type = Double, Dynamic = False, Default = \"9", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow1Col3, Type = Double, Dynamic = False, Default = \"13", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow2Col0, Type = Double, Dynamic = False, Default = \"2", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow2Col1, Type = Double, Dynamic = False, Default = \"6", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow2Col2, Type = Double, Dynamic = False, Default = \"10", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow2Col3, Type = Double, Dynamic = False, Default = \"14", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow3Col0, Type = Double, Dynamic = False, Default = \"3", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow3Col1, Type = Double, Dynamic = False, Default = \"7", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow3Col2, Type = Double, Dynamic = False, Default = \"11", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kRow3Col3, Type = Double, Dynamic = False, Default = \"15", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
