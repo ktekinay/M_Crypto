@@ -352,9 +352,11 @@ Protected Class Encrypter
 		    return
 		  end if
 		  
+		  var blockSize as integer = self.BlockSize // Avoids repeated calls to the computed property
+		  
 		  dim originalSize as integer = data.Size
-		  dim padToAdd as byte = BlockSize - ( originalSize mod BlockSize )
-		  if padToAdd = BlockSize then
+		  dim padToAdd as byte = blockSize - ( originalSize mod blockSize )
+		  if padToAdd = blockSize then
 		    padToAdd = 0
 		  end if
 		  
@@ -363,7 +365,7 @@ Protected Class Encrypter
 		    // https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7
 		    
 		    if padToAdd = 0 then
-		      padToAdd = BlockSize
+		      padToAdd = blockSize
 		    end if
 		    
 		    var firstIndex as integer = data.Size
@@ -371,6 +373,7 @@ Protected Class Encrypter
 		    var lastIndex as integer = data.Size - 1
 		    
 		    var dataPtr as ptr = data
+		    
 		    for i as integer = firstIndex to lastIndex
 		      dataPtr.Byte( i ) = padToAdd
 		    next
@@ -379,15 +382,15 @@ Protected Class Encrypter
 		    //
 		    // ANSI X.923 padding
 		    //
-		    // Pads the data to an exact multiple of BlockSize bytes by
+		    // Pads the data to an exact multiple of blockSize bytes by
 		    // adding nulls plus the number of bytes added. For example, when
-		    // BlockSize = 8 and the final block is 0x32 32 32 32, it will be padded
+		    // blockSize = 8 and the final block is 0x32 32 32 32, it will be padded
 		    // to 0x32 32 32 32 00 00 00 04. A pad is always added even if the final
 		    // block is already the right size.
 		    //
 		    
 		    if padToAdd = 0 then
-		      padToAdd = BlockSize
+		      padToAdd = blockSize
 		    end if
 		    
 		    data.Size = data.Size + padToAdd
