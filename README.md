@@ -350,6 +350,13 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
+__2.8__ (______)
+
+- Converted from `Xojo.Core.MemoryBlock` to `MemoryBlock`.
+- Started using some API2 calls.
+- Improved AES performances slightly.
+- Improved Scrypt performance dramatically (5X!).
+
 __2.7__ (Feb. 21, 2021)
 
 - Added `SHA3Digest_MTC`.
