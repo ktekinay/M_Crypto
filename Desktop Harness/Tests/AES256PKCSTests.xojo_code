@@ -91,13 +91,17 @@ Inherits EncrypterTestGroup
 		  
 		  sw.Reset
 		  sw.Start
+		  StartProfiling
 		  encrypted = e.EncryptCBC( data )
+		  StopProfiling
 		  sw.Stop
 		  Assert.Message "Encryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual expected, EncodeHex( encrypted ), "Long encryption doesn't match"
 		  sw.Reset
 		  sw.Start
+		  StartProfiling
 		  decrypted = e.DecryptCBC( encrypted )
+		  StopProfiling
 		  sw.Stop
 		  Assert.Message "Decryption took " + sw.ElapsedMilliseconds.ToString + " ms"
 		  Assert.AreEqual data, decrypted, "Long decryption doesn't match"
