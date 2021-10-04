@@ -297,28 +297,33 @@ Inherits M_Crypto.Encrypter
 		  var multiplyHEPtr as ptr = MultiplyHEMB
 		  
 		  dim dataPtr as ptr = data
+		  dataPtr = ptr( integer( dataPtr ) + data.Size - kBlockLen )
+		  
 		  dim roundKeyPtr as ptr = RoundKey
 		  dim invSboxPtr as ptr = InvSbox
 		  
 		  dim temp as byte 
 		  
 		  //
-		  // Copy the original data so we have source
-		  // for the vector
+		  // Grab the current initial vector
 		  //
-		  dim originalData as MemoryBlock = data.LeftB( data.Size )
-		  dim originalDataPtr as ptr = originalData
-		  
-		  dim vectorMB as MemoryBlock
-		  if zCurrentVector isa object then
-		    vectorMB = zCurrentVector.LeftB( kBlockLen )
-		  elseif InitialVector <> "" then
-		    vectorMB = InitialVector
-		  else 
-		    vectorMB = new MemoryBlock( kBlockLen )
+		  dim vectorMB as MemoryBlock = zCurrentVector
+		  if vectorMB is nil then
+		    if InitialVector <> "" then
+		      vectorMB = InitialVector
+		    else
+		      vectorMB = new MemoryBlock( kBlockLen )
+		    end if
 		  end if
 		  
-		  dim vectorPtr as ptr = vectorMB
+		  //
+		  // Preserve the last data block
+		  //
+		  if not isFinalBlock then
+		    zCurrentVector = data.RightB( kBlockLen )
+		  end if
+		  
+		  dim vectorPtr as ptr
 		  
 		  dim dataIndex as integer
 		  var dataIndex0 as integer
@@ -331,7 +336,7 @@ Inherits M_Crypto.Encrypter
 		  var round as integer
 		  var roundKeyIndex as integer
 		  
-		  dim lastByte as integer = data.Size - 1
+		  dim lastByte as integer = data.Size - kBlockLen
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
 		    'InvCipher dataPtr, startAt
@@ -442,19 +447,17 @@ Inherits M_Crypto.Encrypter
 		    next
 		    
 		    'XorWithVector dataPtr, startAt, vectorPtr
+		    if startAt = lastByte then
+		      vectorPtr = vectorMB
+		    else
+		      vectorPtr = ptr( integer( dataPtr ) - kBlockLen )
+		    end if
+		    
 		    dataPtr.UInt64( 0 ) = dataPtr.UInt64( 0 ) xor vectorPtr.UInt64( 0 )
 		    dataPtr.UInt64( 8 ) = dataPtr.UInt64( 8 ) xor vectorPtr.UInt64( 8 )
 		    
-		    vectorPtr = ptr( integer( originalDataPtr ) + startAt )
-		    dataPtr = ptr( integer( dataPtr ) + kBlockLen )
+		    dataPtr = ptr( integer( dataPtr ) - kBlockLen )
 		  next
-		  
-		  if not isFinalBlock then
-		    var trueVectorPtr as ptr = vectorMB
-		    trueVectorPtr.UInt64( 0 ) = vectorPtr.UInt64( 0 )
-		    trueVectorPtr.UInt64( 8 ) = vectorPtr.UInt64( 8 )
-		    zCurrentVector = vectorMB
-		  end if
 		  
 		  
 		End Sub
@@ -1028,7 +1031,7 @@ Inherits M_Crypto.Encrypter
 		  var dataIndex2 as integer
 		  var dataIndex3 as integer
 		  
-		  dim lastByte as integer = data.Size - 1
+		  dim lastByte as integer = data.Size - kBlockLen
 		  for startAt as integer = 0 to lastByte step kBlockLen
 		    
 		    'Cipher( dataPtr, 0 )
