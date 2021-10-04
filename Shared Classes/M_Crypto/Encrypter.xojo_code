@@ -19,7 +19,7 @@ Protected Class Encrypter
 		  UseFunction = cloneFrom.UseFunction
 		  PaddingMethod = cloneFrom.PaddingMethod
 		  
-		  if cloneFrom.InitialVector <> "" then
+		  if cloneFrom.InitialVector isa object then
 		    InitialVector = cloneFrom.InitialVector
 		  end if
 		  
@@ -454,12 +454,14 @@ Protected Class Encrypter
 	#tag Method, Flags = &h0
 		Sub SetInitialVector(vector As String)
 		  if vector = "" then
-		    InitialVector = ""
+		    InitialVector = nil
 		    return
 		  end if
 		  
+		  var blockSize as integer = self.BlockSize
+		  
 		  vector = InterpretVector( vector )
-		  RaiseErrorIf vector.Bytes <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
+		  RaiseErrorIf vector.Bytes <> blockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( blockSize ) )
 		  
 		  InitialVector = vector
 		  
@@ -558,7 +560,7 @@ Protected Class Encrypter
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
-		Protected InitialVector As String
+		Protected InitialVector As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h0

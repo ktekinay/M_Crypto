@@ -317,19 +317,20 @@ Implements BcryptInterface
 		  
 		  data.LittleEndian = false
 		  
-		  dim savedInitialVectorMB as new MemoryBlock( 8 )
+		  dim savedInitialVectorMB as new MemoryBlock( kBlockLen )
 		  savedInitialVectorMB.LittleEndian = data.LittleEndian
 		  if zCurrentVector isa object then
 		    savedInitialVectorMB.UInt64Value( 0 ) = zCurrentVector.UInt64Value( 0 )
-		  elseif InitialVector <> "" then
-		    savedInitialVectorMB.StringValue( 0, 8 ) = InitialVector
+		  elseif InitialVector isa object then
+		    InitialVector.LittleEndian = data.LittleEndian
+		    savedInitialVectorMB.UInt64Value( 0 ) = InitialVector.UInt64Value( 0 )
 		  end if
 		  
 		  var savedInitialVectorPtr as ptr = savedInitialVectorMB
 		  
 		  if not isFinalBlock then
 		    if zCurrentVector is nil then
-		      zCurrentVector = new MemoryBlock( 8 )
+		      zCurrentVector = new MemoryBlock( kBlockLen )
 		      zCurrentVector.LittleEndian = data.LittleEndian
 		    end if
 		    zCurrentVector.UInt64Value( 0 ) = data.UInt64Value( byteIndex ) // For chain decrypting
@@ -410,13 +411,13 @@ Implements BcryptInterface
 		  data.LittleEndian = false
 		  
 		  dim vectorMB as MemoryBlock = zCurrentVector
-		  if vectorMB is nil and InitialVector <> "" then
-		    vectorMB = InitialVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = InitialVector.LeftB( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  
 		  if vectorMB is nil then
-		    vectorMB = new MemoryBlock( 8 )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  dim vectorPtr as ptr = vectorMB
@@ -647,13 +648,13 @@ Implements BcryptInterface
 		  data.LittleEndian = false
 		  
 		  dim vectorMB as MemoryBlock = zCurrentVector
-		  if vectorMB is nil and InitialVector <> "" then
-		    vectorMB = InitialVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = InitialVector.LeftB( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  
 		  if vectorMB is nil then
-		    vectorMB = new MemoryBlock( 8 )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  vectorMB.LittleEndian = data.LittleEndian
@@ -662,7 +663,7 @@ Implements BcryptInterface
 		  
 		  dim r, l as UInt32
 		  dim dataPtr as Ptr = data
-		  dim blocks as integer = data.Size \ 8
+		  dim blocks as integer = data.Size \ kBlockLen
 		  dim byteIndex as integer
 		  
 		  for i as integer = 1 to blocks
@@ -726,13 +727,13 @@ Implements BcryptInterface
 		  data.LittleEndian = false
 		  
 		  dim vectorMB as MemoryBlock = zCurrentVector
-		  if vectorMB is nil and InitialVector <> "" then
-		    vectorMB = InitialVector
+		  if vectorMB is nil and InitialVector isa object then
+		    vectorMB = InitialVector.LeftB( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  
 		  if vectorMB is nil then
-		    vectorMB = new MemoryBlock( 8 )
+		    vectorMB = new MemoryBlock( kBlockLen )
 		    zCurrentVector = vectorMB
 		  end if
 		  vectorMB.LittleEndian = data.LittleEndian
