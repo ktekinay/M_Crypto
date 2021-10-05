@@ -95,6 +95,32 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function DecryptStream(enc As M_Crypto.Encrypter, encrypted As String) As String
+		  var decrypted as string
+		  
+		  for i as integer = 0 to encrypted.Bytes step enc.BlockSize
+		    decrypted = decrypted + enc.DecryptCBC( encrypted.MiddleBytes( i, enc.BlockSize ), enc.BlockSize >= ( encrypted.Bytes - i ) )
+		  next
+		  
+		  return decrypted
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function EncryptStream(enc As M_Crypto.Encrypter, data As String) As String
+		  var encrypted as string
+		  
+		  for i as integer = 0 to data.Bytes step enc.BlockSize
+		    encrypted = encrypted + enc.EncryptCBC( data.MiddleBytes( i, enc.BlockSize ), enc.BlockSize >= ( data.Bytes - i ) )
+		  next
+		  
+		  return encrypted
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub SimultaneousEncryptionTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "some password" )
