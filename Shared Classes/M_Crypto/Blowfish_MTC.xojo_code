@@ -806,7 +806,6 @@ Implements BcryptInterface
 		  const kShift2 as UInt32 = 256 ^ 2
 		  const kShift1 as UInt32 = 256 ^ 1
 		  
-		  const kMask0 as UInt32 = &hFF000000
 		  const kMask1 as UInt32 = &h00FF0000
 		  const kMask2 as UInt32 = &h0000FF00
 		  const kMask3 as UInt32 = &h000000FF
