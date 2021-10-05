@@ -105,13 +105,15 @@ Protected Module Bcrypt_MTC
 		    key = key + ChrB( 0 ) // Set it up as CString
 		  end if
 		  
+		  var keyMB as MemoryBlock = key
+		  
 		  // Set up S-Boxes and Subkeys
 		  state = new Blowfish_MTC( Blowfish_MTC.Padding.NullsOnly )
-		  state.ExpandState( csalt, key )
+		  state.ExpandState( csalt, keyMB )
 		  #if kDebug then
 		    startMs = Microseconds
 		  #endif
-		  state.Expand0State rounds, key, csalt
+		  state.Expand0State rounds, keyMB, csalt
 		  #if kDebug then
 		    elapsedMs = Microseconds - startMs
 		    System.DebugLog logPrefix + "state.Expand0State took " + format( elapsedMs, "#,0.0##" ) + " µs"

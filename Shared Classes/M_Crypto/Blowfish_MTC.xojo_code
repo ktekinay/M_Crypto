@@ -836,6 +836,9 @@ Implements BcryptInterface
 		    startMs = Microseconds
 		  #endif
 		  for keyIndex as integer = 0 to keys.Ubound
+		    //
+		    // We want the key as a string here since we will be creating new MemoryBlocks from them
+		    //
 		    dim key as string = keys( keyIndex )
 		    dim keySize as integer = key.Bytes
 		    
@@ -846,18 +849,20 @@ Implements BcryptInterface
 		    
 		    dim streamKey as MemoryBlock
 		    dim streamKeySize as integer = keySize
-		    if ( keySize mod kStreamWordSize ) = 0 then
-		      streamKey = new MemoryBlock( keySize )
-		      streamKey.StringValue( 0, keySize ) = key
-		    else
+		    if ( keySize mod kStreamWordSize ) <> 0 then
 		      streamKeySize = streamKeySize * kStreamWordSize
 		      
-		      streamKey = new MemoryBlock( streamKeySize )
-		      dim lastByte as integer = streamKeySize - 1
-		      for thisByte as integer = 0 to lastByte step keySize
-		        streamKey.StringValue( thisByte, keySize ) = key
-		      next
+		      var halfSize as integer = ( streamKeySize + 1 ) \ 2
+		      var currentSize as integer = keySize
+		      while currentSize < halfSize
+		        key = key + key
+		        currentSize = currentSize + currentSize
+		      wend
+		      var diff as integer = streamKeySize - currentSize
+		      key = key + key.LeftBytes( diff )
 		    end if
+		    
+		    streamKey = key
 		    
 		    #if TargetLittleEndian then
 		      //
