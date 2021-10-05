@@ -354,8 +354,11 @@ __2.8__ (______)
 
 - Converted from `Xojo.Core.MemoryBlock` to `MemoryBlock`.
 - Started using some API2 calls.
-- Improved AES performances slightly.
+- Improved AES performance slightly.
 - Improved Scrypt performance dramatically (5X!).
+- Improved Bcrypt performance slightly.
+- Improved Blowfish performance slightly.
+- General code clean-up.
 
 __2.7__ (Feb. 21, 2021)
 
