@@ -850,15 +850,7 @@ Implements BcryptInterface
 		    dim streamKeySize as integer = keySize
 		    if ( keySize mod kStreamWordSize ) <> 0 then
 		      streamKeySize = streamKeySize * kStreamWordSize
-		      
-		      var halfSize as integer = ( streamKeySize + 1 ) \ 2
-		      var currentSize as integer = keySize
-		      while currentSize < halfSize
-		        key = key + key
-		        currentSize = currentSize + currentSize
-		      wend
-		      var diff as integer = streamKeySize - currentSize
-		      key = key + key.LeftBytes( diff )
+		      key = key + key + key + key + key + key + key + key // x8
 		    end if
 		    
 		    streamKey = key
