@@ -30,8 +30,6 @@ Protected Class SHA256Digest_MTC
 		    for i as integer = 0 to arr.Ubound
 		      kMagicPtr.UInt32( i * 4 ) = arr( i )
 		    next
-		    
-		    IsLittleEndian = kMagic.LittleEndian
 		  end if
 		  
 		  Message = new MemoryBlock( kMagic.Size )
@@ -133,7 +131,7 @@ Protected Class SHA256Digest_MTC
 		  // Unbelievably, this is faster than using the
 		  // MemoryBlock functions to access the data.
 		  //
-		  if IsLittleEndian then
+		  #if TargetLittleEndian then
 		    //
 		    // We'll do this two words at a time
 		    //
@@ -165,7 +163,7 @@ Protected Class SHA256Digest_MTC
 		      ( ( t1 and kMask6 ) * k8_64 ) or _
 		      ( ( t1 and kMask7 ) * k24_64 )
 		    next
-		  end if
+		  #endif
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    //
@@ -308,10 +306,6 @@ Protected Class SHA256Digest_MTC
 
 	#tag Property, Flags = &h21
 		Private CombinedLength As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared IsLittleEndian As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

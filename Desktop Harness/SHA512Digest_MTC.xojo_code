@@ -38,8 +38,6 @@ Protected Class SHA512Digest_MTC
 		    for i as integer = 0 to arr.Ubound
 		      kMagicPtr.UInt64( i * 8 ) = arr( i )
 		    next
-		    
-		    IsLittleEndian = kMagic.LittleEndian
 		  end if
 		  
 		  Message = new MemoryBlock( kMagic.Size )
@@ -149,7 +147,7 @@ Protected Class SHA512Digest_MTC
 		  // Unbelievably, this is faster than using the
 		  // MemoryBlock functions to access the data.
 		  //
-		  if IsLittleEndian then
+		  #if TargetLittleEndian then
 		    const kMask1 as UInt64 = &h00FF000000000000
 		    const kMask2 as UInt64 = &h0000FF0000000000
 		    const kMask3 as UInt64 = &h000000FF00000000
@@ -169,7 +167,7 @@ Protected Class SHA512Digest_MTC
 		      ( ( temp1 and kMask6 ) * k40 ) or _
 		      ( temp1 * k56 )
 		    next
-		  end if
+		  #endif
 		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    //
@@ -311,10 +309,6 @@ Protected Class SHA512Digest_MTC
 
 	#tag Property, Flags = &h21
 		Private CombinedLength As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared IsLittleEndian As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
