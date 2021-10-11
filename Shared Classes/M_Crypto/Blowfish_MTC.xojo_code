@@ -47,13 +47,13 @@ Implements BcryptInterface
 	#tag Event , Description = 506572666F726D20612073656C662D74657374206F6E2074686520636C6173732E20496620636F646520697320696D706C656D656E7465642C206D7573742072657475726E20547275652E
 		Function DoSelfTest(ByRef returnErrorMessage As String) As Boolean
 		  const kKey as string = "password"
-		  const kData as string = "1234567890ABCD"
+		  const kData as string = "1234567890ABCDEF"
 		  
 		  //
 		  // Set up an initial state
 		  //
 		  dim initialVector as MemoryBlock = self.InitialVector
-		  self.InitialVector = ""
+		  self.InitialVector = "ABCDEFGH"
 		  dim initialPadding as Padding = self.PaddingMethod
 		  Constructor( Padding.PKCS )
 		  
@@ -71,12 +71,12 @@ Implements BcryptInterface
 		    ExpandState mbData, mbKey
 		    result = SelfTestMemoryBlockHash( P, 18 * 4 )
 		    System.DebugLog "ExpandState P = " + result
-		    if result <> "335546B718798929DB286BF431347578131297FB7C0DCF7FBED4200637ADEAED" then
+		    if result <> "178CFFAAC0D9DE382987E0450B576CA2E9C466712664335B147CE46D22D78C19" then
 		      returnErrorMessage = "P mismatch after ExpandState"
 		    else
 		      result = SelfTestMemoryBlockHash( S, 1024 * 4 )
 		      System.DebugLog "ExpandState S = " + result
-		      if result <> "1D7B1CE92B99533B95F9676756461EB8BEEFF07A7DDD60C5BE8EE62F47CF7952" then
+		      if result <> "7FBB5318A85CEDF22C93720D767FBD4B7924C7492ED610CF2F4EB801F57A82EA" then
 		        returnErrorMessage = "S mismatch after ExpandState"
 		      end if
 		    end if
@@ -89,40 +89,43 @@ Implements BcryptInterface
 		    Expand0State 1, kData, kKey
 		    result = SelfTestMemoryBlockHash( P, 18 * 4 )
 		    System.DebugLog "Expand0State P = " + result
-		    if result <> "88D7DA0BA674E47208673DD308D731D3D299A1E3746D7D4A8AED88325B08E70C" then
+		    if result <> "1F21F5C741FDF6290CAD58FD22C62127D6A3384BAF8388E9A4311BC9F70ED232" then
 		      returnErrorMessage = "P mismatch after ExpandState"
 		    else
 		      result = SelfTestMemoryBlockHash( S, 1024 * 4 )
 		      System.DebugLog "Expand0State S = " + result
-		      if result <> "0D8B54D47B7E0B0527060F749B9F15A17CF7207538B15287990F550ACB5F121E" then
+		      if result <> "95D5B85AE3EFF476EC7EBB2F16D41B59E39352C611EE97D954EAEC15F31C06A2" then
 		        returnErrorMessage = "S mismatch after ExpandState"
 		      end if
 		    end if
 		  end if
 		  
 		  if returnErrorMessage = "" then
+		    mbData = kData
 		    EncryptMb( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "Encrypt Data = " + result
-		    if result <> "935FAE939D95AAEF2EF71C35C0D3187CC04957A450E80230AB46C8428B550BDF" then
+		    if result <> "54CA30F3A37DEFA8AACC6A6E52A1C72FE26797789146D9D7008F4618E999F3C6" then
 		      returnErrorMessage = "Data mismatch after Encrypt"
 		    end if
 		  end if
 		  
 		  if returnErrorMessage = "" then
+		    mbData = kData
 		    EncryptMbECB( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "EncryptECB Data = " + result
-		    if result <> "F39CAB4DD928508085C4AD58A40F8C698C00A2502A1DBE503527FA519140A812" then
+		    if result <> "BB3048E8FA6499036539B91CDEFE9115732C8D9EC91F3C3E17EBCF61F26E1CA4" then
 		      returnErrorMessage = "Data mismatch after EncryptECB"
 		    end if
 		  end if
 		  
 		  if returnErrorMessage = "" then
+		    mbData = kData
 		    EncryptMbCBC( mbData )
 		    result = SelfTestMemoryBlockHash( mbData, mbData.Size )
 		    System.DebugLog "EncryptCBC Data = " + result
-		    if result <> "3809E69D2EFC2B9C747640516C70E43999B9BEA77462FC31845EDD5BAD850107" then
+		    if result <> "3B1460E667951950C6EC0FF1BD88415CFD03E2D4A4467812E7CB2EE0906CEA58" then
 		      returnErrorMessage = "Data mismatch after EncryptCBC"
 		    end if
 		  end if
@@ -131,7 +134,7 @@ Implements BcryptInterface
 		    dim d0 as UInt32 = 1
 		    dim d1 as UInt32 = 126
 		    Encipher( d0, d1 )
-		    if d0 <> CType( 1759095662, UInt32 ) or d1 <> CType( 231467629, UInt32 ) then
+		    if d0 <> CType( 2245729221, UInt32 ) or d1 <> CType( 526349302, UInt32 ) then
 		      returnErrorMessage = "Encipher fail"
 		    else
 		      Decipher( d0, d1 )
@@ -625,7 +628,6 @@ Implements BcryptInterface
 		    
 		    d0 = xr
 		    d1 = xl
-		    
 		    
 		    dataPtr.UInt32( byteIndex ) = d0
 		    dataPtr.UInt32( byteIndex + 4 ) = d1

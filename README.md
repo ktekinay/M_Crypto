@@ -359,6 +359,7 @@ __2.8__ (______)
 - Improved Bcrypt performance slightly.
 - Improved Blowfish performance slightly.
 - General code clean-up.
+- Improved SHA code.
 
 __2.7__ (Feb. 21, 2021)
 
