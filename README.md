@@ -350,7 +350,7 @@ This project was created by and is maintained by Kem Tekinay (ktekinay at mactec
 
 ## <a name='release-notes'></a>Release Notes
 
-__2.8__ (______)
+__2.8__ (Nov. 10, 2021)
 
 - Converted from `Xojo.Core.MemoryBlock` to `MemoryBlock`.
 - Started using some API2 calls.
