@@ -225,7 +225,7 @@ Protected Class Encrypter
 		Private Sub Encrypt(f As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  
-		  if data.Size = 0 then
+		  if data.Size = 0 and not isFinalBlock then
 		    return
 		  end if
 		  
@@ -348,7 +348,7 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h21
 		Private Sub PadIfNeeded(data As MemoryBlock)
-		  if data is nil or data.Size = 0 or PaddingMethod = Padding.None then
+		  if data is nil or PaddingMethod = Padding.None then
 		    return
 		  end if
 		  

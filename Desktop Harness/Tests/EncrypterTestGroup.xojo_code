@@ -122,6 +122,33 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub EndEncryptionWithBlankTest()
+		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  
+		  var original as string = "0123456789ABCDEF"
+		  original = original + original
+		  
+		  var expectedEncrypted as string = e.Encrypt( original )
+		  
+		  var part1 as string = e.Encrypt( original, false )
+		  var part2 as string = e.Encrypt( "", true )
+		  
+		  if part1.Bytes = expectedEncrypted.Bytes then
+		    Assert.AreEqual "", part2
+		  else
+		    Assert.AreNotEqual "", part2
+		  end if
+		  
+		  var encrypted as string = part1 + part2
+		  Assert.AreSame EncodeHex( expectedEncrypted ), EncodeHex( encrypted ), "Bytes don't match"
+		  
+		  var unencrypted as string = e.Decrypt( encrypted )
+		  Assert.AreEqual original, unencrypted
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SimultaneousEncryptionTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "some password" )
 		  
