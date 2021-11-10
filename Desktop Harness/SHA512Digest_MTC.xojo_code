@@ -348,7 +348,7 @@ Protected Class SHA512Digest_MTC
 	#tag Constant, Name = kLastRoundIndex, Type = Double, Dynamic = False, Default = \"79", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
 
 

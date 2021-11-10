@@ -495,7 +495,7 @@ Class SHA3Digest_MTC
 	#tag Constant, Name = kKeccakRounds, Type = Double, Dynamic = False, Default = \"23", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
 
 
