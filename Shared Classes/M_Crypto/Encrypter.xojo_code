@@ -20,7 +20,7 @@ Protected Class Encrypter
 		  PaddingMethod = cloneFrom.PaddingMethod
 		  
 		  if cloneFrom.InitialVector isa object then
-		    InitialVector = new Xojo.Core.MutableMemoryBlock( cloneFrom.InitialVector )
+		    InitialVector = cloneFrom.InitialVector
 		  end if
 		  
 		  RaiseEvent CloneFrom( cloneFrom )
@@ -28,7 +28,7 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Decrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Private Sub Decrypt(f As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  
 		  if data.Size = 0 then
@@ -54,7 +54,7 @@ Protected Class Encrypter
 		    
 		  case Functions.CFB, Functions.OFB
 		    if zSaveVector is nil then
-		      zSaveVector = new Xojo.Core.MutableMemoryBlock( zBlockSize )
+		      zSaveVector = new MemoryBlock( zBlockSize )
 		    end if
 		    
 		    if PaddingMethod <> Padding.None then
@@ -81,51 +81,51 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Decrypt(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Decrypt( UseFunction, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Decrypt( Functions.CBC, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptCFB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Decrypt( Functions.CFB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Decrypt( Functions.ECB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function DecryptOFB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Decrypt( Functions.OFB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DepadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
+		Private Sub DepadIfNeeded(data As MemoryBlock)
 		  // See PadIfNeeded for a description of how padding works.
 		  
 		  if data is nil or data.Size = 0 or PaddingMethod = Padding.None then
@@ -133,7 +133,7 @@ Protected Class Encrypter
 		  end if
 		  
 		  dim originalSize as integer = data.Size
-		  dim dataPtr as ptr = data.Data
+		  dim dataPtr as ptr = data
 		  
 		  select case PaddingMethod
 		  case Padding.PKCS
@@ -166,7 +166,7 @@ Protected Class Encrypter
 		      end if
 		    next
 		    
-		    data.Remove firstIndex, stripCount
+		    data.Size = data.Size - stripCount
 		    
 		  case Padding.NullsWithCount
 		    // Counterpart to padding. Will remove nulls followed by the number of nulls
@@ -199,7 +199,7 @@ Protected Class Encrypter
 		      end if
 		    next
 		    
-		    data.Remove firstIndex, stripCount
+		    data.Size = data.Size - stripCount
 		    
 		  case Padding.NullsOnly
 		    dim lastIndex as integer = originalSize - 1
@@ -211,7 +211,7 @@ Protected Class Encrypter
 		      if dataPtr.Byte( index ) <> 0 then
 		        dim newSize as integer = index + 1
 		        if originalSize > newSize then
-		          data.Remove newSize, originalSize - newSize
+		          data.Size = newSize
 		        end if
 		        exit
 		      end if
@@ -222,10 +222,10 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Encrypt(f As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Private Sub Encrypt(f As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 		  RaiseErrorIf( not WasKeySet, kErrorNoKeySet )
 		  
-		  if data.Size = 0 then
+		  if data.Size = 0 and not isFinalBlock then
 		    return
 		  end if
 		  
@@ -271,52 +271,52 @@ Protected Class Encrypter
 
 	#tag Method, Flags = &h0
 		Function Encrypt(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Encrypt( UseFunction, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptCBC(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Encrypt( Functions.CBC, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptCFB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Encrypt( Functions.CFB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptECB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Encrypt( Functions.ECB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function EncryptOFB(data As String, isFinalBlock As Boolean = True) As String
-		  dim mb as Xojo.Core.MutableMemoryBlock = StringToMutableMemoryBlock( data )
+		  dim mb as MemoryBlock = data
 		  self.Encrypt( Functions.OFB, mb, isFinalBlock )
-		  dim result as string = MemoryBlockToString( mb )
+		  dim result as string = mb
 		  return result
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Function GetCurrentThreadId() As Integer
-		  dim t as Thread = App.CurrentThread
+		  dim t as Thread = Thread.Current
 		  if t is nil then
 		    return 0
 		  else
@@ -347,14 +347,16 @@ Protected Class Encrypter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PadIfNeeded(data As Xojo.Core.MutableMemoryBlock)
-		  if data is nil or data.Size = 0 or PaddingMethod = Padding.None then
+		Private Sub PadIfNeeded(data As MemoryBlock)
+		  if data is nil or PaddingMethod = Padding.None then
 		    return
 		  end if
 		  
+		  var blockSize as integer = self.BlockSize // Avoids repeated calls to the computed property
+		  
 		  dim originalSize as integer = data.Size
-		  dim padToAdd as byte = BlockSize - ( originalSize mod BlockSize )
-		  if padToAdd = BlockSize then
+		  dim padToAdd as byte = blockSize - ( originalSize mod blockSize )
+		  if padToAdd = blockSize then
 		    padToAdd = 0
 		  end if
 		  
@@ -363,43 +365,43 @@ Protected Class Encrypter
 		    // https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7
 		    
 		    if padToAdd = 0 then
-		      padToAdd = BlockSize
+		      padToAdd = blockSize
 		    end if
 		    
-		    dim adder as new Xojo.Core.MemoryBlock( padToAdd )
-		    dim adderLastIndex as integer = adder.Size - 1
-		    dim adderPtr as ptr = adder.Data
+		    var firstIndex as integer = data.Size
+		    data.Size = firstIndex + padToAdd
+		    var lastIndex as integer = data.Size - 1
 		    
-		    for i as integer = 0 to adderLastIndex
-		      adderPtr.Byte( i ) = padToAdd
+		    var dataPtr as ptr = data
+		    
+		    for i as integer = firstIndex to lastIndex
+		      dataPtr.Byte( i ) = padToAdd
 		    next
-		    data.Append adder
 		    
 		  case Padding.NullsWithCount
 		    //
 		    // ANSI X.923 padding
 		    //
-		    // Pads the data to an exact multiple of BlockSize bytes by
+		    // Pads the data to an exact multiple of blockSize bytes by
 		    // adding nulls plus the number of bytes added. For example, when
-		    // BlockSize = 8 and the final block is 0x32 32 32 32, it will be padded
+		    // blockSize = 8 and the final block is 0x32 32 32 32, it will be padded
 		    // to 0x32 32 32 32 00 00 00 04. A pad is always added even if the final
 		    // block is already the right size.
 		    //
 		    
 		    if padToAdd = 0 then
-		      padToAdd = BlockSize
+		      padToAdd = blockSize
 		    end if
-		    dim adder as new Xojo.Core.MemoryBlock( padToAdd )
-		    adder.Data.Byte( adder.Size - 1 ) = padToAdd
-		    data.Append adder
+		    
+		    data.Size = data.Size + padToAdd
+		    data.Byte( data.Size - 1 ) = padToAdd
 		    
 		  case Padding.NullsOnly
 		    //
 		    // Adds nulls to the end
 		    //
 		    if padToAdd <> 0 then
-		      dim adder as new Xojo.Core.MemoryBlock( padToAdd )
-		      data.Append adder
+		      data.Size = data.Size + padToAdd
 		    end if
 		    
 		  end select
@@ -456,10 +458,12 @@ Protected Class Encrypter
 		    return
 		  end if
 		  
-		  vector = InterpretVector( vector )
-		  RaiseErrorIf vector.LenB <> BlockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( BlockSize ) )
+		  var blockSize as integer = self.BlockSize
 		  
-		  InitialVector = StringToMutableMemoryBlock( vector )
+		  vector = InterpretVector( vector )
+		  RaiseErrorIf vector.Bytes <> blockSize, kErrorVectorSize.ReplaceAll( "BLOCKSIZE", str( blockSize ) )
+		  
+		  InitialVector = vector
 		  
 		End Sub
 	#tag EndMethod
@@ -479,7 +483,7 @@ Protected Class Encrypter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Decrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Event Decrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 506572666F726D20612073656C662D74657374206F6E2074686520636C6173732E20496620636F646520697320696D706C656D656E7465642C206D7573742072657475726E20547275652E
@@ -487,7 +491,7 @@ Protected Class Encrypter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Encrypt(type As Functions, data As Xojo.Core.MutableMemoryBlock, isFinalBlock As Boolean)
+		Event Encrypt(type As Functions, data As MemoryBlock, isFinalBlock As Boolean)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -543,7 +547,12 @@ Protected Class Encrypter
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  return MemoryBlockToString( zCurrentVector )
+			  var temp as MemoryBlock = zCurrentVector
+			  if temp is nil then
+			    return ""
+			  else
+			    return temp
+			  end if
 			  
 			End Get
 		#tag EndGetter
@@ -551,7 +560,7 @@ Protected Class Encrypter
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
-		Protected InitialVector As Xojo.Core.MutableMemoryBlock
+		Protected InitialVector As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -620,11 +629,11 @@ Protected Class Encrypter
 			  VectorDict.Value( GetCurrentThreadId ) = value
 			End Set
 		#tag EndSetter
-		Protected zCurrentVector As Xojo.Core.MutableMemoryBlock
+		Protected zCurrentVector As MemoryBlock
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
-		Protected zSaveVector As Xojo.Core.MutableMemoryBlock
+		Protected zSaveVector As MemoryBlock
 	#tag EndProperty
 
 
@@ -755,7 +764,7 @@ Protected Class Encrypter
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PaddingString"
@@ -763,7 +772,7 @@ Protected Class Encrypter
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

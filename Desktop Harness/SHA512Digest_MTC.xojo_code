@@ -38,8 +38,6 @@ Protected Class SHA512Digest_MTC
 		    for i as integer = 0 to arr.Ubound
 		      kMagicPtr.UInt64( i * 8 ) = arr( i )
 		    next
-		    
-		    IsLittleEndian = kMagic.LittleEndian
 		  end if
 		  
 		  Message = new MemoryBlock( kMagic.Size )
@@ -141,43 +139,42 @@ Protected Class SHA512Digest_MTC
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  
-		  //
-		  // If the natural state is LittleEndian, we have
-		  // to flip the bytes around in the data so
-		  // we can use Ptr below.
-		  // 
-		  // Unbelievably, this is faster than using the
-		  // MemoryBlock functions to access the data.
-		  //
-		  if IsLittleEndian then
-		    const kMask1 as UInt64 = &h00FF000000000000
-		    const kMask2 as UInt64 = &h0000FF0000000000
-		    const kMask3 as UInt64 = &h000000FF00000000
-		    const kMask4 as UInt64 = &h00000000FF000000
-		    const kMask5 as UInt64 = &h0000000000FF0000
-		    const kMask6 as UInt64 = &h000000000000FF00
-		    
-		    for i as integer = 0 to lastByteIndex step 8
-		      temp1 = pIn.UInt64( i )
-		      pIn.UInt64( i ) = _
-		      ( temp1 \ k56 ) or _
-		      ( ( temp1 and kMask1 ) \ k40 ) or _
-		      ( ( temp1 and kMask2 ) \ k24 ) or _
-		      ( ( temp1 and kMask3 ) \ k8 ) or _
-		      ( ( temp1 and kMask4 ) * k8 ) or _
-		      ( ( temp1 and kMask5 ) * k24 ) or _
-		      ( ( temp1 and kMask6 ) * k40 ) or _
-		      ( temp1 * k56 )
-		    next
-		  end if
-		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    //
 		    // Copy the chunk to the Message (faster than StringValue)
 		    //
 		    dim copyIndex as integer = 0
 		    while copyIndex < kChunkBytes
-		      pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      #if TargetLittleEndian
+		        //
+		        // If the natural state is LittleEndian, we have
+		        // to flip the bytes around in the data so
+		        // we can use Ptr below.
+		        // 
+		        // Unbelievably, this is faster than using the
+		        // MemoryBlock functions to access the data.
+		        //
+		        const kMask1 as UInt64 = &h00FF000000000000
+		        const kMask2 as UInt64 = &h0000FF0000000000
+		        const kMask3 as UInt64 = &h000000FF00000000
+		        const kMask4 as UInt64 = &h00000000FF000000
+		        const kMask5 as UInt64 = &h0000000000FF0000
+		        const kMask6 as UInt64 = &h000000000000FF00
+		        
+		        temp1 = pIn.UInt64( chunkIndex + copyIndex )
+		        pMessage.UInt64( copyIndex ) = _
+		        ( temp1 \ k56 ) or _
+		        ( ( temp1 and kMask1 ) \ k40 ) or _
+		        ( ( temp1 and kMask2 ) \ k24 ) or _
+		        ( ( temp1 and kMask3 ) \ k8 ) or _
+		        ( ( temp1 and kMask4 ) * k8 ) or _
+		        ( ( temp1 and kMask5 ) * k24 ) or _
+		        ( ( temp1 and kMask6 ) * k40 ) or _
+		        ( temp1 * k56 )
+		      #else
+		        pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      #endif
+		      
 		      copyIndex = copyIndex + 8
 		    wend
 		    
@@ -314,10 +311,6 @@ Protected Class SHA512Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared IsLittleEndian As Boolean
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private Shared kMagic As MemoryBlock
 	#tag EndProperty
 
@@ -355,7 +348,7 @@ Protected Class SHA512Digest_MTC
 	#tag Constant, Name = kLastRoundIndex, Type = Double, Dynamic = False, Default = \"79", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
 
 

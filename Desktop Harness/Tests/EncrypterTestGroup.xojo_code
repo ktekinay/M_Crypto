@@ -95,6 +95,59 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function DecryptStream(enc As M_Crypto.Encrypter, encrypted As String) As String
+		  var decrypted as string
+		  
+		  for i as integer = 0 to encrypted.Bytes step enc.BlockSize
+		    decrypted = decrypted + enc.DecryptCBC( encrypted.MiddleBytes( i, enc.BlockSize ), enc.BlockSize >= ( encrypted.Bytes - i ) )
+		  next
+		  
+		  return decrypted
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function EncryptStream(enc As M_Crypto.Encrypter, data As String) As String
+		  var encrypted as string
+		  
+		  for i as integer = 0 to data.Bytes step enc.BlockSize
+		    encrypted = encrypted + enc.EncryptCBC( data.MiddleBytes( i, enc.BlockSize ), enc.BlockSize >= ( data.Bytes - i ) )
+		  next
+		  
+		  return encrypted
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub EndEncryptionWithBlankTest()
+		  dim e as M_Crypto.Encrypter = GetEncrypter( "password" )
+		  
+		  var original as string = "0123456789ABCDEF"
+		  original = original + original
+		  
+		  var expectedEncrypted as string = e.Encrypt( original )
+		  
+		  var part1 as string = e.Encrypt( original, false )
+		  var part2 as string = e.Encrypt( "", true )
+		  
+		  if part1.Bytes = expectedEncrypted.Bytes then
+		    Assert.AreEqual "", part2
+		  else
+		    Assert.AreNotEqual "", part2
+		  end if
+		  
+		  var encrypted as string = part1 + part2
+		  Assert.AreSame EncodeHex( expectedEncrypted ), EncodeHex( encrypted ), "Bytes don't match"
+		  
+		  var unencrypted as string = e.Decrypt( encrypted )
+		  Assert.AreEqual original, unencrypted
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub SimultaneousEncryptionTest()
 		  dim e as M_Crypto.Encrypter = GetEncrypter( "some password" )

@@ -182,9 +182,7 @@ Class SHA3Digest_MTC
 		    #pragma StackOverflowChecking False
 		  #endif
 		  
-		  #if not TargetLittleEndian then
-		    mbIn.LittleEndian = true
-		  #endif
+		  var mbPtr as ptr = mbIn
 		  
 		  if isFinal then
 		    //
@@ -194,15 +192,15 @@ Class SHA3Digest_MTC
 		    
 		    var nextByteIndex as integer = mbIn.Size
 		    mbIn.Size = nextByteIndex + remainder
+		    mbPtr = mbIn
+		    
 		    if remainder = 1 then
-		      mbIn.Byte( nextByteIndex ) = &h86
+		      mbPtr.Byte( nextByteIndex ) = &h86
 		    else
-		      mbIn.Byte( nextByteIndex ) = &h06
-		      mbIn.Byte( mbIn.Size - 1 ) = &h80
+		      mbPtr.Byte( nextByteIndex ) = &h06
+		      mbPtr.Byte( mbIn.Size - 1 ) = &h80
 		    end if
 		  end if
-		  
-		  var mbPtr as ptr = mbIn
 		  
 		  var lastMBByteIndex as integer = mbIn.Size - 1
 		  var lastStateIndex as integer = BlockSizeW - 1
@@ -211,11 +209,32 @@ Class SHA3Digest_MTC
 		    for stateIndex as integer = 0 to lastStateIndex
 		      var relativeIndex as integer = byteIndex + stateIndex * 8
 		      
-		      var unaligned as UInt64
-		      #if TargetLittleEndian then
-		        unaligned = mbPtr.UInt64( relativeIndex )
-		      #else
-		        unaligned = mbIn.UInt64Value( relativeIndex )
+		      var unaligned as UInt64 = mbPtr.UInt64( relativeIndex )
+		      #if TargetBigEndian then
+		        //
+		        // Flip the bytes to little endian
+		        //
+		        const k8 as UInt64 = 2 ^ 8
+		        const k24 as UInt64 = 2 ^ 24
+		        const k40 as UInt64 = 2 ^ 40
+		        const k56 as UInt64 = 2 ^ 56
+		        
+		        const kMask1 as UInt64 = &h00FF000000000000
+		        const kMask2 as UInt64 = &h0000FF0000000000
+		        const kMask3 as UInt64 = &h000000FF00000000
+		        const kMask4 as UInt64 = &h00000000FF000000
+		        const kMask5 as UInt64 = &h0000000000FF0000
+		        const kMask6 as UInt64 = &h000000000000FF00
+		        
+		        unaligned = _
+		        ( unaligned \ k56 ) or _
+		        ( ( unaligned and kMask1 ) \ k40 ) or _
+		        ( ( unaligned and kMask2 ) \ k24 ) or _
+		        ( ( unaligned and kMask3 ) \ k8 ) or _
+		        ( ( unaligned and kMask4 ) * k8 ) or _
+		        ( ( unaligned and kMask5 ) * k24 ) or _
+		        ( ( unaligned and kMask6 ) * k40 ) or _
+		        ( unaligned * k56 )
 		      #endif
 		      
 		      useState.ST( stateIndex ) = useState.ST( stateIndex ) xor unaligned
@@ -476,7 +495,7 @@ Class SHA3Digest_MTC
 	#tag Constant, Name = kKeccakRounds, Type = Double, Dynamic = False, Default = \"23", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
 
 

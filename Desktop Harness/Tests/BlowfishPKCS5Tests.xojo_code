@@ -243,6 +243,64 @@ Inherits EncrypterTestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ReuseTest()
+		  var iv as string = "01234567"
+		  
+		  var enc as new Blowfish_MTC( Blowfish_MTC.Padding.PKCS )
+		  enc.SetKey "password"
+		  
+		  call enc.DecryptCBC( enc.EncryptCBC( "some data" ) )
+		  Assert.IsTrue true, "Single block, no IV - 1"
+		  
+		  enc.SetInitialVector iv
+		  call enc.DecryptCBC( enc.EncryptCBC( "some data" ) )
+		  Assert.IsTrue true, "Single block, IV - 1"
+		  
+		  call enc.DecryptCBC( enc.EncryptCBC( "some data" ) )
+		  Assert.IsTrue true, "Single block, IV - 2"
+		  
+		  enc.SetInitialVector ""
+		  call enc.DecryptCBC( enc.EncryptCBC( "some data" ) )
+		  Assert.IsTrue true, "Single block, no IV - 2"
+		  
+		  var data as string = "0123456789"
+		  data = data + data + data + data + data
+		  
+		  call enc.DecryptCBC( enc.EncryptCBC( data ) )
+		  Assert.IsTrue true, "Multi block, no IV - 1"
+		  
+		  enc.SetInitialVector iv
+		  call enc.DecryptCBC( enc.EncryptCBC( data ) )
+		  Assert.IsTrue true, "Multi block, IV - 1"
+		  
+		  enc.SetInitialVector ""
+		  call enc.DecryptCBC( enc.EncryptCBC( data ) )
+		  Assert.IsTrue true, "Multi block, no IV - 2"
+		  
+		  var encrypted as string
+		  var decrypted as string
+		  
+		  encrypted = EncryptStream( enc, data )
+		  decrypted = DecryptStream( enc, encrypted )
+		  Assert.AreEqual data, decrypted, "Stream, no IV - 1"
+		  
+		  enc.SetInitialVector iv
+		  encrypted = EncryptStream( enc, data )
+		  decrypted = DecryptStream( enc, encrypted )
+		  Assert.AreEqual data, decrypted, "Stream, IV - 1"
+		  
+		  enc.SetInitialVector ""
+		  encrypted = EncryptStream( enc, data )
+		  decrypted = DecryptStream( enc, encrypted )
+		  Assert.AreEqual data, decrypted, "Stream, no IV - 2"
+		  
+		  call enc.DecryptCBC( enc.EncryptCBC( "some data" ) )
+		  Assert.IsTrue true, "Single block, no IV - 3"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SelfTestTest()
 		  dim bf as new Blowfish_MTC()
 		  bf.SelfTest

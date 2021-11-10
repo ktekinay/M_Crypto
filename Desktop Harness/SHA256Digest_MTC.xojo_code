@@ -30,8 +30,6 @@ Protected Class SHA256Digest_MTC
 		    for i as integer = 0 to arr.Ubound
 		      kMagicPtr.UInt32( i * 4 ) = arr( i )
 		    next
-		    
-		    IsLittleEndian = kMagic.LittleEndian
 		  end if
 		  
 		  Message = new MemoryBlock( kMagic.Size )
@@ -125,55 +123,53 @@ Protected Class SHA256Digest_MTC
 		  
 		  dim lastByteIndex as integer = mbIn.Size - 1
 		  
-		  //
-		  // If the natural state is LittleEndian, we have
-		  // to flip the bytes around in the data so
-		  // we can use Ptr below.
-		  // 
-		  // Unbelievably, this is faster than using the
-		  // MemoryBlock functions to access the data.
-		  //
-		  if IsLittleEndian then
-		    //
-		    // We'll do this two words at a time
-		    //
-		    const k8_64 as UInt64 = 2 ^ 8
-		    const k24_64 as UInt64 = 2 ^ 24
-		    
-		    const kMask0 as UInt64 = &hFF00000000000000
-		    const kMask1 as UInt64 = &h00FF000000000000
-		    const kMask2 as UInt64 = &h0000FF0000000000
-		    const kMask3 as UInt64 = &h000000FF00000000
-		    const kMask4 as UInt64 = &h00000000FF000000
-		    const kMask5 as UInt64 = &h0000000000FF0000
-		    const kMask6 as UInt64 = &h000000000000FF00
-		    const kMask7 as UInt64 = &h00000000000000FF
-		    
-		    dim t1 as UInt64
-		    
-		    for i as integer = 0 to lastByteIndex step 8
-		      t1 = pIn.UInt64( i )
-		      pIn.UInt64( i ) = _
-		      _ // Word 1
-		      ( ( t1 and kMask0 ) \ k24_64 ) or _
-		      ( ( t1 and kMask1 ) \ k8_64 ) or _
-		      ( ( t1 and kMask2 ) * k8_64 ) or _
-		      ( ( t1 and kMask3 ) * k24_64 ) or _
-		      _ // Word 2
-		      ( ( t1 and kMask4 ) \ k24_64 ) or _
-		      ( ( t1 and kMask5 ) \ k8_64 ) or _
-		      ( ( t1 and kMask6 ) * k8_64 ) or _
-		      ( ( t1 and kMask7 ) * k24_64 )
-		    next
-		  end if
-		  
 		  for chunkIndex as integer = 0 to lastByteIndex step kChunkBytes // Split into blocks
 		    //
 		    // Copy the chunk to the Message (faster than StringValue)
 		    //
 		    dim copyIndex as integer = 0
 		    while copyIndex < kChunkBytes
-		      pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      #if TargetLittleEndian then
+		        //
+		        // If the natural state is LittleEndian, we have
+		        // to flip the bytes around in the data so
+		        // we can use Ptr below.
+		        // 
+		        // Unbelievably, this is faster than using the
+		        // MemoryBlock functions to access the data.
+		        //
+		        
+		        //
+		        // We'll do this two words at a time
+		        //
+		        const k8_64 as UInt64 = 2 ^ 8
+		        const k24_64 as UInt64 = 2 ^ 24
+		        
+		        const kMask0 as UInt64 = &hFF00000000000000
+		        const kMask1 as UInt64 = &h00FF000000000000
+		        const kMask2 as UInt64 = &h0000FF0000000000
+		        const kMask3 as UInt64 = &h000000FF00000000
+		        const kMask4 as UInt64 = &h00000000FF000000
+		        const kMask5 as UInt64 = &h0000000000FF0000
+		        const kMask6 as UInt64 = &h000000000000FF00
+		        const kMask7 as UInt64 = &h00000000000000FF
+		        
+		        dim t1 as UInt64 = pIn.UInt64( chunkIndex + copyIndex )
+		        pMessage.UInt64( copyIndex ) = _
+		        _ // Word 1
+		        ( ( t1 and kMask0 ) \ k24_64 ) or _
+		        ( ( t1 and kMask1 ) \ k8_64 ) or _
+		        ( ( t1 and kMask2 ) * k8_64 ) or _
+		        ( ( t1 and kMask3 ) * k24_64 ) or _
+		        _ // Word 2
+		        ( ( t1 and kMask4 ) \ k24_64 ) or _
+		        ( ( t1 and kMask5 ) \ k8_64 ) or _
+		        ( ( t1 and kMask6 ) * k8_64 ) or _
+		        ( ( t1 and kMask7 ) * k24_64 )
+		      #else
+		        pMessage.UInt64( copyIndex ) = pIn.UInt64( chunkIndex + copyIndex )
+		      #endif
+		      
 		      copyIndex = copyIndex + 8
 		    wend
 		    
@@ -311,10 +307,6 @@ Protected Class SHA256Digest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared IsLittleEndian As Boolean
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private Shared kMagic As MemoryBlock
 	#tag EndProperty
 
@@ -352,7 +344,7 @@ Protected Class SHA256Digest_MTC
 	#tag Constant, Name = kLastRoundIndex, Type = Double, Dynamic = False, Default = \"63", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.7", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
 
 

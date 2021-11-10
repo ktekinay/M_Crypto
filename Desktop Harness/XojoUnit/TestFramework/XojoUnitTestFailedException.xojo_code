@@ -58,14 +58,6 @@ Inherits RuntimeException
 			Type="Integer"
 			EditorType=""
 		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Reason"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Text"
-			EditorType=""
-		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
 #tag EndClass

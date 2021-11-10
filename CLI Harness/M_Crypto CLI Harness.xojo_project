@@ -1,5 +1,5 @@
 Type=Console
-RBProjectVersion=2020.021
+RBProjectVersion=2021.021
 MinIDEVersion=20070100
 OrigIDEVersion=00000000
 Class=App;App.xojo_code;&h000000007908E7FF;&h0000000000000000;false
@@ -36,7 +36,7 @@ Class=SHA3_256Digest_MTC;../Shared Classes/M_SHA3/SHA3_256Digest_MTC.xojo_code;&
 Class=SHA3_384Digest_MTC;../Shared Classes/M_SHA3/SHA3_384Digest_MTC.xojo_code;&h000000007E97D7FF;&h00000000274E47FF;false
 Class=SHA3_512Digest_MTC;../Shared Classes/M_SHA3/SHA3_512Digest_MTC.xojo_code;&h00000000533047FF;&h00000000274E47FF;false
 MajorVersion=2
-MinorVersion=7
+MinorVersion=8
 SubVersion=0
 NonRelease=0
 Release=3
