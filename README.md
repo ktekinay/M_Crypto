@@ -360,6 +360,7 @@ __2.8__ (______)
 - Improved Blowfish performance slightly.
 - General code clean-up.
 - Improved SHA code.
+- Streaming encryption can be ended with an empty string when `isFinalBlock` is True.
 
 __2.7__ (Feb. 21, 2021)
 
