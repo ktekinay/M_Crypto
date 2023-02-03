@@ -34,6 +34,8 @@ Inherits TestController
 		  group = new SHA256DigestTest( self, "SHA256Digest" )
 		  group = new SHA512DigestTest( self, "SHA512Digest" )
 		  
+		  group = new Blake2bDigestTest( self, "Blake2bDigest" )
+		  
 		  group = new StressTests( self, "Stress Tests" )
 		  group.IncludeGroup = false
 		End Sub
