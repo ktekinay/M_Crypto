@@ -1,41 +1,54 @@
 #tag Class
 Protected Class Blake2bDigest_MTC
 	#tag Method, Flags = &h21
-		Private Sub Compress(statePtr As Ptr, dataPtr As Ptr, compressed As UInt64, isFinal As Boolean)
-		  const kHalfway as integer = kChunkBytes \ 2
+		Private Sub Compress(state As MemoryBlock, data As MemoryBlock, startIndex As Integer, compressed As UInt64, isFinal As Boolean)
+		  var localVector as MemoryBlock = self.LocalVector
 		  
-		  var localVector as new MemoryBlock( kChunkBytes )
-		  localVector.CopyBytes statePtr, 0, kHalfway
-		  localVector.CopyBytes IV, 0, IV.Size, kHalfway
+		  localVector.CopyBytes state, 0, State.Size
+		  localVector.CopyBytes IV, 0, IV.Size, IV.Size
 		  
-		  var localVectorPtr as ptr = localVector
-		  '
-		  'localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
+		  'var localVectorPtr as ptr = localVector
+		  var before as UInt64 = localVector.UInt64Value( 12 * 8 )
+		  System.DebugLog "Before: " + before.ToHex
+		  
+		  localVector.UInt64Value( 12 * 8 ) = localVector.UInt64Value( 12 * 8 ) xor compressed
 		  'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
 		  
+		  var expected as UInt64 = &h510E527FADE682D2
+		  var switcher as new MemoryBlock( 8 )
+		  switcher.UInt64Value( 0 ) = expected
+		  switcher.LittleEndian = not switcher.LittleEndian
+		  expected = switcher.UInt64Value( 0 )
+		  
+		  System.DebugLog "Expected: " + expected.ToHex
+		  var got as UInt64 = localVector.UInt64Value( 12 * 8 )
+		  System.DebugLog "Got: " + got.ToHex
+		  
+		  var shouldHaveApplied as UInt64 = before xor expected
+		  System.DebugLog "Should have applied: " + shouldHaveApplied.ToBinary
+		  
 		  if isFinal then
-		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
+		    localVector.UInt64Value( 14 * 8 ) = localVector.UInt64Value( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
 		  end if
 		  
 		  for round as integer = 0 to Sigma.LastIndex
 		    var thisSigma as MemoryBlock = Sigma( round )
-		    var sigmaPtr as ptr = thisSigma
 		    
-		    Mix localVectorPtr, 0, 4, 8, 12, dataPtr.UInt64( sigmaPtr.Byte( 0 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 1 ) * 8 )
-		    Mix localVectorPtr, 1, 5, 9, 13, dataPtr.UInt64( sigmaPtr.Byte( 2 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 3 ) * 8 )
-		    Mix localVectorPtr, 2, 6, 10, 14, dataPtr.UInt64( sigmaPtr.Byte( 4 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 5 ) * 8 )
-		    Mix localVectorPtr, 3, 7, 11, 15, dataPtr.UInt64( sigmaPtr.Byte( 6 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 7 ) * 8 )
-		    Mix localVectorPtr, 0, 5, 10, 15, dataPtr.UInt64( sigmaPtr.Byte( 8 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 9 ) * 8 )
-		    Mix localVectorPtr, 1, 6, 11, 12, dataPtr.UInt64( sigmaPtr.Byte( 10 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 11 ) * 8 )
-		    Mix localVectorPtr, 2, 7, 8, 13, dataPtr.UInt64( sigmaPtr.Byte( 12 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 13 ) * 8 )
-		    Mix localVectorPtr, 3, 4, 9, 14, dataPtr.UInt64( sigmaPtr.Byte( 14 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 15 ) * 8 )
+		    Mix localVector, 0, 4, 8, 12, data.UInt64Value( thisSigma.Byte( 0 ) * 8 ), data.UInt64Value( thisSigma.Byte( 1 ) * 8 )
+		    Mix localVector, 1, 5, 9, 13, data.UInt64Value( thisSigma.Byte( 2 ) * 8 ), data.UInt64Value( thisSigma.Byte( 3 ) * 8 )
+		    Mix localVector, 2, 6, 10, 14, data.UInt64Value( thisSigma.Byte( 4 ) * 8 ), data.UInt64Value( thisSigma.Byte( 5 ) * 8 )
+		    Mix localVector, 3, 7, 11, 15, data.UInt64Value( thisSigma.Byte( 6 ) * 8 ), data.UInt64Value( thisSigma.Byte( 7 ) * 8 )
+		    Mix localVector, 0, 5, 10, 15, data.UInt64Value( thisSigma.Byte( 8 ) * 8 ), data.UInt64Value( thisSigma.Byte( 9 ) * 8 )
+		    Mix localVector, 1, 6, 11, 12, data.UInt64Value( thisSigma.Byte( 10 ) * 8 ), data.UInt64Value( thisSigma.Byte( 11 ) * 8 )
+		    Mix localVector, 2, 7, 8, 13, data.UInt64Value( thisSigma.Byte( 12 ) * 8 ), data.UInt64Value( thisSigma.Byte( 13 ) * 8 )
+		    Mix localVector, 3, 4, 9, 14, data.UInt64Value( thisSigma.Byte( 14 ) * 8 ), data.UInt64Value( thisSigma.Byte( 15 ) * 8 )
 		  next
 		  
-		  for byteIndex as integer = 0 to State.Size step 8
-		    statePtr.UInt64( byteIndex ) = statePtr.UInt64( byteIndex ) xor localVectorPtr.UInt64( byteIndex )
+		  for byteIndex as integer = 0 to state.Size - 1 step 8
+		    state.UInt64Value( byteIndex ) = state.UInt64Value( byteIndex ) xor localVector.UInt64Value( byteIndex )
 		    
-		    var upperByteIndex as integer = byteIndex + byteIndex
-		    statePtr.UInt64( byteIndex ) = statePtr.UInt64( byteIndex ) xor localVectorPtr.UInt64( upperByteIndex )
+		    var upperByteIndex as integer = byteIndex + state.Size
+		    state.UInt64Value( byteIndex ) = state.UInt64Value( byteIndex ) xor localVector.UInt64Value( upperByteIndex )
 		  next
 		  
 		  
@@ -185,20 +198,19 @@ Protected Class Blake2bDigest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Process(mbIn As MemoryBlock, statePtr As Ptr, isFinal As Boolean)
+		Private Sub Process(mbIn As MemoryBlock, state As MemoryBlock, isFinal As Boolean)
 		  //
 		  // mbIn will be kChunkSize exactly
 		  //
 		  
 		  var combinedLength as integer = self.CombinedLength
 		  
-		  var dataPtr as Ptr = MbIn
-		  mbIn.LittleEndian = false
-		  
 		  for byteIndex as integer = 0 to mbIn.Size step kChunkBytes
 		    combinedLength = combinedLength + kChunkBytes
-		    Compress statePtr, Ptr( integer( dataPtr ) + byteIndex ), combinedLength, isFinal
+		    Compress state, mbIn, byteIndex, combinedLength, isFinal
 		  next
+		  
+		  self.CombinedLength = combinedLength
 		  
 		End Sub
 	#tag EndMethod
@@ -250,6 +262,8 @@ Protected Class Blake2bDigest_MTC
 		   
 		  State.UInt64Value( 0 ) = State.UInt64Value( 0 ) xor mixValue
 		  
+		  LocalVector = new MemoryBlock( kChunkBytes )
+		  
 		  CombinedLength = 0
 		  
 		End Sub
@@ -284,6 +298,10 @@ Protected Class Blake2bDigest_MTC
 
 	#tag Property, Flags = &h21
 		Private Key As MemoryBlock
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private LocalVector As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
