@@ -9,19 +9,35 @@ Protected Class Blake2bDigest_MTC
 		  localVector.CopyBytes IV, 0, IV.Size, kHalfway
 		  
 		  var localVectorPtr as ptr = localVector
-		  
-		  localVectorPtr.UInt64( 12 ) = localVectorPtr.UInt64( 12 ) xor compressed
-		  localVectorPtr.UInt64( 13 ) = localVectorPtr.UInt64( 13 ) xor 0 // Supposed to be the high bits, but we don't have them
+		  '
+		  'localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
+		  'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
 		  
 		  if isFinal then
-		    localVectorPtr.UInt64( 14 ) = localVectorPtr.UInt64( 14 ) xor &hFFFFFFFFFFFFFFFF
+		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
 		  end if
 		  
 		  for round as integer = 0 to Sigma.LastIndex
-		    var sigmaPtr as ptr = Sigma( round )
+		    var thisSigma as MemoryBlock = Sigma( round )
+		    var sigmaPtr as ptr = thisSigma
 		    
-		    Mix localVectorPtr.UInt64( 0 ), localVectorPtr.UInt64( 4 ), localVectorPtr.UInt64( 8 ), localVectorPtr.UInt64( 12 ), dataPtr.UInt64( sigmaPtr.Byte( 0 ) ), dataPtr.UInt64( sigmaPtr.Byte( 1 ) )
+		    Mix localVectorPtr, 0, 4, 8, 12, dataPtr.UInt64( sigmaPtr.Byte( 0 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 1 ) * 8 )
+		    Mix localVectorPtr, 1, 5, 9, 13, dataPtr.UInt64( sigmaPtr.Byte( 2 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 3 ) * 8 )
+		    Mix localVectorPtr, 2, 6, 10, 14, dataPtr.UInt64( sigmaPtr.Byte( 4 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 5 ) * 8 )
+		    Mix localVectorPtr, 3, 7, 11, 15, dataPtr.UInt64( sigmaPtr.Byte( 6 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 7 ) * 8 )
+		    Mix localVectorPtr, 0, 5, 10, 15, dataPtr.UInt64( sigmaPtr.Byte( 8 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 9 ) * 8 )
+		    Mix localVectorPtr, 1, 6, 11, 12, dataPtr.UInt64( sigmaPtr.Byte( 10 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 11 ) * 8 )
+		    Mix localVectorPtr, 2, 7, 8, 13, dataPtr.UInt64( sigmaPtr.Byte( 12 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 13 ) * 8 )
+		    Mix localVectorPtr, 3, 4, 9, 14, dataPtr.UInt64( sigmaPtr.Byte( 14 ) * 8 ), dataPtr.UInt64( sigmaPtr.Byte( 15 ) * 8 )
 		  next
+		  
+		  for byteIndex as integer = 0 to State.Size step 8
+		    statePtr.UInt64( byteIndex ) = statePtr.UInt64( byteIndex ) xor localVectorPtr.UInt64( byteIndex )
+		    
+		    var upperByteIndex as integer = byteIndex + byteIndex
+		    statePtr.UInt64( byteIndex ) = statePtr.UInt64( byteIndex ) xor localVectorPtr.UInt64( upperByteIndex )
+		  next
+		  
 		  
 		End Sub
 	#tag EndMethod
@@ -46,6 +62,9 @@ Protected Class Blake2bDigest_MTC
 		  
 		  Reset
 		  
+		  var v as UInt64 = &h1000000000000001
+		  System.DebugLog RotateRight( v, 8 ).ToHex
+		  System.DebugLog RotateRight( v, 56 ).ToHex
 		End Sub
 	#tag EndMethod
 
@@ -138,6 +157,34 @@ Protected Class Blake2bDigest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub Mix(localVectorPtr As Ptr, i1 As Integer, i2 As Integer, i3 As Integer, i4 As Integer, x As UInt64, y As UInt64)
+		  i1 = i1 * 8
+		  i2 = i2 * 8
+		  i3 = i3 * 8
+		  i4 = i4 * 8
+		  
+		  var p as Ptr = localVectorPtr
+		  
+		  p.UInt64( i1 ) = p.UInt64( i1 ) + p.UInt64( i2 ) + x
+		  p.UInt64( i4 ) = p.UInt64( i4 ) xor p.UInt64( i1 )
+		  p.UInt64( i4 ) = RotateRight( p.UInt64( i4 ), 32 )
+		  
+		  p.UInt64( i3 ) = p.UInt64( i3 ) + p.UInt64( i4 )
+		  p.UInt64( i2 ) = p.UInt64( i2 ) xor p.UInt64( i3 )
+		  p.UInt64( i2 ) = RotateRight( p.UInt64( i2 ), 24 )
+		  
+		  p.UInt64( i1 ) = p.UInt64( i1 ) + p.UInt64( i2 ) + y
+		  p.UInt64( i4 ) = p.UInt64( i4 ) xor p.UInt64( i1 )
+		  p.UInt64( i4 ) = RotateRight( p.UInt64( i4 ), 16 )
+		  
+		  p.UInt64( i3 ) = p.UInt64( i3 ) + p.UInt64( i4 )
+		  p.UInt64( i2 ) = p.UInt64( i2 ) xor p.UInt64( i3 )
+		  p.UInt64( i2 ) = RotateRight( p.UInt64( i2 ), 63 )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub Process(mbIn As MemoryBlock, statePtr As Ptr, isFinal As Boolean)
 		  //
 		  // mbIn will be kChunkSize exactly
@@ -146,6 +193,7 @@ Protected Class Blake2bDigest_MTC
 		  var combinedLength as integer = self.CombinedLength
 		  
 		  var dataPtr as Ptr = MbIn
+		  mbIn.LittleEndian = false
 		  
 		  for byteIndex as integer = 0 to mbIn.Size step kChunkBytes
 		    combinedLength = combinedLength + kChunkBytes
@@ -207,6 +255,16 @@ Protected Class Blake2bDigest_MTC
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function RotateRight(value As UInt64, bits As Integer) As UInt64
+		  var v1 as UInt64 = value \ CType( 2 ^ bits, UInt64 )
+		  var v2 as UInt64 = value * CType( 2 ^ ( 64 - bits ), UInt64 )
+		  
+		  return v1 or v2
+		  
+		End Function
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h21
 		Private Buffer As String
@@ -239,8 +297,6 @@ Protected Class Blake2bDigest_MTC
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  var returnMB as MemoryBlock = State
-			  
 			  var tempState as new MemoryBlock( State.Size )
 			  tempState.CopyBytes State, 0, State.Size
 			  
@@ -248,9 +304,9 @@ Protected Class Blake2bDigest_MTC
 			  data.Size = kChunkBytes // Even if Buffer is empty, process zeros
 			  
 			  Process data, tempState, true
-			  returnMB = tempState
 			  
-			  return returnMB
+			  return tempState
+			  
 			  
 			End Get
 		#tag EndGetter
