@@ -1,24 +1,39 @@
 #tag Class
 Protected Class Blake2bDigest_MTC
 	#tag Method, Flags = &h0
-		Sub Constructor(key As String = "", hashLength As Integer = kMaxLength)
+		Sub Constructor(hashLength As Integer = kMaxLength)
+		  Constructor hashLength, ""
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(hashLength As Integer, key As String)
 		  if IV is nil then
 		    InitIV
 		    InitSigma
 		  end if
 		  
-		  if hashLength < 1 or hashLength > kMaxLength  then
+		  if hashLength < 1 or hashLength > kMaxLength or key.Bytes > kMaxLength then
 		    raise new OutOfBoundsException
 		  end if
 		  
 		  self.HashLength = hashLength
 		  
 		  if key <> "" then
-		    self.Key = key
-		    self.Key.Size = 128
+		    KeyLength = key.Bytes
+		    self.Key = new MemoryBlock( kChunkBytes )
+		    self.Key.StringValue( 0, KeyLength ) = key
 		  end if
 		  
 		  Reset
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(key As String)
+		  Constructor kMaxLength, key
 		  
 		End Sub
 	#tag EndMethod
@@ -234,7 +249,8 @@ Protected Class Blake2bDigest_MTC
 		  var mixValue as UInt64 = &h01010000
 		  mixValue = mixValue + HashLength
 		  if Key isa object then
-		    mixValue = mixValue or ( Key.Size * CType( 256^2, UInt64 ) )
+		    var shifted as UInt64 = KeyLength * CType( 256^1, UInt64 )
+		    mixValue = mixValue xor shifted 
 		  end if
 		  
 		  State.UInt64Value( 0 ) = State.UInt64Value( 0 ) xor mixValue
@@ -277,6 +293,10 @@ Protected Class Blake2bDigest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private KeyLength As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private LocalVector As MemoryBlock
 	#tag EndProperty
 
@@ -304,7 +324,8 @@ Protected Class Blake2bDigest_MTC
 			  
 			  Process data, dataLen + CombinedLength, tempState, true
 			  
-			  return tempState
+			  return tempState.StringValue( 0, HashLength )
+			  
 			  
 			  
 			End Get
