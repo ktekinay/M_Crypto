@@ -213,7 +213,7 @@ Protected Class Blake2bDigest_MTC
 		  data = data.LeftBytes( dataLen )
 		  
 		  if data <> "" then
-		    Process data, dataLen + CombinedLength, State, false
+		    Process data, CombinedLength + kChunkBytes, State, false
 		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
