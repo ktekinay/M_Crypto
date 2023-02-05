@@ -28,11 +28,12 @@ Inherits TestGroup
 		Sub LargeFileTest()
 		  var file as FolderItem = SpecialFolder.Resources.Child( "Testing Resources" ).Child( "Res_ipsa.html" )
 		  var tis as TextInputStream = TextInputStream.Open( file )
-		  var contents as string = tis.ReadAll
+		  var contents as string = tis.ReadAll( Encodings.UTF8 )
 		  tis.Close
 		  
 		  StartTestTimer "mine"
-		  TestIt contents, "ABC"
+		  TestIt contents, _
+		  "e03b0e727add73d2ea1a0e852b170fa04fdaca3473ae24c1a3f3f6897a76112f292a06bb85466a85a2a405c7a756fb53ef18890dbdf59a364f4197e010c719cd"
 		  LogTestTimer "mine"
 		End Sub
 	#tag EndMethod
