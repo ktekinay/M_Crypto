@@ -25,6 +25,19 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub LargeFileTest()
+		  var file as FolderItem = SpecialFolder.Resources.Child( "Testing Resources" ).Child( "Res_ipsa.html" )
+		  var tis as TextInputStream = TextInputStream.Open( file )
+		  var contents as string = tis.ReadAll
+		  tis.Close
+		  
+		  StartTestTimer "mine"
+		  TestIt contents, "ABC"
+		  LogTestTimer "mine"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub MoreThan128Test()
 		  TestIt _
 		  "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEFx", _
@@ -49,7 +62,7 @@ Inherits TestGroup
 		  
 		  b.Process data
 		  var actual as string = EncodeHex( b.Value )
-		  Assert.AreEqual expected.ReplaceAll( " ", "" ).Lowercase, actual.Lowercase, data
+		  Assert.AreEqual expected.ReplaceAll( " ", "" ).Lowercase, actual.Lowercase, data.Left( 50 )
 		  
 		End Sub
 	#tag EndMethod
