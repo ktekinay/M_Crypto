@@ -89,6 +89,20 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ResetTest()
+		  var b as new Blake2bDigest_MTC
+		  b.Process "abc"
+		  var h1 as string = b.Value
+		  
+		  b.Reset
+		  Assert.AreNotEqual h1, b.Value
+		  
+		  b.Process "abc"
+		  Assert.AreSame h1, b.Value
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub RFCSelfTestTest()
 		  //
 		  // Adapted from the RFC's self-test code
@@ -182,6 +196,15 @@ Inherits TestGroup
 		  "7D 87 C5 39 2A AB 79 2D C2 52 D5 DE 45 33 CC 95" + _
 		  "18 D3 8A A8 DB F1 92 5A B9 23 86 ED D4 00 99 23"
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SameValueTest()
+		  var b as new Blake2bDigest_MTC
+		  b.Process "abc"
+		  var h1 as string = b.Value
+		  Assert.AreSame h1, b.Value
 		End Sub
 	#tag EndMethod
 
