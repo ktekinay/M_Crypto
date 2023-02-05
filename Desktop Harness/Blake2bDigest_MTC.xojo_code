@@ -162,14 +162,6 @@ Protected Class Blake2bDigest_MTC
 		    end if
 		    
 		    for round as integer = 0 to Sigma.LastIndex
-		      System.DebugLog "Round: " + round.ToString
-		      
-		      for i as integer = 0 to localVector.Size - 1 step 8
-		        System.DebugLog localVector.UInt64Value( i ).ToHex
-		      next
-		      
-		      System.DebugLog "---"
-		      
 		      var thisSigma as Ptr = Sigma( round )
 		      
 		      Mix localVector, 0, 4, 8, 12, data.UInt64Value( thisSigma.Byte( 0 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 1 ) + dataByteIndex )
@@ -244,7 +236,7 @@ Protected Class Blake2bDigest_MTC
 		  if Key isa object then
 		    mixValue = mixValue or ( Key.Size * CType( 256^2, UInt64 ) )
 		  end if
-		   
+		  
 		  State.UInt64Value( 0 ) = State.UInt64Value( 0 ) xor mixValue
 		  
 		  LocalVector = new MemoryBlock( kChunkBytes )
@@ -370,6 +362,14 @@ Protected Class Blake2bDigest_MTC
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Value"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
 			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
