@@ -9,10 +9,26 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Exact128Test()
+		  TestIt _
+		  "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF", _
+		  "7fdc929ec9743915de5f12ab3fa5b4901a23ad78e3f6606a4bb4edcd55c9d15cdaf7a96f3cc11938fefb31f2b9c2ea2c3b02bfa67cfa03f403ff899dca19fe5f"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InitTest()
 		  var b as new Blake2bDigest_MTC
 		  Assert.IsNotNil b
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub MoreThan128Test()
+		  TestIt _
+		  "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEFx", _
+		  "e5291e6b6010615ae681d20a96f14c5d22bbb84ac3a504c3b296121431093d9f7a821a5f913038b6711aa22f3f917eb7eb257c92f2ac35dcfec296ecbd42581a"
 		End Sub
 	#tag EndMethod
 
@@ -33,7 +49,7 @@ Inherits TestGroup
 		  
 		  b.Process data
 		  var actual as string = EncodeHex( b.Value )
-		  Assert.AreEqual expected.ReplaceAll( " ", "" ), actual, data
+		  Assert.AreEqual expected.ReplaceAll( " ", "" ).Lowercase, actual.Lowercase, data
 		  
 		End Sub
 	#tag EndMethod
