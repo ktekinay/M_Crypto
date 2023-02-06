@@ -2,6 +2,36 @@
 Protected Class Blake2bDigestTest
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub DigestSuperLargeTest()
+		  dim s as string = "Hello "
+		  while s.Bytes <= 10000000
+		    s = s + s
+		  wend
+		  
+		  var expected as string = _
+		  "6e5c5398b6dd014d723beafa5f096dc0969181330e1889f6737ed395becf1b5b3c46d50952b42ca83e9e941cb6eee0f4c1a902e7c6d06fb08846ac799db56f9c"
+		  
+		  dim chunkSize as integer = 128 * 8 * 1000
+		  
+		  Assert.Message "Data length is " + format( s.Bytes, "#,0" ) + " bytes"
+		  Assert.Message "ChunkSize is " + format( chunkSize, "#,0" ) + " bytes"
+		  
+		  StartTestTimer "mine"
+		  
+		  dim b as new Blake2bDigest_MTC
+		  
+		  for i as integer = 0 to s.Bytes step chunkSize
+		    b.Process s.MiddleBytes( i, chunkSize )
+		  next
+		  dim actual as string = b.Value
+		  
+		  LogTestTimer "mine"
+		  
+		  Assert.AreEqual expected, EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub EmptyTest()
 		  TestIt "", "786A02F742015903C6C6FD852552D272912F4740E15847618A86E217F71F5419D25E1031AFEE585313896444934EB04B903A685B1448B755D56F701AFE9BE2CE"
 		  
