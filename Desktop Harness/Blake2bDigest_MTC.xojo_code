@@ -274,15 +274,6 @@ Protected Class Blake2bDigest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function RotateRight(value As UInt64, bits As Integer) As UInt64
-		  return _
-		  ( value \ CType( 2 ^ bits, UInt64 ) ) + _
-		  ( value * CType( 2 ^ ( 64 - bits ), UInt64 ) )
-		  
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h21
 		Private Buffer As String
