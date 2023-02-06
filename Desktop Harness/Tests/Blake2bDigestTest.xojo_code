@@ -21,7 +21,9 @@ Inherits TestGroup
 		  dim b as new Blake2bDigest_MTC
 		  
 		  for i as integer = 0 to s.Bytes step chunkSize
+		    StartProfiling
 		    b.Process s.MiddleBytes( i, chunkSize )
+		    StopProfiling
 		  next
 		  dim actual as string = b.Value
 		  

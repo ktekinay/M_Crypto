@@ -206,6 +206,7 @@ Protected Class Blake2bDigest_MTC
 		  var x, y as UInt64
 		  
 		  var lastDataIndex as integer = data.Size - 1
+		  static lastSigmaIndex as integer = Sigma.LastIndex
 		  
 		  for dataByteIndex as integer = 0 to lastDataIndex step kChunkBytes
 		    //
@@ -219,7 +220,7 @@ Protected Class Blake2bDigest_MTC
 		    
 		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
-		    for round as integer = 0 to Sigma.LastIndex
+		    for round as integer = 0 to lastSigmaIndex
 		      var thisSigma as Ptr = Sigma( round )
 		      
 		      //
