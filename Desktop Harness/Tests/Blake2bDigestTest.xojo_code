@@ -55,6 +55,26 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub LargeFileStreamingTest()
+		  var b as new Blake2bDigest_MTC
+		  
+		  var file as FolderItem = SpecialFolder.Resources.Child( "Testing Resources" ).Child( "Res_ipsa.html" )
+		  var tis as TextInputStream = TextInputStream.Open( file )
+		  
+		  while not tis.EndOfFile
+		    b.Process tis.Read( 4096 )
+		  wend
+		  
+		  tis.Close
+		  
+		  var actual as string = EncodeHex( b.Value )
+		  var expected as string = "e03b0e727add73d2ea1a0e852b170fa04fdaca3473ae24c1a3f3f6897a76112f292a06bb85466a85a2a405c7a756fb53ef18890dbdf59a364f4197e010c719cd"
+		  Assert.AreEqual expected, actual
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub LargeFileTest()
 		  var file as FolderItem = SpecialFolder.Resources.Child( "Testing Resources" ).Child( "Res_ipsa.html" )
 		  var tis as TextInputStream = TextInputStream.Open( file )
