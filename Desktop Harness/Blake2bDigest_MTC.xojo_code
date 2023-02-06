@@ -182,8 +182,6 @@ Protected Class Blake2bDigest_MTC
 		  var dataPtr as ptr = data
 		  var statePtr as ptr = state
 		  
-		  var lastStateIndex as integer = kMaxLength - 1
-		  
 		  var localVector as MemoryBlock = self.LocalVector
 		  var localVectorPtr as ptr = localVector
 		  
