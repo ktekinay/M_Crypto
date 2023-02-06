@@ -450,6 +450,8 @@ Protected Class Blake2bDigest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
+		  mValue = ""
+		  
 		  if Buffer <> "" then
 		    data = Buffer + data
 		    Buffer = ""
@@ -506,6 +508,7 @@ Protected Class Blake2bDigest_MTC
 		  LocalVector = new MemoryBlock( kChunkBytes )
 		  
 		  CombinedLength = 0
+		  mValue = ""
 		  
 		End Sub
 	#tag EndMethod
@@ -540,6 +543,10 @@ Protected Class Blake2bDigest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private mValue As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private Shared Sigma() As MemoryBlock
 	#tag EndProperty
 
@@ -550,24 +557,26 @@ Protected Class Blake2bDigest_MTC
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  var tempState as new MemoryBlock( State.Size )
-			  tempState.CopyBytes State, 0, State.Size
-			  
-			  var data as new MemoryBlock( kChunkBytes )
-			  var dataLen as UInt64
-			  
-			  if Buffer <> "" then
-			    dataLen = Buffer.Bytes
-			    data.StringValue( 0, dataLen ) = Buffer
+			  if mValue = "" then
+			    var tempState as new MemoryBlock( State.Size )
+			    tempState.CopyBytes State, 0, State.Size
+			    
+			    var data as new MemoryBlock( kChunkBytes )
+			    var dataLen as UInt64
+			    
+			    if Buffer <> "" then
+			      dataLen = Buffer.Bytes
+			      data.StringValue( 0, dataLen ) = Buffer
+			    end if
+			    
+			    const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
+			    
+			    Process data, dataLen + CombinedLength, tempState, kFinalMask
+			    
+			    mValue = tempState.StringValue( 0, HashLength )
 			  end if
 			  
-			  const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
-			  
-			  Process data, dataLen + CombinedLength, tempState, kFinalMask
-			  
-			  return tempState.StringValue( 0, HashLength )
-			  
-			  
+			  return mValue
 			  
 			End Get
 		#tag EndGetter
