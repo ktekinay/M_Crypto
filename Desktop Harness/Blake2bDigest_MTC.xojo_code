@@ -126,6 +126,18 @@ Protected Class Blake2bDigest_MTC
 		  const R3 as integer = 16
 		  const R4 as integer = 63
 		  
+		  const R1ShiftRight as UInt64 = 2 ^ R1
+		  const R1ShiftLeft as UInt64 = 2 ^ ( 64 - R1 )
+		  
+		  const R2ShiftRight as UInt64 = 2 ^ R2
+		  const R2ShiftLeft as UInt64 = 2 ^ ( 64 - R2 )
+		  
+		  const R3ShiftRight as UInt64 = 2 ^ R3
+		  const R3ShiftLeft as UInt64 = 2 ^ ( 64 - R3 )
+		  
+		  const R4ShiftRight as UInt64 = 2 ^ R4
+		  const R4ShiftLeft as UInt64 = 2 ^ ( 64 - R4 )
+		  
 		  var a as integer = i1 * 8
 		  var b as integer = i2 * 8
 		  var c as integer = i3 * 8
@@ -135,19 +147,19 @@ Protected Class Blake2bDigest_MTC
 		  
 		  p.UInt64( a ) = p.UInt64( a ) + p.UInt64( b ) + x
 		  p.UInt64( d ) = p.UInt64( d ) xor p.UInt64( a )
-		  p.UInt64( d ) = RotateRight( p.UInt64( d ), R1 )
+		  p.UInt64( d ) = ( p.UInt64( d ) \ R1ShiftRight ) xor ( p.UInt64( d ) * R1ShiftLeft )
 		  
 		  p.UInt64( c ) = p.UInt64( c ) + p.UInt64( d )
 		  p.UInt64( b ) = p.UInt64( b ) xor p.UInt64( c )
-		  p.UInt64( b ) = RotateRight( p.UInt64( b ), R2 )
+		  p.UInt64( b ) = ( p.UInt64( b ) \ R2ShiftRight ) xor ( p.UInt64( b ) * R2ShiftLeft )
 		  
 		  p.UInt64( a ) = p.UInt64( a ) + p.UInt64( b ) + y
 		  p.UInt64( d ) = p.UInt64( d ) xor p.UInt64( a )
-		  p.UInt64( d ) = RotateRight( p.UInt64( d ), R3 )
+		  p.UInt64( d ) = ( p.UInt64( d ) \ R3ShiftRight ) xor ( p.UInt64( d ) * R3ShiftLeft )
 		  
 		  p.UInt64( c ) = p.UInt64( c ) + p.UInt64( d )
 		  p.UInt64( b ) = p.UInt64( b ) xor p.UInt64( c )
-		  p.UInt64( b ) = RotateRight( p.UInt64( b ), R4 )
+		  p.UInt64( b ) = ( p.UInt64( b ) \ R4ShiftRight ) xor ( p.UInt64( b ) * R4ShiftLeft )
 		  
 		End Sub
 	#tag EndMethod
