@@ -167,7 +167,7 @@ Protected Class Blake2bDigest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Process(data As MemoryBlock, compressed As UInt64, state As MemoryBlock, isFinal As Boolean)
+		Private Sub Process(data As MemoryBlock, compressed As UInt64, state As MemoryBlock, finalMask As UInt64)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks false
 		    #pragma BoundsChecking false
@@ -219,9 +219,7 @@ Protected Class Blake2bDigest_MTC
 		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
 		    'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
 		    
-		    if isFinal then
-		      localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
-		    end if
+		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
 		    for round as integer = 0 to Sigma.LastIndex
 		      var thisSigma as Ptr = Sigma( round )
@@ -476,7 +474,9 @@ Protected Class Blake2bDigest_MTC
 		  data = data.LeftBytes( dataLen )
 		  
 		  if data <> "" then
-		    Process data, CombinedLength + kChunkBytes, State, false
+		    const kNoMask as UInt64 = 0
+		    
+		    Process data, CombinedLength + kChunkBytes, State, kNoMask
 		    CombinedLength = CombinedLength + dataLen
 		  end if
 		  
@@ -561,7 +561,9 @@ Protected Class Blake2bDigest_MTC
 			    data.StringValue( 0, dataLen ) = Buffer
 			  end if
 			  
-			  Process data, dataLen + CombinedLength, tempState, true
+			  const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
+			  
+			  Process data, dataLen + CombinedLength, tempState, kFinalMask
 			  
 			  return tempState.StringValue( 0, HashLength )
 			  
