@@ -442,6 +442,11 @@ Protected Class Blake2bDigest_MTC
 		    statePtr.UInt64( 56 ) = statePtr.UInt64( 56 ) xor localVectorPtr.UInt64( 56 ) xor localVectorPtr.UInt64( 120 )
 		    
 		    compressed = compressed + kChunkBytes
+		    
+		    //
+		    // Advance dataPtr
+		    //
+		    dataPtr = ptr( integer( dataPtr ) + kChunkBytes )
 		  next
 		  
 		End Sub
