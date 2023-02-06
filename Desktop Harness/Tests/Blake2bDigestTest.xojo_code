@@ -108,6 +108,8 @@ Inherits TestGroup
 		  // Adapted from the RFC's self-test code
 		  //
 		  
+		  StartProfiling
+		  
 		  // grand hash of hash results
 		  var finalHash as string = _
 		  "C2 3A 78 00 D9 81 23 BD" + _
@@ -142,6 +144,9 @@ Inherits TestGroup
 		  next
 		  
 		  var result as string = EncodeHex( master.Value )
+		  
+		  StopProfiling
+		  
 		  Assert.AreEqual finalHash.ReplaceAll( " ", "" ), result
 		  
 		  
@@ -245,10 +250,15 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Sub TestIt(data As String, expected As String)
+		  StartProfiling
+		  
 		  var b as new Blake2bDigest_MTC
 		  
 		  b.Process data
 		  var actual as string = EncodeHex( b.Value )
+		  
+		  StopProfiling
+		  
 		  Assert.AreEqual expected.ReplaceAll( " ", "" ).Lowercase, actual.Lowercase, data.Left( 50 )
 		  
 		End Sub
