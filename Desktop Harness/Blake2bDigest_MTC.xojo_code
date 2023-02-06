@@ -170,7 +170,11 @@ Protected Class Blake2bDigest_MTC
 		  // data will be a multiple of kChunkSize exactly
 		  //
 		  
+		  var dataPtr as ptr = data
+		  var statePtr as ptr = state
+		  
 		  var localVector as MemoryBlock = self.LocalVector
+		  var localVectorPtr as ptr = localVector
 		  
 		  for dataByteIndex as integer = 0 to data.Size - 1 step kChunkBytes
 		    //
@@ -181,31 +185,31 @@ Protected Class Blake2bDigest_MTC
 		    
 		    'var localVectorPtr as ptr = localVector
 		    
-		    localVector.UInt64Value( 12 * 8 ) = localVector.UInt64Value( 12 * 8 ) xor compressed
+		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
 		    'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
 		    
 		    if isFinal then
-		      localVector.UInt64Value( 14 * 8 ) = localVector.UInt64Value( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
+		      localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor &hFFFFFFFFFFFFFFFF
 		    end if
 		    
 		    for round as integer = 0 to Sigma.LastIndex
 		      var thisSigma as Ptr = Sigma( round )
 		      
-		      Mix localVector, 0, 4, 8, 12, data.UInt64Value( thisSigma.Byte( 0 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 1 ) + dataByteIndex )
-		      Mix localVector, 1, 5, 9, 13, data.UInt64Value( thisSigma.Byte( 2 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 3 ) + dataByteIndex )
-		      Mix localVector, 2, 6, 10, 14, data.UInt64Value( thisSigma.Byte( 4 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 5 ) + dataByteIndex )
-		      Mix localVector, 3, 7, 11, 15, data.UInt64Value( thisSigma.Byte( 6 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 7 ) + dataByteIndex )
-		      Mix localVector, 0, 5, 10, 15, data.UInt64Value( thisSigma.Byte( 8 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 9 ) + dataByteIndex )
-		      Mix localVector, 1, 6, 11, 12, data.UInt64Value( thisSigma.Byte( 10 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 11 ) + dataByteIndex )
-		      Mix localVector, 2, 7, 8, 13, data.UInt64Value( thisSigma.Byte( 12 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 13 ) + dataByteIndex )
-		      Mix localVector, 3, 4, 9, 14, data.UInt64Value( thisSigma.Byte( 14 ) + dataByteIndex ), data.UInt64Value( thisSigma.Byte( 15 ) + dataByteIndex )
+		      Mix localVectorPtr, 0, 4, 8, 12, dataPtr.UInt64( thisSigma.Byte( 0 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 1 ) + dataByteIndex )
+		      Mix localVectorPtr, 1, 5, 9, 13, dataPtr.UInt64( thisSigma.Byte( 2 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 3 ) + dataByteIndex )
+		      Mix localVectorPtr, 2, 6, 10, 14, dataPtr.UInt64( thisSigma.Byte( 4 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 5 ) + dataByteIndex )
+		      Mix localVectorPtr, 3, 7, 11, 15, dataPtr.UInt64( thisSigma.Byte( 6 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 7 ) + dataByteIndex )
+		      Mix localVectorPtr, 0, 5, 10, 15, dataPtr.UInt64( thisSigma.Byte( 8 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 9 ) + dataByteIndex )
+		      Mix localVectorPtr, 1, 6, 11, 12, dataPtr.UInt64( thisSigma.Byte( 10 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 11 ) + dataByteIndex )
+		      Mix localVectorPtr, 2, 7, 8, 13, dataPtr.UInt64( thisSigma.Byte( 12 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 13 ) + dataByteIndex )
+		      Mix localVectorPtr, 3, 4, 9, 14, dataPtr.UInt64( thisSigma.Byte( 14 ) + dataByteIndex ), dataPtr.UInt64( thisSigma.Byte( 15 ) + dataByteIndex )
 		    next
 		    
 		    for byteIndex as integer = 0 to state.Size - 1 step 8
 		      var upperByteIndex as integer = byteIndex + state.Size
-		      state.UInt64Value( byteIndex ) = state.UInt64Value( byteIndex ) _
-		      xor localVector.UInt64Value( byteIndex ) _
-		      xor localVector.UInt64Value( upperByteIndex )
+		      statePtr.UInt64( byteIndex ) = statePtr.UInt64( byteIndex ) _
+		      xor localVectorPtr.UInt64( byteIndex ) _
+		      xor localVectorPtr.UInt64( upperByteIndex )
 		    next
 		    
 		    compressed = compressed + kChunkBytes
