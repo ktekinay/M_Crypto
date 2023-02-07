@@ -202,7 +202,8 @@ Protected Class Blake2bDigest_MTC
 		  const R4ShiftRight as UInt64 = 2 ^ R4
 		  const R4ShiftLeft as UInt64 = 2 ^ ( 64 - R4 )
 		  
-		  var a, b, c, d as integer
+		  var aIndex, bIndex, cIndex, dIndex as integer
+		  var a, b, c, d as UInt64
 		  var x, y as UInt64
 		  
 		  var lastDataIndex as integer = data.Size - 1
@@ -212,8 +213,8 @@ Protected Class Blake2bDigest_MTC
 		    //
 		    // Compress state, mbIn, byteIndex, combinedLength, isFinal
 		    //
-		    localVector.CopyBytes state, 0, State.Size
-		    localVector.CopyBytes IV, 0, IV.Size, IV.Size
+		    localVector.CopyBytes state, 0, kMaxLength
+		    localVector.CopyBytes IV, 0, kMaxLength, kMaxLength
 		    
 		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
 		    'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
@@ -226,210 +227,298 @@ Protected Class Blake2bDigest_MTC
 		      //
 		      // ---
 		      //
-		      a = 0 * 8
-		      b = 4 * 8
-		      c = 8 * 8
-		      d = 12 * 8
+		      aIndex = 0 * 8
+		      bIndex = 4 * 8
+		      cIndex = 8 * 8
+		      dIndex = 12 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 0 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 1 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 1 * 8
-		      b = 5 * 8
-		      c = 9 * 8
-		      d = 13 * 8
+		      aIndex = 1 * 8
+		      bIndex = 5 * 8
+		      cIndex = 9 * 8
+		      dIndex = 13 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 2 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 3 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 2 * 8
-		      b = 6 * 8
-		      c = 10 * 8
-		      d = 14 * 8
+		      aIndex = 2 * 8
+		      bIndex = 6 * 8
+		      cIndex = 10 * 8
+		      dIndex = 14 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 4 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 5 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 3 * 8
-		      b = 7 * 8
-		      c = 11 * 8
-		      d = 15 * 8
+		      aIndex = 3 * 8
+		      bIndex = 7 * 8
+		      cIndex = 11 * 8
+		      dIndex = 15 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 6 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 7 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 0 * 8
-		      b = 5 * 8
-		      c = 10 * 8
-		      d = 15 * 8
+		      aIndex = 0 * 8
+		      bIndex = 5 * 8
+		      cIndex = 10 * 8
+		      dIndex = 15 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 8 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 9 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 1 * 8
-		      b = 6 * 8
-		      c = 11 * 8
-		      d = 12 * 8
+		      aIndex = 1 * 8
+		      bIndex = 6 * 8
+		      cIndex = 11 * 8
+		      dIndex = 12 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 10 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 11 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 2 * 8
-		      b = 7 * 8
-		      c = 8 * 8
-		      d = 13 * 8
+		      aIndex = 2 * 8
+		      bIndex = 7 * 8
+		      cIndex = 8 * 8
+		      dIndex = 13 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 12 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 13 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		      
 		      //
 		      // ---
 		      //
-		      a = 3 * 8
-		      b = 4 * 8
-		      c = 9 * 8
-		      d = 14 * 8
+		      aIndex = 3 * 8
+		      bIndex = 4 * 8
+		      cIndex = 9 * 8
+		      dIndex = 14 * 8
+		      
+		      a = localVectorPtr.UInt64( aIndex )
+		      b = localVectorPtr.UInt64( bIndex )
+		      c = localVectorPtr.UInt64( cIndex )
+		      d = localVectorPtr.UInt64( dIndex )
+		      
 		      x = dataPtr.UInt64( thisSigma.Byte( 14 ) )
 		      y = dataPtr.UInt64( thisSigma.Byte( 15 ) )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
+		      a = a + b + x
+		      d = d xor a
+		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
 		      
-		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		      localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
+		      a = a + b + y
+		      d = d xor a
+		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
 		      
-		      localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		      localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		      localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
+		      c = c + d
+		      b = b xor c
+		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		      
+		      localVectorPtr.UInt64( aIndex ) = a
+		      localVectorPtr.UInt64( bIndex ) = b
+		      localVectorPtr.UInt64( cIndex ) = c
+		      localVectorPtr.UInt64( dIndex ) = d
 		    next
 		    
 		    statePtr.UInt64(  0 ) = statePtr.UInt64(  0 ) xor localVectorPtr.UInt64(  0 ) xor localVectorPtr.UInt64(  64 )
