@@ -119,53 +119,6 @@ Protected Class Blake2bDigest_MTC
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = API1Only or ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) )
-		Private Sub Mix(localVectorPtr As Ptr, i1 As Integer, i2 As Integer, i3 As Integer, i4 As Integer, x As UInt64, y As UInt64)
-		  //
-		  // For reference only
-		  //
-		  
-		  const R1 as integer = 32
-		  const R2 as integer = 24
-		  const R3 as integer = 16
-		  const R4 as integer = 63
-		  
-		  const R1ShiftRight as UInt64 = 2 ^ R1
-		  const R1ShiftLeft as UInt64 = 2 ^ ( 64 - R1 )
-		  
-		  const R2ShiftRight as UInt64 = 2 ^ R2
-		  const R2ShiftLeft as UInt64 = 2 ^ ( 64 - R2 )
-		  
-		  const R3ShiftRight as UInt64 = 2 ^ R3
-		  const R3ShiftLeft as UInt64 = 2 ^ ( 64 - R3 )
-		  
-		  const R4ShiftRight as UInt64 = 2 ^ R4
-		  const R4ShiftLeft as UInt64 = 2 ^ ( 64 - R4 )
-		  
-		  var a as integer = i1 * 8
-		  var b as integer = i2 * 8
-		  var c as integer = i3 * 8
-		  var d as integer = i4 * 8
-		  
-		  localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
-		  localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		  localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R1ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R1ShiftLeft )
-		  
-		  localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		  localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		  localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R2ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R2ShiftLeft )
-		  
-		  localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + y
-		  localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
-		  localVectorPtr.UInt64( d ) = ( localVectorPtr.UInt64( d ) \ R3ShiftRight ) xor ( localVectorPtr.UInt64( d ) * R3ShiftLeft )
-		  
-		  localVectorPtr.UInt64( c ) = localVectorPtr.UInt64( c ) + localVectorPtr.UInt64( d )
-		  localVectorPtr.UInt64( b ) = localVectorPtr.UInt64( b ) xor localVectorPtr.UInt64( c )
-		  localVectorPtr.UInt64( b ) = ( localVectorPtr.UInt64( b ) \ R4ShiftRight ) xor ( localVectorPtr.UInt64( b ) * R4ShiftLeft )
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub Process(data As MemoryBlock, compressed As UInt64, state As MemoryBlock, finalMask As UInt64)
 		  #if not DebugBuild
