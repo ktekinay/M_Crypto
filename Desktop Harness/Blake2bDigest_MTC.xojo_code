@@ -206,6 +206,18 @@ Protected Class Blake2bDigest_MTC
 		  var a, b, c, d as UInt64
 		  var x, y as UInt64
 		  
+		  static mixA as MemoryBlock = FromBytes( 0, 1, 2, 3, 0, 1, 2, 3 )
+		  static mixB as MemoryBlock = FromBytes( 4, 5, 6, 7, 5, 6, 7, 4 )
+		  static mixC as MemoryBlock = FromBytes( 8, 9, 10, 11, 10, 11, 8, 9 )
+		  static mixD as MemoryBlock = FromBytes( 12, 13, 14, 15, 15, 12, 13, 14 )
+		  
+		  static mixAPtr as ptr = mixA
+		  static mixBPtr as ptr = mixB
+		  static mixCPtr as ptr = mixC
+		  static mixDPtr as ptr = mixD
+		  
+		  const kLastMixIndex as integer = 7
+		  
 		  var lastDataIndex as integer = data.Size - 1
 		  static lastSigmaIndex as integer = Sigma.LastIndex
 		  
@@ -224,301 +236,42 @@ Protected Class Blake2bDigest_MTC
 		    for round as integer = 0 to lastSigmaIndex
 		      var thisSigma as Ptr = Sigma( round )
 		      
-		      //
-		      // ---
-		      //
-		      aIndex = 0 * 8
-		      bIndex = 4 * 8
-		      cIndex = 8 * 8
-		      dIndex = 12 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 0 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 1 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 1 * 8
-		      bIndex = 5 * 8
-		      cIndex = 9 * 8
-		      dIndex = 13 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 2 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 3 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 2 * 8
-		      bIndex = 6 * 8
-		      cIndex = 10 * 8
-		      dIndex = 14 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 4 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 5 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 3 * 8
-		      bIndex = 7 * 8
-		      cIndex = 11 * 8
-		      dIndex = 15 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 6 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 7 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 0 * 8
-		      bIndex = 5 * 8
-		      cIndex = 10 * 8
-		      dIndex = 15 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 8 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 9 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 1 * 8
-		      bIndex = 6 * 8
-		      cIndex = 11 * 8
-		      dIndex = 12 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 10 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 11 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 2 * 8
-		      bIndex = 7 * 8
-		      cIndex = 8 * 8
-		      dIndex = 13 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 12 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 13 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
-		      
-		      //
-		      // ---
-		      //
-		      aIndex = 3 * 8
-		      bIndex = 4 * 8
-		      cIndex = 9 * 8
-		      dIndex = 14 * 8
-		      
-		      a = localVectorPtr.UInt64( aIndex )
-		      b = localVectorPtr.UInt64( bIndex )
-		      c = localVectorPtr.UInt64( cIndex )
-		      d = localVectorPtr.UInt64( dIndex )
-		      
-		      x = dataPtr.UInt64( thisSigma.Byte( 14 ) )
-		      y = dataPtr.UInt64( thisSigma.Byte( 15 ) )
-		      
-		      a = a + b + x
-		      d = d xor a
-		      d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
-		      
-		      a = a + b + y
-		      d = d xor a
-		      d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
-		      
-		      c = c + d
-		      b = b xor c
-		      b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
-		      
-		      localVectorPtr.UInt64( aIndex ) = a
-		      localVectorPtr.UInt64( bIndex ) = b
-		      localVectorPtr.UInt64( cIndex ) = c
-		      localVectorPtr.UInt64( dIndex ) = d
+		      for mixIndex as integer = 0 to kLastMixIndex
+		        aIndex = mixAPtr.Byte( mixIndex )
+		        bIndex = mixBPtr.Byte( mixIndex )
+		        cIndex = mixCPtr.Byte( mixIndex )
+		        dIndex = mixDPtr.Byte( mixIndex )
+		        
+		        a = localVectorPtr.UInt64( aIndex )
+		        b = localVectorPtr.UInt64( bIndex )
+		        c = localVectorPtr.UInt64( cIndex )
+		        d = localVectorPtr.UInt64( dIndex )
+		        
+		        var sigmaIndex as integer = mixIndex + mixIndex
+		        x = dataPtr.UInt64( thisSigma.Byte( sigmaIndex ) )
+		        y = dataPtr.UInt64( thisSigma.Byte( sigmaIndex + 1 ) )
+		        
+		        a = a + b + x
+		        d = d xor a
+		        d = ( d \ R1ShiftRight ) xor ( d * R1ShiftLeft )
+		        
+		        c = c + d
+		        b = b xor c
+		        b = ( b \ R2ShiftRight ) xor ( b * R2ShiftLeft )
+		        
+		        a = a + b + y
+		        d = d xor a
+		        d = ( d \ R3ShiftRight ) xor ( d * R3ShiftLeft )
+		        
+		        c = c + d
+		        b = b xor c
+		        b = ( b \ R4ShiftRight ) xor ( b * R4ShiftLeft )
+		        
+		        localVectorPtr.UInt64( aIndex ) = a
+		        localVectorPtr.UInt64( bIndex ) = b
+		        localVectorPtr.UInt64( cIndex ) = c
+		        localVectorPtr.UInt64( dIndex ) = d
+		      next
 		    next
 		    
 		    statePtr.UInt64(  0 ) = statePtr.UInt64(  0 ) xor localVectorPtr.UInt64(  0 ) xor localVectorPtr.UInt64(  64 )
