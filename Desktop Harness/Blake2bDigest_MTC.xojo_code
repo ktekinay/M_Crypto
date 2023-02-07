@@ -206,6 +206,10 @@ Protected Class Blake2bDigest_MTC
 		  var a, b, c, d as UInt64
 		  var x, y as UInt64
 		  
+		  //
+		  // Unbelievably, looping through these MemoryBlocks is faster
+		  // than unrolling the loop
+		  //
 		  static mixA as MemoryBlock = FromBytes( 0, 1, 2, 3, 0, 1, 2, 3 )
 		  static mixB as MemoryBlock = FromBytes( 4, 5, 6, 7, 5, 6, 7, 4 )
 		  static mixC as MemoryBlock = FromBytes( 8, 9, 10, 11, 10, 11, 8, 9 )
@@ -217,11 +221,18 @@ Protected Class Blake2bDigest_MTC
 		  static mixDPtr as ptr = mixD
 		  
 		  const kLastMixIndex as integer = 7
+		  const kLastSigmaIndex as integer = 11
+		  
+		  var sigmaIndex as integer
+		  var thisSigma as ptr
+		  
+		  var round as integer
+		  var dataByteIndex as integer
+		  var mixIndex as integer
 		  
 		  var lastDataIndex as integer = data.Size - 1
-		  static lastSigmaIndex as integer = Sigma.LastIndex
 		  
-		  for dataByteIndex as integer = 0 to lastDataIndex step kChunkBytes
+		  for dataByteIndex = 0 to lastDataIndex step kChunkBytes
 		    //
 		    // Compress state, mbIn, byteIndex, combinedLength, isFinal
 		    //
@@ -233,10 +244,14 @@ Protected Class Blake2bDigest_MTC
 		    
 		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
-		    for round as integer = 0 to lastSigmaIndex
-		      var thisSigma as Ptr = Sigma( round )
+		    for round = 0 to kLastSigmaIndex
+		      thisSigma = Sigma( round )
 		      
-		      for mixIndex as integer = 0 to kLastMixIndex
+		      sigmaIndex = -2
+		      
+		      for mixIndex = 0 to kLastMixIndex
+		        sigmaIndex = sigmaIndex + 2
+		        
 		        aIndex = mixAPtr.Byte( mixIndex )
 		        bIndex = mixBPtr.Byte( mixIndex )
 		        cIndex = mixCPtr.Byte( mixIndex )
@@ -247,7 +262,6 @@ Protected Class Blake2bDigest_MTC
 		        c = localVectorPtr.UInt64( cIndex )
 		        d = localVectorPtr.UInt64( dIndex )
 		        
-		        var sigmaIndex as integer = mixIndex + mixIndex
 		        x = dataPtr.UInt64( thisSigma.Byte( sigmaIndex ) )
 		        y = dataPtr.UInt64( thisSigma.Byte( sigmaIndex + 1 ) )
 		        
