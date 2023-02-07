@@ -300,6 +300,33 @@ Inherits TestGroup
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub SuperLargeTest()
+		  dim s as string = "Hello "
+		  while s.Bytes <= 10000000
+		    s = s + s
+		  wend
+		  
+		  var expected as string = _
+		  "6e5c5398b6dd014d723beafa5f096dc0969181330e1889f6737ed395becf1b5b3c46d50952b42ca83e9e941cb6eee0f4c1a902e7c6d06fb08846ac799db56f9c"
+		  
+		  Assert.Message "Data length is " + format( s.Bytes, "#,0" ) + " bytes"
+		  
+		  StartTestTimer "mine"
+		  
+		  dim b as new Blake2bDigest_MTC
+		  
+		  StartProfiling
+		  b.Process s
+		  StopProfiling
+		  dim actual as string = b.Value
+		  
+		  LogTestTimer "mine"
+		  
+		  Assert.AreEqual expected, EncodeHex( actual )
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub TestIt(data As String, expected As String)
 		  StartProfiling

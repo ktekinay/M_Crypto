@@ -230,8 +230,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 4 * 8
 		      c = 8 * 8
 		      d = 12 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 0 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 1 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 0 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 1 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -256,8 +256,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 5 * 8
 		      c = 9 * 8
 		      d = 13 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 2 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 3 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 2 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 3 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -282,8 +282,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 6 * 8
 		      c = 10 * 8
 		      d = 14 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 4 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 5 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 4 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 5 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -308,8 +308,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 7 * 8
 		      c = 11 * 8
 		      d = 15 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 6 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 7 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 6 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 7 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -334,8 +334,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 5 * 8
 		      c = 10 * 8
 		      d = 15 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 8 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 9 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 8 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 9 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -360,8 +360,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 6 * 8
 		      c = 11 * 8
 		      d = 12 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 10 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 11 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 10 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 11 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -386,8 +386,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 7 * 8
 		      c = 8 * 8
 		      d = 13 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 12 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 13 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 12 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 13 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
@@ -412,8 +412,8 @@ Protected Class Blake2bDigest_MTC
 		      b = 4 * 8
 		      c = 9 * 8
 		      d = 14 * 8
-		      x = dataPtr.UInt64( thisSigma.Byte( 14 ) + dataByteIndex )
-		      y = dataPtr.UInt64( thisSigma.Byte( 15 ) + dataByteIndex )
+		      x = dataPtr.UInt64( thisSigma.Byte( 14 ) )
+		      y = dataPtr.UInt64( thisSigma.Byte( 15 ) )
 		      
 		      localVectorPtr.UInt64( a ) = localVectorPtr.UInt64( a ) + localVectorPtr.UInt64( b ) + x
 		      localVectorPtr.UInt64( d ) = localVectorPtr.UInt64( d ) xor localVectorPtr.UInt64( a )
