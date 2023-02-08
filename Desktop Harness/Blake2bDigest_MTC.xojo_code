@@ -85,36 +85,23 @@ Protected Class Blake2bDigest_MTC
 		  'SIGMA[9] | 10  2  8  4  7  6  1  5 15 11  9 14  3 12 13  0 |
 		  '----------+-------------------------------------------------+
 		  
-		  Sigma.Add FromBytes(  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 )
-		  Sigma.Add FromBytes( 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 )
-		  Sigma.Add FromBytes( 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 )
-		  Sigma.Add FromBytes(  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 )
-		  Sigma.Add FromBytes(  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 )
-		  Sigma.Add FromBytes(  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 )
-		  Sigma.Add FromBytes( 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 )
-		  Sigma.Add FromBytes( 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 )
-		  Sigma.Add FromBytes(  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 )
-		  Sigma.Add FromBytes( 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0 )
+		  Sigma = new MemoryBlock( 12 * 16 )
 		  
-		  //
-		  // Below is the Go implementation
-		  //
-		  'Sigma.Add FromBytes(  0,  2,  4,  6,  1,  3,  5,  7,  8, 10, 12, 14,  9, 11, 13, 15 )
-		  'Sigma.Add FromBytes( 14,  4,  9, 13, 10,  8, 15,  6,  1,  0, 11,  5, 12,  2,  7,  3 )
-		  'Sigma.Add FromBytes( 11, 12,  5, 15,  8,  0,  2, 13, 10,  3,  7,  9, 14,  6,  1,  4 )
-		  'Sigma.Add FromBytes(  7,  3, 13, 11,  9,  1, 12, 14,  2,  5,  4, 15,  6, 10,  0,  8 )
-		  'Sigma.Add FromBytes(  9,  5,  2, 10,  0,  7,  4, 15, 14, 11,  6,  3,  1, 12,  8, 13 )
-		  'Sigma.Add FromBytes(  2,  6,  0,  8, 12, 10, 11,  3,  4,  7, 15,  1, 13,  5, 14,  9 )
-		  'Sigma.Add FromBytes( 12,  1, 14,  4,  5, 15, 13, 10,  0,  6,  9,  8,  7,  3,  2, 11 )
-		  'Sigma.Add FromBytes( 13,  7, 12,  3, 11, 14,  1,  9,  5, 15,  8,  2,  0,  4,  6, 10 )
-		  'Sigma.Add FromBytes(  6, 14, 11,  0, 15,  9,  3,  8, 12, 13,  1, 10,  2,  7,  4,  5 )
-		  'Sigma.Add FromBytes( 10,  8,  7,  1,  2,  4,  6,  5, 15,  9,  3, 13, 11, 14, 12,  0 )
+		  Sigma.CopyBytes FromBytes(  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 ), 0, 16,   0
+		  Sigma.CopyBytes FromBytes( 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ), 0, 16,  16
+		  Sigma.CopyBytes FromBytes( 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 ), 0, 16,  32
+		  Sigma.CopyBytes FromBytes(  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 ), 0, 16,  48
+		  Sigma.CopyBytes FromBytes(  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 ), 0, 16,  64
+		  Sigma.CopyBytes FromBytes(  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 ), 0, 16,  80
+		  Sigma.CopyBytes FromBytes( 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 ), 0, 16,  96
+		  Sigma.CopyBytes FromBytes( 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 ), 0, 16, 112
+		  Sigma.CopyBytes FromBytes(  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 ), 0, 16, 128
+		  Sigma.CopyBytes FromBytes( 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0 ), 0, 16, 144
 		  
 		  //
 		  // Last two rounds are the same as the first two
 		  //
-		  Sigma.Add Sigma( 0 )
-		  Sigma.Add Sigma( 1 )
+		  Sigma.CopyBytes Sigma, 0, 32, 160
 		  
 		End Sub
 	#tag EndMethod
@@ -177,7 +164,7 @@ Protected Class Blake2bDigest_MTC
 		  const kLastSigmaIndex as integer = 11
 		  
 		  var sigmaIndex as integer
-		  var thisSigma as ptr
+		  var thisSigma as ptr = Sigma
 		  
 		  var round as integer
 		  var dataByteIndex as integer
@@ -197,9 +184,7 @@ Protected Class Blake2bDigest_MTC
 		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
 		    for round = 0 to kLastSigmaIndex
-		      thisSigma = Sigma( round )
-		      
-		      sigmaIndex = -2
+		      sigmaIndex = ( round * 16 ) - 2
 		      
 		      for mixIndex = 0 to kLastMixIndex
 		        sigmaIndex = sigmaIndex + 2
@@ -365,7 +350,7 @@ Protected Class Blake2bDigest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Shared Sigma() As MemoryBlock
+		Private Shared Sigma As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
