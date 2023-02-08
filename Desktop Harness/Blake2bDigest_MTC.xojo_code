@@ -183,9 +183,9 @@ Protected Class Blake2bDigest_MTC
 		    
 		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
+		    sigmaIndex = -2
+		    
 		    for round = 0 to kLastSigmaIndex
-		      sigmaIndex = ( round * 16 ) - 2
-		      
 		      for mixIndex = 0 to kLastMixIndex
 		        sigmaIndex = sigmaIndex + 2
 		        
