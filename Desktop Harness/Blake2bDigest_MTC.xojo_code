@@ -189,8 +189,7 @@ Protected Class Blake2bDigest_MTC
 		    //
 		    // Compress state, mbIn, byteIndex, combinedLength, isFinal
 		    //
-		    localVector.CopyBytes state, 0, kMaxLength
-		    localVector.CopyBytes IV, 0, kMaxLength, kMaxLength
+		    localVector.CopyBytes state, 0, kChunkBytes // Includes IV in the lower 64 bytes
 		    
 		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
 		    'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
@@ -306,8 +305,14 @@ Protected Class Blake2bDigest_MTC
 		    Buffer = Key
 		  end if
 		  
-		  State = new MemoryBlock( IV.Size )
-		  State.CopyBytes( IV, 0, IV.Size )
+		  //
+		  // We make State twice as large as we need so
+		  // the Process method can just copy the whole
+		  // thing to the LocalVector in one shot.
+		  //
+		  State = new MemoryBlock( kChunkBytes )
+		  State.CopyBytes( IV, 0, kMaxLength )
+		  State.CopyBytes( IV, 0, kMaxLength, kMaxLength )
 		  
 		  var mixValue as UInt64 = &h01010000
 		  mixValue = mixValue + HashLength
