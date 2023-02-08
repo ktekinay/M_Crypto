@@ -71,37 +71,49 @@ Protected Class Blake2bDigest_MTC
 
 	#tag Method, Flags = &h21
 		Private Shared Sub InitSigma()
-		  'Round   |  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 |
+		  '  Round   |  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 |
 		  '----------+-------------------------------------------------+
-		  'SIGMA[0] |  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 |
-		  'SIGMA[1] | 14 10  4  8  9 15 13  6  1 12  0  2 11  7  5  3 |
-		  'SIGMA[2] | 11  8 12  0  5  2 15 13 10 14  3  6  7  1  9  4 |
-		  'SIGMA[3] |  7  9  3  1 13 12 11 14  2  6  5 10  4  0 15  8 |
-		  'SIGMA[4] |  9  0  5  7  2  4 10 15 14  1 11 12  6  8  3 13 |
-		  'SIGMA[5] |  2 12  6 10  0 11  8  3  4 13  7  5 15 14  1  9 |
-		  'SIGMA[6] | 12  5  1 15 14 13  4 10  0  7  6  3  9  2  8 11 |
-		  'SIGMA[7] | 13 11  7 14 12  1  3  9  5  0 15  4  8  6  2 10 |
-		  'SIGMA[8] |  6 15 14  9 11  3  0  8 12  2 13  7  1  4 10  5 |
-		  'SIGMA[9] | 10  2  8  4  7  6  1  5 15 11  9 14  3 12 13  0 |
+		  ' SIGMA[0] |  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 |
+		  ' SIGMA[1] | 14 10  4  8  9 15 13  6  1 12  0  2 11  7  5  3 |
+		  ' SIGMA[2] | 11  8 12  0  5  2 15 13 10 14  3  6  7  1  9  4 |
+		  ' SIGMA[3] |  7  9  3  1 13 12 11 14  2  6  5 10  4  0 15  8 |
+		  ' SIGMA[4] |  9  0  5  7  2  4 10 15 14  1 11 12  6  8  3 13 |
+		  ' SIGMA[5] |  2 12  6 10  0 11  8  3  4 13  7  5 15 14  1  9 |
+		  ' SIGMA[6] | 12  5  1 15 14 13  4 10  0  7  6  3  9  2  8 11 |
+		          ' SIGMA[7] | 13 11  7 14 12  1  3  9  5  0 15  4  8  6  2 10 |
+		  ' SIGMA[8] |  6 15 14  9 11  3  0  8 12  2 13  7  1  4 10  5 |
+		  ' SIGMA[9] | 10  2  8  4  7  6  1  5 15 11  9 14  3 12 13  0 |
 		  '----------+-------------------------------------------------+
 		  
 		  Sigma = new MemoryBlock( 12 * 16 )
 		  
-		  Sigma.CopyBytes FromBytes(  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 ), 0, 16,   0
-		  Sigma.CopyBytes FromBytes( 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 ), 0, 16,  16
-		  Sigma.CopyBytes FromBytes( 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 ), 0, 16,  32
-		  Sigma.CopyBytes FromBytes(  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 ), 0, 16,  48
-		  Sigma.CopyBytes FromBytes(  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 ), 0, 16,  64
-		  Sigma.CopyBytes FromBytes(  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 ), 0, 16,  80
-		  Sigma.CopyBytes FromBytes( 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 ), 0, 16,  96
-		  Sigma.CopyBytes FromBytes( 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 ), 0, 16, 112
-		  Sigma.CopyBytes FromBytes(  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 ), 0, 16, 128
-		  Sigma.CopyBytes FromBytes( 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0 ), 0, 16, 144
+		  InsertBytes( Sigma,   0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 )
+		  InsertBytes( Sigma,  16, 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 )
+		  InsertBytes( Sigma,  32, 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 )
+		  InsertBytes( Sigma,  48,  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 )
+		  InsertBytes( Sigma,  64,  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 )
+		  InsertBytes( Sigma,  80,  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 )
+		  InsertBytes( Sigma,  96, 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 )
+		  InsertBytes( Sigma, 112, 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 )
+		  InsertBytes( Sigma, 128,  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 )
+		  InsertBytes( Sigma, 144, 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0 )
 		  
 		  //
 		  // Last two rounds are the same as the first two
 		  //
 		  Sigma.CopyBytes Sigma, 0, 32, 160
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub InsertBytes(mb As MemoryBlock, offset As Integer, ParamArray bytes() As Byte)
+		  var p as ptr = mb
+		  
+		  for each b as Byte in bytes
+		    p.Byte( offset ) = b * 8
+		    offset = offset + 1
+		  next
 		  
 		End Sub
 	#tag EndMethod
