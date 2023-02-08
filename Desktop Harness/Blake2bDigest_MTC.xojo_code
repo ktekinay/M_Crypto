@@ -239,7 +239,7 @@ Protected Class Blake2bDigest_MTC
 		    //
 		    // Advance dataPtr
 		    //
-		    dataPtr = ptr( integer( dataPtr ) + kChunkBytes )
+		    dataPtr = ptr( UInteger( dataPtr ) + CType( kChunkBytes, UInteger ) )
 		  next
 		  
 		End Sub
