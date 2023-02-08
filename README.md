@@ -240,7 +240,7 @@ Scrypt is a password hashing algorithm that is generally considered "costlier" t
 
 ### <a name='hash-digests'></a>Hash Digests
 
-The project includes `SHA256Digest_MTC`, `SHA512Digest_MTC`, and `SHA3Digest_MTC` classes. These will let you calculate those respective hashes a chunk at a time. Use the `Process` method to add data and check the `Value` property to get the hash at that moment. `Value` will alway be up to date with whatever data as been processed.
+The project includes `SHA256Digest_MTC`, `SHA512Digest_MTC`, `SHA3Digest_MTC`, and `Blake2bDigest_MTC` classes. These will let you calculate those respective hashes a chunk at a time. Use the `Process` method to add data and check the `Value` property to get the hash at that moment. `Value` will alway be up to date with whatever data as been processed.
 
 If you want to reuse the object for a new hash, use the `Reset` method. See the [example](#hash-example) above in [Examples](#examples).
 
@@ -349,6 +349,10 @@ All comments are also welcome.
 This project was created by and is maintained by Kem Tekinay (ktekinay at mactechnologies dot com).
 
 ## <a name='release-notes'></a>Release Notes
+
+__2.9__ (_)
+
+- Added `Blake2bDigest_MTC`.
 
 __2.8__ (Nov. 10, 2021)
 
