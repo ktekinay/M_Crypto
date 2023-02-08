@@ -107,7 +107,7 @@ Protected Class Blake2bDigest_MTC
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Process(data As MemoryBlock, compressed As UInt64, state As MemoryBlock, finalMask As UInt64)
+		Private Sub Process(data As MemoryBlock, compressed As UInt128, state As MemoryBlock, finalMask As UInt64)
 		  #if not DebugBuild
 		    #pragma BackgroundTasks false
 		    #pragma BoundsChecking false
@@ -178,8 +178,8 @@ Protected Class Blake2bDigest_MTC
 		    //
 		    localVector.CopyBytes state, 0, kChunkBytes // Includes IV in the lower 64 bytes
 		    
-		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed
-		    'localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor 0 // Supposed to be the high bits, but we don't have them
+		    localVectorPtr.UInt64( 12 * 8 ) = localVectorPtr.UInt64( 12 * 8 ) xor compressed.LittleEnd
+		    localVectorPtr.UInt64( 13 * 8 ) = localVectorPtr.UInt64( 13 * 8 ) xor compressed.BigEnd
 		    
 		    localVectorPtr.UInt64( 14 * 8 ) = localVectorPtr.UInt64( 14 * 8 ) xor finalMask
 		    
@@ -234,7 +234,13 @@ Protected Class Blake2bDigest_MTC
 		    statePtr.UInt64( 48 ) = statePtr.UInt64( 48 ) xor localVectorPtr.UInt64( 48 ) xor localVectorPtr.UInt64( 112 )
 		    statePtr.UInt64( 56 ) = statePtr.UInt64( 56 ) xor localVectorPtr.UInt64( 56 ) xor localVectorPtr.UInt64( 120 )
 		    
-		    compressed = compressed + kChunkBytes
+		    const kUChunkBytes as UInt64 = kChunkBytes
+		    const kUOne as UInt64 = 1
+		    
+		    compressed.LittleEnd = compressed.LittleEnd + kUChunkBytes
+		    if compressed.LittleEnd < kUChunkBytes then
+		      compressed.BigEnd = compressed.BigEnd + kUOne
+		    end if
 		    
 		    //
 		    // Advance dataPtr
@@ -274,9 +280,23 @@ Protected Class Blake2bDigest_MTC
 		  
 		  if data <> "" then
 		    const kNoMask as UInt64 = 0
+		    const kUChunkBytes as UInt64 = kChunkBytes
+		    const kUOne as UInt64 = 1
 		    
-		    Process data, CombinedLength + kChunkBytes, State, kNoMask
-		    CombinedLength = CombinedLength + dataLen
+		    var compressed as UInt128 = CombinedLength
+		    compressed.LittleEnd = compressed.LittleEnd + kUChunkBytes
+		    if compressed.LittleEnd < kUChunkBytes then
+		      compressed.BigEnd = compressed.BigEnd + kUOne
+		    end if
+		    
+		    Process data, compressed, State, kNoMask
+		    
+		    var udataLen as UInt64 = dataLen
+		    
+		    CombinedLength.LittleEnd = CombinedLength.LittleEnd + udataLen
+		    if CombinedLength.LittleEnd < udataLen then
+		      CombinedLength.BigEnd = CombinedLength.BigEnd + kUOne
+		    end if
 		  end if
 		  
 		End Sub
@@ -310,7 +330,8 @@ Protected Class Blake2bDigest_MTC
 		  
 		  LocalVector = new MemoryBlock( kChunkBytes )
 		  
-		  CombinedLength = 0
+		  var zero as UInt128
+		  CombinedLength = zero
 		  mValue = ""
 		  
 		End Sub
@@ -322,7 +343,7 @@ Protected Class Blake2bDigest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private CombinedLength As UInt64
+		Private CombinedLength As UInt128
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -373,8 +394,17 @@ Protected Class Blake2bDigest_MTC
 			    end if
 			    
 			    const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
+			    const kUOne as UInt64 = 1
 			    
-			    Process data, dataLen + CombinedLength, tempState, kFinalMask
+			    var udataLen as UInt64 = dataLen
+			    
+			    var compressed as UInt128 = CombinedLength
+			    compressed.LittleEnd = compressed.LittleEnd + udataLen
+			    if compressed.LittleEnd < udataLen then
+			      compressed.BigEnd = compressed.BigEnd + kUOne
+			    end if
+			    
+			    Process data, compressed, tempState, kFinalMask
 			    
 			    mValue = tempState.StringValue( 0, HashLength )
 			  end if
@@ -395,6 +425,12 @@ Protected Class Blake2bDigest_MTC
 
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"2.8", Scope = Public
 	#tag EndConstant
+
+
+	#tag Structure, Name = UInt128, Flags = &h21
+		LittleEnd As UInt64
+		BigEnd As UInt64
+	#tag EndStructure
 
 
 	#tag ViewBehavior
