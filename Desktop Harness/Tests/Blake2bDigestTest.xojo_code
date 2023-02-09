@@ -147,7 +147,7 @@ Inherits TestGroup
 		  var h1 as string = b.Value
 		  
 		  b.Reset
-		  Assert.AreNotEqual h1, b.Value
+		  Assert.AreNotEqual h1, b.Value.StringValue( 0, h1.Bytes )
 		  
 		  b.Process "abc"
 		  Assert.AreSame h1, b.Value

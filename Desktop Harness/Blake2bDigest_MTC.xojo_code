@@ -38,6 +38,42 @@ Protected Class Blake2bDigest_MTC
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, Description = 436F70696573207468652056616C756520746F2074686520676976656E204D656D6F7279426C6F636B2E
+		Sub CopyTo(mb As MemoryBlock, offset As Integer = 0)
+		  if mValue is nil then
+		    var tempState as new MemoryBlock( State.Size )
+		    tempState.CopyBytes State, 0, State.Size
+		    
+		    var data as new MemoryBlock( kChunkBytes )
+		    var dataLen as UInt64
+		    
+		    if Buffer <> "" then
+		      dataLen = Buffer.Bytes
+		      data.StringValue( 0, dataLen ) = Buffer
+		    end if
+		    
+		    const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
+		    const kUOne as UInt64 = 1
+		    
+		    var udataLen as UInt64 = dataLen
+		    
+		    var compressed as UInt128 = CombinedLength
+		    compressed.LittleEnd = compressed.LittleEnd + udataLen
+		    if compressed.LittleEnd < udataLen then
+		      compressed.BigEnd = compressed.BigEnd + kUOne
+		    end if
+		    
+		    Process data, compressed, tempState, kFinalMask
+		    
+		    mValue = tempState
+		  end if
+		  
+		  mb.CopyBytes mValue, 0, HashLength, offset
+		  
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Shared Function FromBytes(ParamArray bytes() As Byte) As MemoryBlock
 		  var mb as new MemoryBlock( bytes.Count )
@@ -80,7 +116,7 @@ Protected Class Blake2bDigest_MTC
 		  ' SIGMA[4] |  9  0  5  7  2  4 10 15 14  1 11 12  6  8  3 13 |
 		  ' SIGMA[5] |  2 12  6 10  0 11  8  3  4 13  7  5 15 14  1  9 |
 		  ' SIGMA[6] | 12  5  1 15 14 13  4 10  0  7  6  3  9  2  8 11 |
-		          ' SIGMA[7] | 13 11  7 14 12  1  3  9  5  0 15  4  8  6  2 10 |
+		  ' SIGMA[7] | 13 11  7 14 12  1  3  9  5  0 15  4  8  6  2 10 |
 		  ' SIGMA[8] |  6 15 14  9 11  3  0  8 12  2 13  7  1  4 10  5 |
 		  ' SIGMA[9] | 10  2  8  4  7  6  1  5 15 11  9 14  3 12 13  0 |
 		  '----------+-------------------------------------------------+
@@ -265,7 +301,7 @@ Protected Class Blake2bDigest_MTC
 
 	#tag Method, Flags = &h0
 		Sub Process(data As String)
-		  mValue = ""
+		  mValue = nil
 		  
 		  if Buffer <> "" then
 		    data = Buffer + data
@@ -344,7 +380,7 @@ Protected Class Blake2bDigest_MTC
 		  
 		  var zero as UInt128
 		  CombinedLength = zero
-		  mValue = ""
+		  mValue = nil
 		  
 		End Sub
 	#tag EndMethod
@@ -379,7 +415,7 @@ Protected Class Blake2bDigest_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mValue As String
+		Private mValue As MemoryBlock
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -393,39 +429,13 @@ Protected Class Blake2bDigest_MTC
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  if mValue = "" then
-			    var tempState as new MemoryBlock( State.Size )
-			    tempState.CopyBytes State, 0, State.Size
-			    
-			    var data as new MemoryBlock( kChunkBytes )
-			    var dataLen as UInt64
-			    
-			    if Buffer <> "" then
-			      dataLen = Buffer.Bytes
-			      data.StringValue( 0, dataLen ) = Buffer
-			    end if
-			    
-			    const kFinalMask as UInt64 = &hFFFFFFFFFFFFFFFF
-			    const kUOne as UInt64 = 1
-			    
-			    var udataLen as UInt64 = dataLen
-			    
-			    var compressed as UInt128 = CombinedLength
-			    compressed.LittleEnd = compressed.LittleEnd + udataLen
-			    if compressed.LittleEnd < udataLen then
-			      compressed.BigEnd = compressed.BigEnd + kUOne
-			    end if
-			    
-			    Process data, compressed, tempState, kFinalMask
-			    
-			    mValue = tempState.StringValue( 0, HashLength )
-			  end if
-			  
-			  return mValue
+			  var result as new MemoryBlock( HashLength )
+			  CopyTo result
+			  return result
 			  
 			End Get
 		#tag EndGetter
-		Value As String
+		Value As MemoryBlock
 	#tag EndComputedProperty
 
 
